@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 
 type MarketingPageProps = {
@@ -122,6 +122,37 @@ const pricingPlans = [
     features: ["Seluruh fitur Paket Tumbuh", "Pembayaran QRIS dinamis melalui Midtrans", "Manajemen staf dengan peran admin dan kasir", "Pembukaan, penutupan, dan perhitungan selisih kas shift", "Layanan makan di tempat, bawa pulang, dan manajemen meja", "Pembatalan transaksi dengan pengembalian stok otomatis", "Dasbor penjualan dan laporan keuntungan", "Penyaringan laporan serta ekspor CSV/XLSX"],
     cta: "Konsultasikan Paket Bisnis",
     popular: false,
+  },
+] as const;
+
+const featureComparison = [
+  {
+    category: "Operasional inti",
+    items: [
+      { name: "Kasir dan transaksi tunai", detail: "Melayani transaksi harian dengan alur kasir yang praktis.", tumbuh: true, bisnis: true },
+      { name: "Produk, kategori, SKU, barcode, dan varian", detail: "Mengatur katalog produk secara lebih terstruktur.", tumbuh: true, bisnis: true },
+      { name: "Stok otomatis dan peringatan stok minimum", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", tumbuh: true, bisnis: true },
+      { name: "Data pelanggan dan riwayat transaksi", detail: "Menyimpan informasi pelanggan untuk pelayanan yang lebih baik.", tumbuh: true, bisnis: true },
+    ],
+  },
+  {
+    category: "Pembayaran dan laporan",
+    items: [
+      { name: "Diskon, pajak, dan biaya layanan", detail: "Menyesuaikan perhitungan transaksi sesuai kebutuhan usaha.", tumbuh: true, bisnis: true },
+      { name: "Laporan penjualan dan produk terlaris", detail: "Melihat performa penjualan harian dan produk unggulan.", tumbuh: true, bisnis: true },
+      { name: "Pembayaran QRIS dinamis melalui Midtrans", detail: "Menerima pembayaran digital dengan nominal yang sesuai transaksi.", tumbuh: false, bisnis: true },
+      { name: "Ekspor laporan CSV/XLSX", detail: "Mengunduh data laporan untuk analisis lanjutan.", tumbuh: false, bisnis: true },
+    ],
+  },
+  {
+    category: "Tim dan alur usaha",
+    items: [
+      { name: "Pengaturan dan cetak struk 58 mm/80 mm", detail: "Menyesuaikan format struk dengan perangkat usaha.", tumbuh: true, bisnis: true },
+      { name: "Manajemen staf dan peran admin/kasir", detail: "Mengatur akses berdasarkan tanggung jawab tim.", tumbuh: false, bisnis: true },
+      { name: "Pembukaan dan penutupan shift kasir", detail: "Mencatat operasional kas dan selisih setiap shift.", tumbuh: false, bisnis: true },
+      { name: "Meja, makan di tempat, dan bawa pulang", detail: "Mendukung alur pemesanan restoran dan kedai.", tumbuh: false, bisnis: true },
+      { name: "Pembatalan transaksi dengan pengembalian stok", detail: "Menjaga stok tetap akurat saat transaksi dibatalkan.", tumbuh: false, bisnis: true },
+    ],
   },
 ] as const;
 
@@ -287,7 +318,6 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl, 
           </div>
           <div className="container pricing-grid">
             {pricingPlans.map((plan) => {
-              const isBusiness = plan.id === "bisnis";
               return (
                 <article className={plan.popular ? "pricing-card popular" : "pricing-card"} key={plan.id} data-reveal>
                   {plan.popular && <span className="pricing-badge">Paling Populer</span>}
@@ -297,10 +327,36 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl, 
                   <div className="plan-divider"/>
                   <strong className="feature-label">Fitur dalam paket:</strong>
                   <ul className="plan-features">{plan.features.map((feature) => <li key={feature}><span><Icon name="check" size={14}/></span>{feature}</li>)}</ul>
-                  <TrackedLink href={isBusiness ? whatsappPricingUrl : trialUrl} event={isBusiness ? "click_whatsapp" : "click_try_free"} className={plan.popular ? "button button-primary button-large full-width" : "button button-soft button-large full-width"} external={isBusiness}>{plan.cta}<Icon name="arrow" size={17}/></TrackedLink>
+                  <TrackedLink href={whatsappPricingUrl} event="click_whatsapp" className={plan.popular ? "button button-primary button-large full-width" : "button button-soft button-large full-width"} external>{plan.cta}<Icon name="arrow" size={17}/></TrackedLink>
                 </article>
               );
             })}
+          </div>
+          <div className="container comparison-wrap" data-reveal>
+            <div className="comparison-heading">
+              <div><span className="section-kicker light">Bandingkan paket</span><h3>Pilih paket yang paling sesuai.</h3></div>
+              <p>Semua fitur inti tersedia di Paket Tumbuh. Paket Bisnis menambahkan fitur untuk tim dan operasional yang lebih kompleks.</p>
+            </div>
+            <div className="comparison-table-scroll">
+              <table className="comparison-table">
+                <thead><tr><th scope="col">Fitur</th><th scope="col"><span className="comparison-plan-name">Tumbuh</span><small>Rp450.000/tahun</small></th><th scope="col"><span className="comparison-plan-name">Bisnis</span><small>Rp950.000/tahun</small></th></tr></thead>
+                <tbody>
+                  {featureComparison.map((group) => (
+                    <Fragment key={group.category}>
+                      <tr className="comparison-category"><th colSpan={3} scope="colgroup">{group.category}</th></tr>
+                      {group.items.map((item) => (
+                        <tr key={item.name}>
+                          <th scope="row"><strong>{item.name}</strong></th>
+                          <td aria-label={item.tumbuh ? "Termasuk" : "Tidak tersedia"}>{item.tumbuh ? <span className="comparison-status included"><Icon name="check" size={15}/> <span className="comparison-status-label">Termasuk</span></span> : <span className="comparison-status excluded"><Icon name="x" size={15}/><span className="comparison-status-label">-</span></span>}</td>
+                          <td aria-label={item.bisnis ? "Termasuk" : "Tidak tersedia"}>{item.bisnis ? <span className="comparison-status included"><Icon name="check" size={15}/> <span className="comparison-status-label">Termasuk</span></span> : <span className="comparison-status excluded"><Icon name="x" size={15}/><span className="comparison-status-label">-</span></span>}</td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="comparison-legend"><span><Icon name="check" size={14}/> Termasuk dalam paket</span><span><Icon name="x" size={14}/> Tidak tersedia</span></div>
           </div>
           <div className="container pricing-footnote" data-reveal><Icon name="shield" size={17}/><span>Harga berlaku untuk satu tahun. Silakan konfirmasikan ketentuan pajak dan ketersediaan fitur sebelum berlangganan.</span></div>
         </section>
