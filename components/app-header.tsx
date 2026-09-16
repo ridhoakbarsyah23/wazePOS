@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowRight,
   BarChart3,
   Boxes,
   Crown,
@@ -18,19 +19,23 @@ type AppHeaderProps = {
   businessName: string;
   outletName?: string;
   role?: "owner" | "admin" | "cashier";
+  trialDaysRemaining?: number | null;
 };
 
 export function AppHeader({
   businessName,
   outletName,
   role = "owner",
+  trialDaysRemaining,
 }: AppHeaderProps) {
   const pathname = usePathname();
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
-  useEffect(() => {
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setNavigatingTo(null);
-  }, [pathname]);
+  }
 
   const navItems = [
     {
@@ -87,6 +92,32 @@ export function AppHeader({
           <div className="h-full w-full bg-gradient-to-r from-[#23a473] via-[#198760] to-[#073d2f] animate-nav-progress shadow-[0_0_10px_rgba(35,164,115,0.8)]" />
         )}
       </div>
+
+      {/* Trial Countdown Banner */}
+      {typeof trialDaysRemaining === "number" && trialDaysRemaining > 0 && (
+        <aside
+          aria-label="Pemberitahuan Masa Uji Coba"
+          className="border-b border-amber-200/80 bg-linear-to-r from-amber-50 via-orange-50 to-amber-50 px-4 py-1.5 text-xs text-amber-900 print:hidden"
+        >
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="flex size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
+              <span>
+                Masa uji coba gratis (Trial) gerai Anda tersisa <strong>{trialDaysRemaining} hari lagi</strong>.
+              </span>
+            </div>
+            {role === "owner" && (
+              <Link
+                href="/subscription"
+                className="inline-flex items-center gap-1 font-bold text-amber-800 underline hover:text-amber-950 transition"
+              >
+                <span>Pilih & Aktifkan Paket</span>
+                <ArrowRight className="size-3" />
+              </Link>
+            )}
+          </div>
+        </aside>
+      )}
 
       <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         {/* Logo & Business Info */}

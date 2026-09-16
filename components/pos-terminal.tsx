@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import {
+  AlertCircle,
+  ArrowRight,
   Banknote,
-  QrCode,
+  CheckCircle2,
   CreditCard,
   Maximize2,
-  X,
-  CheckCircle2,
-  Smartphone,
+  QrCode,
+  ScanBarcode,
   ShieldCheck,
   Sparkles,
-  ArrowRight,
-  AlertCircle,
+  X,
 } from "lucide-react";
 
 type PosProduct = {
@@ -45,6 +45,10 @@ export function PosTerminal({
   businessName?: string;
 }) {
   const outletId = initialOutletId;
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const barcodeBufferRef = useRef<string>("");
+  const lastKeyTimeRef = useRef<number>(0);
+
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Semua");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -172,34 +176,190 @@ export function PosTerminal({
     }
   }
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const activeEl = document.activeElement;
+      const isInputActive =
+        activeEl?.tagName === "INPUT" ||
+        activeEl?.tagName === "TEXTAREA" ||
+        activeEl?.tagName === "SELECT";
+
+      // F2: Focus Search Bar
+      if (e.key === "F2") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      // /: Focus Search Bar when not already typing in an input
+      if (e.key === "/" && !isInputActive) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      // F4: Switch Payment Method
+      if (e.key === "F4") {
+        e.preventDefault();
+        setPaymentMethod((prev) => {
+          if (prev === "cash") return "qris";
+          if (prev === "qris") return allowNonCashPayments ? "debit" : "cash";
+          if (prev === "debit") return "credit";
+          return "cash";
+        });
+        return;
+      }
+
+      // F9: Quick Exact Cash
+      if (e.key === "F9") {
+        e.preventDefault();
+        if (cart.length > 0) {
+          setPaymentMethod("cash");
+          setPaidAmount(String(total));
+        }
+        return;
+      }
+
+      // Space: Exact Cash (if in cash mode and not typing in an input)
+      if (e.key === " " && !isInputActive && cart.length > 0) {
+        e.preventDefault();
+        if (paymentMethod === "cash") {
+          setPaidAmount(String(total));
+        }
+        return;
+      }
+
+      // Escape: Close QR modal, clear search, or clear cart
+      if (e.key === "Escape") {
+        if (showQrModal) {
+          e.preventDefault();
+          setShowQrModal(false);
+          return;
+        }
+        if (search.length > 0) {
+          e.preventDefault();
+          setSearch("");
+          return;
+        }
+        if (cart.length > 0) {
+          e.preventDefault();
+          setCart([]);
+          setMessage({ type: "success", text: "Keranjang belanja telah dikosongkan." });
+          return;
+        }
+      }
+
+      // Hardware Barcode Scanner logic (rapid key stream ending with Enter)
+      const now = Date.now();
+      if (e.key === "Enter") {
+        const scannedCode = barcodeBufferRef.current.trim();
+        barcodeBufferRef.current = "";
+
+        if (scannedCode.length >= 2) {
+          const matched = products.find(
+            (p) =>
+              p.sku?.toLowerCase() === scannedCode.toLowerCase() ||
+              p.id.toLowerCase() === scannedCode.toLowerCase()
+          );
+
+          if (matched) {
+            e.preventDefault();
+            if (matched.trackStock && matched.stock < 1) {
+              setMessage({ type: "error", text: `Stok produk ${matched.name} sudah habis.` });
+            } else {
+              addProduct(matched);
+              setMessage({ type: "success", text: `Barcode discan: ${matched.name} (+1)` });
+            }
+            if (isInputActive && searchInputRef.current) {
+              setSearch("");
+            }
+            return;
+          } else if (scannedCode.length >= 3) {
+            setMessage({
+              type: "error",
+              text: `Barcode "${scannedCode}" tidak ditemukan di katalog produk.`,
+            });
+          }
+        }
+        return;
+      }
+
+      // Buffer single printable characters
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (now - lastKeyTimeRef.current > 150) {
+          barcodeBufferRef.current = "";
+        }
+        barcodeBufferRef.current += e.key;
+        lastKeyTimeRef.current = now;
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [products, cart, total, allowNonCashPayments, paymentMethod, showQrModal, search]);
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_390px]">
-      <section className="min-w-0 rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="grid flex-1 gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
-            Gerai aktif
-            <select
-              value={outletId}
-              disabled
-              className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-semibold normal-case tracking-normal text-[#15211d] disabled:opacity-100"
-            >
-              {outlets.map((outlet) => (
-                <option key={outlet.id} value={outlet.id}>
-                  {outlet.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid flex-[2] gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
-            Cari produk
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Nama atau SKU..."
-              className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-normal normal-case tracking-normal text-[#15211d]"
-            />
-          </label>
+    <div className="space-y-4">
+      {/* Shortcut & Hardware Scanner Status Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#dfe8e3] bg-white px-4 py-2.5 text-xs text-[#627069] shadow-xs">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-1.5 font-bold text-[#15211d]">
+            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">F2 / /</kbd>
+            <span>Cari Produk</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 font-bold text-[#15211d]">
+            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">F4</kbd>
+            <span>Ganti Pembayaran</span>
+          </div>
+          <div className="flex items-center gap-1.5 font-bold text-[#15211d]">
+            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">F9 / Space</kbd>
+            <span>Uang Pas</span>
+          </div>
+          <div className="hidden md:flex items-center gap-1.5 font-bold text-[#15211d]">
+            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">Esc</kbd>
+            <span>Bersihkan / Batal</span>
+          </div>
         </div>
+
+        <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+          </span>
+          <ScanBarcode className="size-3.5 text-emerald-700" />
+          <span>Scanner USB Siap</span>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_390px]">
+        <section className="min-w-0 rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="grid flex-1 gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
+              Gerai aktif
+              <select
+                value={outletId}
+                disabled
+                className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-semibold normal-case tracking-normal text-[#15211d] disabled:opacity-100"
+              >
+                {outlets.map((outlet) => (
+                  <option key={outlet.id} value={outlet.id}>
+                    {outlet.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid flex-[2] gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
+              Cari produk
+              <input
+                ref={searchInputRef}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Ketik nama / scan barcode SKU... [F2]"
+                className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-normal normal-case tracking-normal text-[#15211d] focus:border-[#198760] focus:outline-hidden focus:ring-1 focus:ring-[#198760]"
+              />
+            </label>
+          </div>
 
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
           {categories.map((category) => (
@@ -521,7 +681,7 @@ export function PosTerminal({
               <div className="border-t border-[#edf2ee] pt-2 text-[10px] text-[#627069]">
                 <p className="m-0 mb-1 font-semibold text-[#15211d]">Bisa di-scan menggunakan:</p>
                 <p className="m-0 text-[#627069] leading-4">
-                  BCA, Livin' Mandiri, BRImo, BNI, GoPay, OVO, DANA, ShopeePay, LinkAja & semua m-Banking.
+                  BCA, Livin&apos; Mandiri, BRImo, BNI, GoPay, OVO, DANA, ShopeePay, LinkAja &amp; semua m-Banking.
                 </p>
               </div>
             </div>
@@ -653,6 +813,7 @@ export function PosTerminal({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
