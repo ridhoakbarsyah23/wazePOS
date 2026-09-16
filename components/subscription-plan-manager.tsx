@@ -45,29 +45,32 @@ export function SubscriptionPlanManager({
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function changePlan(plan: PlanId) {
-    if (!canChangePlan || plan === activePlan) return;
-    setPendingPlan(plan);
-    setMessage(null);
+    if (subscriptionStatus === "active" || plan === activePlan) return;
+    setActivePlan(plan);
 
-    try {
-      const response = await fetch("/api/subscription", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const payload = await response.json() as { message?: string; plan?: PlanId };
-      if (!response.ok) {
-        setMessage({ type: "error", text: payload.message ?? "Paket belum berhasil diperbarui." });
-        return;
+    if (canChangePlan) {
+      setPendingPlan(plan);
+      setMessage(null);
+
+      try {
+        const response = await fetch("/api/subscription", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
+        const payload = (await response.json()) as { message?: string; plan?: PlanId };
+        if (!response.ok) {
+          setMessage({ type: "error", text: payload.message ?? "Paket belum berhasil diperbarui." });
+          return;
+        }
+
+        setMessage({ type: "success", text: payload.message ?? "Paket berhasil diperbarui." });
+        router.refresh();
+      } catch {
+        setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
+      } finally {
+        setPendingPlan(null);
       }
-
-      setActivePlan(payload.plan ?? plan);
-      setMessage({ type: "success", text: payload.message ?? "Paket berhasil diperbarui." });
-      router.refresh();
-    } catch {
-      setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
-    } finally {
-      setPendingPlan(null);
     }
   }
 
@@ -81,7 +84,7 @@ export function SubscriptionPlanManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan: activePlan }),
       });
-      const payload = await response.json() as { message?: string; redirectUrl?: string };
+      const payload = (await response.json()) as { message?: string; redirectUrl?: string };
       if (!response.ok || !payload.redirectUrl) {
         setMessage({ type: "error", text: payload.message ?? "Checkout belum berhasil dibuat." });
         return;
@@ -94,11 +97,21 @@ export function SubscriptionPlanManager({
     }
   }
 
+  const isPaidActive = subscriptionStatus === "active";
+
   return (
     <div>
       {message && (
-        <div role={message.type === "error" ? "alert" : "status"} className={`mb-5 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm font-semibold ${message.type === "success" ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]" : "border-[#f3c8c4] bg-[#fff2f1] text-[#a4382f]"}`}>
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />{message.text}
+        <div
+          role={message.type === "error" ? "alert" : "status"}
+          className={`mb-5 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm font-semibold ${
+            message.type === "success"
+              ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]"
+              : "border-[#f3c8c4] bg-[#fff2f1] text-[#a4382f]"
+          }`}
+        >
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+          {message.text}
         </div>
       )}
 
@@ -111,25 +124,77 @@ export function SubscriptionPlanManager({
             <Card key={planId} className={active ? "border-[#63b792] ring-4 ring-[#198760]/8" : ""}>
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
-                  <span className={`grid size-11 place-items-center rounded-xl ${active ? "bg-[#198760] text-white" : "bg-[#eaf7f0] text-[#198760]"}`}><Crown className="size-5" /></span>
-                  {active && <Badge><Check className="size-3.5" /> Paket saat ini</Badge>}
+                  <span
+                    className={`grid size-11 place-items-center rounded-xl ${
+                      active ? "bg-[#198760] text-white" : "bg-[#eaf7f0] text-[#198760]"
+                    }`}
+                  >
+                    <Crown className="size-5" />
+                  </span>
+                  {active && (
+                    <Badge>
+                      <Check className="size-3.5" />
+                      {isPaidActive ? "Paket Aktif" : "Paket Dipilih"}
+                    </Badge>
+                  )}
                 </div>
                 <CardTitle className="mt-3">Paket {plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
               <CardContent className="pt-5">
-                <p className="mb-5"><strong className="text-2xl tracking-[-0.8px]">Rp {plan.annualPrice.toLocaleString("id-ID")}</strong><span className="text-xs text-[#627069]"> / tahun</span></p>
+                <p className="mb-5">
+                  <strong className="text-2xl tracking-[-0.8px]">
+                    Rp {plan.annualPrice.toLocaleString("id-ID")}
+                  </strong>
+                  <span className="text-xs text-[#627069]"> / tahun</span>
+                </p>
                 <ul className="mb-6 space-y-3">
-                  {includedFeatures[planId].map((feature) => <li key={feature} className="flex items-start gap-2.5 text-sm text-[#42534c]"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#eaf7f0] text-[#198760]"><Check className="size-3" /></span>{feature}</li>)}
+                  {includedFeatures[planId].map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5 text-sm text-[#42534c]">
+                      <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#eaf7f0] text-[#198760]">
+                        <Check className="size-3" />
+                      </span>
+                      {feature}
+                    </li>
+                  ))}
                 </ul>
-                <Button className="w-full" variant={active ? "secondary" : "default"} disabled={active || !canChangePlan || Boolean(pendingPlan)} onClick={() => void changePlan(planId)}>
-                  {pending ? <LoaderCircle className="animate-spin" /> : active ? <Check /> : <Crown />}
-                  {pending ? "Mengganti paket..." : active ? "Paket sedang digunakan" : canChangePlan ? `Gunakan Paket ${plan.name}` : "Perubahan melalui pembayaran"}
+                <Button
+                  className="w-full"
+                  variant={active ? "secondary" : "default"}
+                  disabled={active || isPaidActive || Boolean(pendingPlan)}
+                  onClick={() => void changePlan(planId)}
+                >
+                  {pending ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : active ? (
+                    <Check />
+                  ) : (
+                    <Crown />
+                  )}
+                  {pending
+                    ? "Mengganti paket..."
+                    : active
+                    ? "Paket ini dipilih"
+                    : isPaidActive
+                    ? "Paket aktif tidak dapat diubah"
+                    : `Pilih Paket ${plan.name}`}
                 </Button>
-                {active && subscriptionStatus !== "active" && (
-                  <Button className="mt-2 w-full" disabled={!paymentConfigured || checkoutPending || Boolean(pendingPlan)} onClick={() => void startCheckout()}>
-                    {checkoutPending ? <LoaderCircle className="animate-spin" /> : <CreditCard />}
-                    {checkoutPending ? "Menyiapkan checkout..." : paymentConfigured ? `Aktifkan Paket ${plan.name}` : "Midtrans belum dikonfigurasi"}
+                {active && !isPaidActive && (
+                  <Button
+                    className="mt-2 w-full"
+                    disabled={!paymentConfigured || checkoutPending || Boolean(pendingPlan)}
+                    onClick={() => void startCheckout()}
+                  >
+                    {checkoutPending ? (
+                      <LoaderCircle className="animate-spin" />
+                    ) : (
+                      <CreditCard />
+                    )}
+                    {checkoutPending
+                      ? "Menyiapkan checkout..."
+                      : paymentConfigured
+                      ? `Aktifkan & Bayar Paket ${plan.name}`
+                      : "Midtrans belum dikonfigurasi"}
                   </Button>
                 )}
               </CardContent>

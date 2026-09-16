@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { cashShift, inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
-import { hasPlanFeature } from "@/lib/plans";
+import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
 import { saleSchema } from "@/lib/validation/sale";
 
 function makeInvoiceNumber() {
@@ -24,7 +24,19 @@ export async function POST(request: Request) {
   if (!membership) {
     return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
   }
+
   const currentSubscription = await getBusinessSubscription(membership.businessId);
+  const subDetails = getSubscriptionStatusDetails(currentSubscription);
+  if (!subDetails.isValid) {
+    return NextResponse.json(
+      {
+        message: "Masa uji coba gratis (trial) atau langganan gerai ini telah berakhir. Silakan perpanjang paket langganan untuk melanjutkan transaksi.",
+        code: "SUBSCRIPTION_EXPIRED",
+      },
+      { status: 403 }
+    );
+  }
+
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
 
   let payload: unknown;

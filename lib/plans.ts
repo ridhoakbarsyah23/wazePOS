@@ -90,3 +90,106 @@ export function hasPlanFeature(plan: unknown, feature: PlanFeature | string): bo
   if (feature === "shiftManagement") return false;
   return false;
 }
+
+export type SubscriptionStatus = "trialing" | "active" | "past_due" | "cancelled";
+
+export type SubscriptionData = {
+  status: SubscriptionStatus;
+  trialEndsAt: Date | string;
+  currentPeriodEnd?: Date | string | null;
+  plan?: string | null;
+} | null;
+
+export type SubscriptionDetails = {
+  isValid: boolean;
+  isTrialing: boolean;
+  isActive: boolean;
+  isExpired: boolean;
+  daysRemaining: number;
+  message: string;
+};
+
+export function getSubscriptionStatusDetails(subscription: SubscriptionData): SubscriptionDetails {
+  if (!subscription) {
+    return {
+      isValid: false,
+      isTrialing: false,
+      isActive: false,
+      isExpired: true,
+      daysRemaining: 0,
+      message: "Profil langganan tidak ditemukan.",
+    };
+  }
+
+  const now = Date.now();
+
+  if (subscription.status === "active") {
+    if (subscription.currentPeriodEnd) {
+      const endMs = new Date(subscription.currentPeriodEnd).getTime();
+      if (endMs <= now) {
+        return {
+          isValid: false,
+          isTrialing: false,
+          isActive: false,
+          isExpired: true,
+          daysRemaining: 0,
+          message: "Masa aktif paket langganan Anda telah berakhir.",
+        };
+      }
+      const days = Math.ceil((endMs - now) / (1000 * 60 * 60 * 24));
+      return {
+        isValid: true,
+        isTrialing: false,
+        isActive: true,
+        isExpired: false,
+        daysRemaining: days,
+        message: `Paket aktif hingga ${new Date(subscription.currentPeriodEnd).toLocaleDateString("id-ID")}.`,
+      };
+    }
+
+    return {
+      isValid: true,
+      isTrialing: false,
+      isActive: true,
+      isExpired: false,
+      daysRemaining: 365,
+      message: "Paket langganan aktif.",
+    };
+  }
+
+  if (subscription.status === "trialing") {
+    const trialEndMs = new Date(subscription.trialEndsAt).getTime();
+    if (trialEndMs <= now) {
+      return {
+        isValid: false,
+        isTrialing: false,
+        isActive: false,
+        isExpired: true,
+        daysRemaining: 0,
+        message: "Masa uji coba (trial) gratis 14 hari Anda telah berakhir.",
+      };
+    }
+
+    const days = Math.max(1, Math.ceil((trialEndMs - now) / (1000 * 60 * 60 * 24)));
+    return {
+      isValid: true,
+      isTrialing: true,
+      isActive: false,
+      isExpired: false,
+      daysRemaining: days,
+      message: `Masa uji coba gratis tersisa ${days} hari.`,
+    };
+  }
+
+  return {
+    isValid: false,
+    isTrialing: false,
+    isActive: false,
+    isExpired: true,
+    daysRemaining: 0,
+    message: subscription.status === "past_due"
+      ? "Pembayaran langganan tertunda."
+      : "Langganan telah dibatalkan.",
+  };
+}
+

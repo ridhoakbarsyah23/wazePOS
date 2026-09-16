@@ -35,6 +35,7 @@ import { AppHeader } from "@/components/app-header";
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button";
 import { DashboardSalesChart } from "@/components/dashboard-sales-chart";
 import { ShiftPanel } from "@/components/shift-panel";
+import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +45,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { db } from "@/db";
 import { cashShift, category, inventoryStock, outlet, product, sale } from "@/db/schema";
 import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
-import { hasPlanFeature, normalizePlan, plans } from "@/lib/plans";
+import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan, plans } from "@/lib/plans";
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -90,6 +91,27 @@ export default async function DashboardPage({ searchParams }: {
   if (membership.role === "cashier") redirect("/pos");
 
   const currentSubscription = await getBusinessSubscription(membership.businessId);
+  const subDetails = getSubscriptionStatusDetails(currentSubscription);
+
+  if (!subDetails.isValid) {
+    if (membership.role === "owner") {
+      redirect("/subscription?expired=1");
+    }
+    return (
+      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
+        <AppHeader
+          businessName={membership.businessName}
+          role={membership.role}
+        />
+        <SubscriptionLockout
+          businessName={membership.businessName}
+          role={membership.role}
+          reason={subDetails.message}
+        />
+      </main>
+    );
+  }
+
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const shiftManagementEnabled = hasPlanFeature(selectedPlan, "shiftManagement");
   const selectedPeriod: PeriodKey = feedback.period === "today" || feedback.period === "30d" ? feedback.period : "7d";
@@ -195,6 +217,7 @@ export default async function DashboardPage({ searchParams }: {
         businessName={membership.businessName}
         outletName={currentOutletName}
         role={membership.role}
+        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       />
 
       <div className="mx-auto w-[min(1240px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter space-y-7">

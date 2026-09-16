@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { business, businessMember, subscription } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { getSubscriptionStatusDetails } from "@/lib/plans";
 
 export const getCurrentSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
@@ -65,3 +66,10 @@ export function canManageBusiness(role: "owner" | "admin" | "cashier") {
 export function canManageStaff(role: "owner" | "admin" | "cashier") {
   return role === "owner" || role === "admin";
 }
+
+export const requireValidSubscription = cache(async (businessId: string) => {
+  const sub = await getBusinessSubscription(businessId);
+  const details = getSubscriptionStatusDetails(sub);
+  return { sub, details };
+});
+

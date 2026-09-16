@@ -4,8 +4,9 @@ import { db } from "@/db";
 import { businessMember, user } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { StaffManager } from "@/components/staff-manager";
+import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { canManageStaff, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
-import { getPlanLimits, normalizePlan, plans } from "@/lib/plans";
+import { getPlanLimits, getSubscriptionStatusDetails, normalizePlan, plans } from "@/lib/plans";
 
 export default async function StaffPage() {
   const session = await requireSession();
@@ -30,6 +31,26 @@ export default async function StaffPage() {
     getBusinessSubscription(membership.businessId),
   ]);
 
+  const subDetails = getSubscriptionStatusDetails(subscription);
+  if (!subDetails.isValid) {
+    if (membership.role === "owner") {
+      redirect("/subscription?expired=1");
+    }
+    return (
+      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
+        <AppHeader
+          businessName={membership.businessName}
+          role={membership.role}
+        />
+        <SubscriptionLockout
+          businessName={membership.businessName}
+          role={membership.role}
+          reason={subDetails.message}
+        />
+      </main>
+    );
+  }
+
   const selectedPlan = normalizePlan(subscription?.plan);
   const planLimits = getPlanLimits(selectedPlan);
 
@@ -43,6 +64,7 @@ export default async function StaffPage() {
       <AppHeader
         businessName={membership.businessName}
         role={membership.role}
+        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       />
 
       <section className="mx-auto w-[min(1080px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
