@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789442408616,
+      "tag": "0000_massive_molten_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789443615904,
+      "tag": "0001_strange_wrecker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757935650000,
+      "tag": "0002_foundation_catalog_outlet",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1757935710000,
+      "tag": "0003_sales",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1757935770000,
+      "tag": "0004_stock_movement",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1757935830000,
+      "tag": "0005_cash_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789451386316,
+      "tag": "0006_whole_greymalkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789455005861,
+      "tag": "0007_early_gambit",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789468353520,
+      "tag": "0008_fast_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789468810306,
+      "tag": "0009_gorgeous_celestials",
+      "breakpoints": true
+    }
+  ]
+}

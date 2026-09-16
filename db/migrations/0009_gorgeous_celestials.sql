@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "subscription_payment_pending_subscription_idx" ON "subscription_payment" USING btree ("subscription_id") WHERE "subscription_payment"."status" = 'pending';
