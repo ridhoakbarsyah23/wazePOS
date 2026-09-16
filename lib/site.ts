@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "wazePOS",
   tagline: "Jual. Pantau. Tumbuh.",
-  trialUrl: process.env.NEXT_PUBLIC_TRIAL_URL?.trim() || "/login",
+  trialUrl: process.env.NEXT_PUBLIC_TRIAL_URL?.trim() || "/register",
   whatsappNumber: "6281390277240",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000",
 };
