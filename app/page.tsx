@@ -7,7 +7,6 @@ export default function Home() {
       trialUrl={siteConfig.trialUrl}
       whatsappGeneralUrl={getWhatsAppUrl("general")}
       whatsappTrialUrl={getWhatsAppUrl("trial")}
-      whatsappPricingUrl={getWhatsAppUrl("pricing")}
     />
   );
 }

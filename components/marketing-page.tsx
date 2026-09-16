@@ -7,7 +7,6 @@ type MarketingPageProps = {
   trialUrl: string;
   whatsappGeneralUrl: string;
   whatsappTrialUrl: string;
-  whatsappPricingUrl: string;
 };
 
 type IconName =
@@ -106,21 +105,37 @@ const pricingPlans = [
   {
     id: "tumbuh",
     name: "Tumbuh",
-    description: "Untuk usaha aktif yang ingin operasional lebih teratur.",
+    description: "Kapasitas operasional inti untuk usaha mandiri dan UMKM.",
     price: "Rp450.000",
     priceNote: "Ditagihkan satu kali setiap tahun",
-    features: ["Kasir untuk transaksi tunai", "Produk, kategori, SKU, kode batang, dan varian", "Stok otomatis, penambahan stok, dan peringatan stok", "Data pelanggan dan riwayat transaksi", "Diskon, pajak, dan biaya layanan", "Laporan penjualan dan produk terlaris", "Pengaturan dan pencetakan struk 58 mm/80 mm"],
+    features: [
+      "Maksimal 1 gerai aktif",
+      "Maksimal 2 akun staf (Owner + Kasir)",
+      "Hingga 100 produk aktif",
+      "Pembayaran kasir: Tunai & QRIS Digital",
+      "Stok otomatis & peringatan stok menipis",
+      "Laporan penjualan harian di layar",
+      "Cetak struk kasir 58 mm / 80 mm",
+    ],
     cta: "Pilih Paket Tumbuh",
     popular: true,
   },
   {
     id: "bisnis",
     name: "Bisnis",
-    description: "Untuk usaha dengan tim kasir dan operasional yang lebih kompleks.",
+    description: "Kapasitas tanpa batas dan seluruh metode pembayaran untuk usaha berkembang.",
     price: "Rp950.000",
     priceNote: "Ditagihkan satu kali setiap tahun",
-    features: ["Seluruh fitur Paket Tumbuh", "Pembayaran QRIS dinamis melalui Midtrans", "Manajemen staf dengan peran admin dan kasir", "Pembukaan, penutupan, dan perhitungan selisih kas shift", "Layanan makan di tempat, bawa pulang, dan manajemen meja", "Pembatalan transaksi dengan pengembalian stok otomatis", "Dasbor penjualan dan laporan keuntungan", "Penyaringan laporan serta ekspor CSV/XLSX"],
-    cta: "Konsultasikan Paket Bisnis",
+    features: [
+      "Seluruh fitur Paket Tumbuh",
+      "Seluruh metode pembayaran (Tunai, QRIS, Kartu Debit & Kredit EDC)",
+      "Hingga 5 gerai / multi-cabang",
+      "Akun staf kasir & admin tanpa batas",
+      "Katalog produk tanpa batas",
+      "Ekspor laporan penjualan CSV / XLSX",
+      "Pengaturan struk kustom & logo",
+    ],
+    cta: "Pilih Paket Bisnis",
     popular: false,
   },
 ] as const;
@@ -129,29 +144,27 @@ const featureComparison = [
   {
     category: "Operasional inti",
     items: [
-      { name: "Kasir dan transaksi tunai", detail: "Melayani transaksi harian dengan alur kasir yang praktis.", tumbuh: true, bisnis: true },
-      { name: "Produk, kategori, SKU, barcode, dan varian", detail: "Mengatur katalog produk secara lebih terstruktur.", tumbuh: true, bisnis: true },
-      { name: "Stok otomatis dan peringatan stok minimum", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", tumbuh: true, bisnis: true },
-      { name: "Data pelanggan dan riwayat transaksi", detail: "Menyimpan informasi pelanggan untuk pelayanan yang lebih baik.", tumbuh: true, bisnis: true },
+      { name: "Kasir transaksi Tunai & QRIS", detail: "Melayani transaksi kasir harian dengan Tunai & QRIS resmi.", tumbuh: true, bisnis: true },
+      { name: "Katalog produk, SKU, & varian", detail: "Hingga 100 produk di Paket Tumbuh, tanpa batas di Paket Bisnis.", tumbuh: true, bisnis: true },
+      { name: "Stok otomatis & peringatan stok", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", tumbuh: true, bisnis: true },
+      { name: "Riwayat transaksi & cetak struk", detail: "Mencetak struk thermal 58mm / 80mm untuk pelanggan.", tumbuh: true, bisnis: true },
     ],
   },
   {
-    category: "Pembayaran dan laporan",
+    category: "Metode pembayaran & laporan",
     items: [
-      { name: "Diskon, pajak, dan biaya layanan", detail: "Menyesuaikan perhitungan transaksi sesuai kebutuhan usaha.", tumbuh: true, bisnis: true },
-      { name: "Laporan penjualan dan produk terlaris", detail: "Melihat performa penjualan harian dan produk unggulan.", tumbuh: true, bisnis: true },
-      { name: "Pembayaran QRIS dinamis melalui Midtrans", detail: "Menerima pembayaran digital dengan nominal yang sesuai transaksi.", tumbuh: false, bisnis: true },
-      { name: "Ekspor laporan CSV/XLSX", detail: "Mengunduh data laporan untuk analisis lanjutan.", tumbuh: false, bisnis: true },
+      { name: "Pembayaran QRIS Digital Dinamis", detail: "Mendukung BCA, Mandiri, BRI, GoPay, OVO, DANA, ShopeePay.", tumbuh: true, bisnis: true },
+      { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", tumbuh: false, bisnis: true },
+      { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", tumbuh: true, bisnis: true },
+      { name: "Ekspor laporan CSV / XLSX (Excel)", detail: "Mengunduh data transaksi dan pembukuan toko.", tumbuh: false, bisnis: true },
     ],
   },
   {
-    category: "Tim dan alur usaha",
+    category: "Tim & kapasitas usaha",
     items: [
-      { name: "Pengaturan dan cetak struk 58 mm/80 mm", detail: "Menyesuaikan format struk dengan perangkat usaha.", tumbuh: true, bisnis: true },
-      { name: "Manajemen staf dan peran admin/kasir", detail: "Mengatur akses berdasarkan tanggung jawab tim.", tumbuh: false, bisnis: true },
-      { name: "Pembukaan dan penutupan shift kasir", detail: "Mencatat operasional kas dan selisih setiap shift.", tumbuh: false, bisnis: true },
-      { name: "Meja, makan di tempat, dan bawa pulang", detail: "Mendukung alur pemesanan restoran dan kedai.", tumbuh: false, bisnis: true },
-      { name: "Pembatalan transaksi dengan pengembalian stok", detail: "Menjaga stok tetap akurat saat transaksi dibatalkan.", tumbuh: false, bisnis: true },
+      { name: "Multi-gerai / cabang usaha", detail: "1 gerai pada Paket Tumbuh, hingga 5 gerai pada Paket Bisnis.", tumbuh: false, bisnis: true },
+      { name: "Manajemen staf & tim kasir", detail: "Maksimal 2 staf pada Tumbuh, staf tanpa batas pada Bisnis.", tumbuh: true, bisnis: true },
+      { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", tumbuh: true, bisnis: true },
     ],
   },
 ] as const;
@@ -199,7 +212,7 @@ function DashboardMockup({ mode = "hero", active = "Dasbor" }: { mode?: "hero" |
   );
 }
 
-export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl, whatsappPricingUrl }: MarketingPageProps) {
+export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }: MarketingPageProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFeature, setActiveFeature] = useState(featureGroups[0]);
   const [activeShowcase, setActiveShowcase] = useState(showcaseTabs[0]);
@@ -327,28 +340,28 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl, 
                   <div className="plan-divider"/>
                   <strong className="feature-label">Fitur dalam paket:</strong>
                   <ul className="plan-features">{plan.features.map((feature) => <li key={feature}><span><Icon name="check" size={14}/></span>{feature}</li>)}</ul>
-                  <TrackedLink href={whatsappPricingUrl} event="click_whatsapp" className={plan.popular ? "button button-primary button-large full-width" : "button button-soft button-large full-width"} external>{plan.cta}<Icon name="arrow" size={17}/></TrackedLink>
+                  <TrackedLink href={`/register?plan=${plan.id}`} event="click_try_free" className={plan.popular ? "button button-primary button-large full-width" : "button button-soft button-large full-width"}>{plan.cta}<Icon name="arrow" size={17}/></TrackedLink>
                 </article>
               );
             })}
           </div>
-          <div className="container comparison-wrap" data-reveal>
-            <div className="comparison-heading">
-              <div><span className="section-kicker light">Bandingkan paket</span><h3>Pilih paket yang paling sesuai.</h3></div>
-              <p>Semua fitur inti tersedia di Paket Tumbuh. Paket Bisnis menambahkan fitur untuk tim dan operasional yang lebih kompleks.</p>
+          <div className="container mt-12 rounded-3xl border border-white/15 bg-[#032d22]/30 p-[30px] max-[820px]:mt-8 max-[820px]:rounded-[19px] max-[820px]:px-3.5 max-[820px]:py-5" data-reveal>
+            <div className="mb-[22px] flex items-end justify-between gap-6 max-[820px]:mb-4 max-[820px]:block">
+              <div><span className="section-kicker light">Bandingkan paket</span><h3 className="mt-2.5 mb-0 text-[25px] tracking-[-0.8px] text-white max-[820px]:text-[21px]">Pilih paket yang paling sesuai.</h3></div>
+              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Semua fitur inti tersedia di Paket Tumbuh. Paket Bisnis menambahkan fitur untuk tim dan operasional yang lebih kompleks.</p>
             </div>
-            <div className="comparison-table-scroll">
-              <table className="comparison-table">
-                <thead><tr><th scope="col">Fitur</th><th scope="col"><span className="comparison-plan-name">Tumbuh</span><small>Rp450.000/tahun</small></th><th scope="col"><span className="comparison-plan-name">Bisnis</span><small>Rp950.000/tahun</small></th></tr></thead>
+            <div className="overflow-x-auto rounded-2xl border border-[#dce9e2] bg-white">
+              <table className="w-full min-w-[620px] border-collapse text-[11px] text-[var(--ink)] max-[820px]:min-w-[580px]">
+                <thead><tr><th className="border-b border-[#e8efeb] bg-[#f4faf7] px-[18px] py-3.5 text-left align-middle text-[10px] font-[850] tracking-[0.4px] text-[#6b7b73] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col">Fitur</th><th className="w-[170px] border-b border-[#e8efeb] bg-[#eefaf4] px-[18px] py-3.5 text-center align-middle text-[10px] font-[850] tracking-[0.4px] text-[var(--green-700)] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col"><span className="block text-[13px] tracking-[-0.2px]">Tumbuh</span><small className="mt-[3px] block text-[9px] font-[650] tracking-normal text-[#84928b] normal-case">Rp450.000/tahun</small></th><th className="w-[170px] border-b border-[#e8efeb] bg-[#e2f7ec] px-[18px] py-3.5 text-center align-middle text-[10px] font-[850] tracking-[0.4px] text-[var(--green-700)] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col"><span className="block text-[13px] tracking-[-0.2px]">Bisnis</span><small className="mt-[3px] block text-[9px] font-[650] tracking-normal text-[#84928b] normal-case">Rp950.000/tahun</small></th></tr></thead>
                 <tbody>
                   {featureComparison.map((group) => (
                     <Fragment key={group.category}>
-                      <tr className="comparison-category"><th colSpan={3} scope="colgroup">{group.category}</th></tr>
+                      <tr><th className="border-b border-[#e8efeb] bg-[#eaf7f0] px-[18px] py-[9px] text-left align-middle text-[9px] font-semibold tracking-[0.7px] text-[var(--green-800)] uppercase max-[820px]:px-3.5" colSpan={3} scope="colgroup">{group.category}</th></tr>
                       {group.items.map((item) => (
-                        <tr key={item.name}>
-                          <th scope="row"><strong>{item.name}</strong></th>
-                          <td aria-label={item.tumbuh ? "Termasuk" : "Tidak tersedia"}>{item.tumbuh ? <span className="comparison-status included"><Icon name="check" size={15}/> <span className="comparison-status-label">Termasuk</span></span> : <span className="comparison-status excluded"><Icon name="x" size={15}/><span className="comparison-status-label">-</span></span>}</td>
-                          <td aria-label={item.bisnis ? "Termasuk" : "Tidak tersedia"}>{item.bisnis ? <span className="comparison-status included"><Icon name="check" size={15}/> <span className="comparison-status-label">Termasuk</span></span> : <span className="comparison-status excluded"><Icon name="x" size={15}/><span className="comparison-status-label">-</span></span>}</td>
+                        <tr className="last:[&>th]:border-b-0 last:[&>td]:border-b-0" key={item.name}>
+                          <th className="border-b border-[#e8efeb] px-[18px] py-3.5 text-left align-middle font-semibold max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="row"><strong className="block text-[11px]">{item.name}</strong></th>
+                          <td className="border-b border-[#e8efeb] px-[18px] py-3.5 text-center align-middle max-[820px]:px-3.5 max-[820px]:py-[13px]" aria-label={item.tumbuh ? "Termasuk" : "Tidak tersedia"}>{item.tumbuh ? <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[var(--green-700)] [&>svg]:shrink-0"><Icon name="check" size={15}/> <span className="max-[820px]:hidden">Termasuk</span></span> : <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[#a7b0ab] [&>svg]:shrink-0"><Icon name="x" size={15}/><span className="max-[820px]:hidden">-</span></span>}</td>
+                          <td className="border-b border-[#e8efeb] px-[18px] py-3.5 text-center align-middle max-[820px]:px-3.5 max-[820px]:py-[13px]" aria-label={item.bisnis ? "Termasuk" : "Tidak tersedia"}>{item.bisnis ? <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[var(--green-700)] [&>svg]:shrink-0"><Icon name="check" size={15}/> <span className="max-[820px]:hidden">Termasuk</span></span> : <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[#a7b0ab] [&>svg]:shrink-0"><Icon name="x" size={15}/><span className="max-[820px]:hidden">-</span></span>}</td>
                         </tr>
                       ))}
                     </Fragment>
@@ -356,7 +369,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl, 
                 </tbody>
               </table>
             </div>
-            <div className="comparison-legend"><span><Icon name="check" size={14}/> Termasuk dalam paket</span><span><Icon name="x" size={14}/> Tidak tersedia</span></div>
+            <div className="mt-[13px] flex justify-end gap-[18px] text-[10px] text-[#afd0c2] max-[820px]:justify-start max-[820px]:gap-3 max-[820px]:text-[9px] [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[5px] [&>span:first-child_svg]:text-[#87dfb4] [&>span:last-child_svg]:text-[#a7b0ab]"><span><Icon name="check" size={14}/> Termasuk dalam paket</span><span><Icon name="x" size={14}/> Tidak tersedia</span></div>
           </div>
           <div className="container pricing-footnote" data-reveal><Icon name="shield" size={17}/><span>Harga berlaku untuk satu tahun. Silakan konfirmasikan ketentuan pajak dan ketersediaan fitur sebelum berlangganan.</span></div>
         </section>
