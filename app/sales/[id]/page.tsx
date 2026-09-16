@@ -1,9 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, Ban } from "lucide-react";
 import { db } from "@/db";
 import { business, outlet, sale, saleItem, user } from "@/db/schema";
-import { getMembership, requireSession } from "@/lib/auth-session";
+import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
 import { PrintButton } from "@/components/print-button";
+import { VoidSaleButton } from "@/components/void-sale-button";
 
 export default async function SaleReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireSession();
@@ -15,6 +17,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
     .select({
       id: sale.id,
       invoiceNumber: sale.invoiceNumber,
+      status: sale.status,
       subtotal: sale.subtotal,
       discount: sale.discount,
       total: sale.total,
@@ -36,36 +39,152 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
   if (!receipt) notFound();
   const items = await db.select().from(saleItem).where(eq(saleItem.saleId, receipt.id)).orderBy(saleItem.createdAt);
   const money = (value: number) => `Rp ${Number(value).toLocaleString("id-ID")}`;
+  const isVoided = receipt.status === "voided";
+  const userCanVoid = canManageBusiness(membership.role);
 
   return (
-    <main className="min-h-dvh bg-[#f4faf7] px-4 py-8 text-[#15211d]">
-      <div className="mx-auto max-w-xl">
-        <div className="mb-4 flex items-center justify-between print:hidden">
-          <a href="/pos" className="text-sm font-bold text-[#198760]">← Kembali ke kasir</a>
-          <PrintButton />
+    <main className="min-h-dvh bg-[#f4faf7] px-4 py-8 text-[#15211d] print:bg-white print:p-0 print:m-0">
+      <style>{`
+        @media print {
+          @page {
+            size: auto;
+            margin: 0mm;
+          }
+          body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .thermal-receipt {
+            width: 100% !important;
+            margin: 0 auto !important;
+            padding: 6px 8px !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+          }
+          html[data-receipt-paper="58mm"] .thermal-receipt {
+            max-width: 58mm !important;
+            font-size: 11px !important;
+            line-height: 1.25 !important;
+          }
+          html[data-receipt-paper="80mm"] .thermal-receipt {
+            max-width: 80mm !important;
+            font-size: 13px !important;
+            line-height: 1.35 !important;
+          }
+        }
+      `}</style>
+
+      <div className="mx-auto max-w-xl print:max-w-none print:w-full print:m-0 print:p-0">
+        {/* Header Action Bar */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <a
+            href="/pos"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#198760] transition hover:text-[#14714f]"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Kembali ke kasir</span>
+          </a>
+
+          <div className="flex items-center gap-2">
+            <VoidSaleButton
+              saleId={receipt.id}
+              invoiceNumber={receipt.invoiceNumber}
+              isVoided={isVoided}
+              canVoid={userCanVoid}
+            />
+            <PrintButton />
+          </div>
         </div>
-        <article className="rounded-2xl border border-[#dfe8e3] bg-white p-7 shadow-[0_8px_24px_rgba(16,65,48,.06)] print:border-0 print:shadow-none">
-          <header className="border-b border-dashed border-[#cddbd3] pb-5 text-center">
-            <h1 className="text-2xl font-extrabold">waze<span className="text-[#198760]">POS</span></h1>
-            <p className="mt-2 text-sm font-bold">{receipt.businessName}</p>
+
+        {/* Struk Card / Thermal Paper */}
+        <article
+          className={`thermal-receipt relative rounded-2xl border bg-white p-7 shadow-[0_8px_24px_rgba(16,65,48,.06)] transition ${
+            isVoided ? "border-rose-300 bg-rose-50/20" : "border-[#dfe8e3]"
+          }`}
+        >
+          {/* Stempel VOID jika status transaksi voided */}
+          {isVoided && (
+            <div className="mb-4 rounded-xl border-2 border-dashed border-rose-500 bg-rose-50/80 px-4 py-2.5 text-center text-rose-700">
+              <div className="flex items-center justify-center gap-1.5 font-black text-sm uppercase tracking-wider">
+                <Ban className="size-4" />
+                <span>Transaksi Telah Dibatalkan (VOID)</span>
+              </div>
+              <p className="m-0 mt-0.5 text-[10px] text-rose-600">
+                Stok produk telah dikembalikan dan nominal tidak dihitung ke omzet gerai.
+              </p>
+            </div>
+          )}
+
+          <header className="border-b border-dashed border-[#cddbd3] pb-4 text-center">
+            <h1 className="text-xl font-extrabold tracking-tight">
+              waze<span className="text-[#198760]">POS</span>
+            </h1>
+            <p className="mt-1 text-sm font-bold">{receipt.businessName}</p>
             <p className="m-0 text-xs text-[#627069]">{receipt.outletName}</p>
           </header>
-          <div className="flex justify-between gap-4 border-b border-dashed border-[#cddbd3] py-4 text-xs text-[#627069]">
-            <div><p className="m-0 font-bold text-[#15211d]">{receipt.invoiceNumber}</p><p className="m-0 mt-1">{new Date(receipt.createdAt).toLocaleString("id-ID")}</p></div>
-            <div className="text-right"><p className="m-0">Kasir</p><p className="m-0 font-bold text-[#15211d]">{receipt.cashierName}</p></div>
+
+          <div className="flex justify-between gap-4 border-b border-dashed border-[#cddbd3] py-3 text-xs text-[#627069]">
+            <div>
+              <p className={`m-0 font-bold ${isVoided ? "line-through text-rose-600" : "text-[#15211d]"}`}>
+                {receipt.invoiceNumber}
+              </p>
+              <p className="m-0 mt-0.5">{new Date(receipt.createdAt).toLocaleString("id-ID")}</p>
+            </div>
+            <div className="text-right">
+              <p className="m-0">Kasir</p>
+              <p className="m-0 font-bold text-[#15211d]">{receipt.cashierName}</p>
+            </div>
           </div>
-          <div className="space-y-3 py-5">
-            {items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><div><p className="m-0 font-semibold">{item.productName}</p><p className="m-0 text-xs text-[#627069]">{item.quantity} × {money(item.unitPrice)}</p></div><strong>{money(item.subtotal)}</strong></div>)}
+
+          <div className="space-y-2.5 py-4">
+            {items.map((item) => (
+              <div key={item.id} className="flex justify-between gap-4 text-xs sm:text-sm">
+                <div>
+                  <p className="m-0 font-semibold">{item.productName}</p>
+                  <p className="m-0 text-xs text-[#627069]">
+                    {item.quantity} × {money(item.unitPrice)}
+                  </p>
+                </div>
+                <strong className={isVoided ? "text-[#8b9991]" : "text-[#15211d]"}>
+                  {money(item.subtotal)}
+                </strong>
+              </div>
+            ))}
           </div>
-          <div className="space-y-2 border-t border-dashed border-[#cddbd3] pt-4 text-sm">
-            <div className="flex justify-between"><span>Subtotal</span><strong>{money(receipt.subtotal)}</strong></div>
-            <div className="flex justify-between"><span>Diskon</span><strong>{money(receipt.discount)}</strong></div>
-            <div className="flex justify-between text-lg font-extrabold"><span>Total</span><strong className="text-[#198760]">{money(receipt.total)}</strong></div>
+
+          <div className="space-y-1.5 border-t border-dashed border-[#cddbd3] pt-3 text-xs sm:text-sm">
+            <div className="flex justify-between text-[#627069]">
+              <span>Subtotal</span>
+              <strong className="text-[#15211d]">{money(receipt.subtotal)}</strong>
+            </div>
+
+            {receipt.discount > 0 && (
+              <div className="flex justify-between text-[#627069]">
+                <span>Diskon</span>
+                <strong className="text-[#de232c]">-{money(receipt.discount)}</strong>
+              </div>
+            )}
+
+            <div className="flex justify-between text-base font-extrabold pt-1">
+              <span>Total</span>
+              <strong className={isVoided ? "text-rose-600 line-through" : "text-[#198760]"}>
+                {money(receipt.total)}
+              </strong>
+            </div>
+
             {receipt.paymentMethod === "qris" ? (
               <>
                 <div className="flex justify-between pt-2 text-[#627069]">
                   <span className="font-bold text-[#de232c] flex items-center gap-1">QRIS DIGITAL</span>
-                  <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-extrabold text-emerald-700">LUNAS</span>
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-extrabold ${isVoided ? "bg-rose-100 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
+                    {isVoided ? "VOID" : "LUNAS"}
+                  </span>
                 </div>
                 <div className="flex justify-between text-xs text-[#627069]">
                   <span>Nominal Pas</span>
@@ -75,7 +194,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
             ) : (
               <>
                 <div className="flex justify-between pt-2 text-[#627069]">
-                  <span>{receipt.paymentMethod.toUpperCase()}</span>
+                  <span className="font-semibold uppercase">{receipt.paymentMethod}</span>
                   <span>Dibayar {money(receipt.paidAmount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-[#198760]">
@@ -85,7 +204,11 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               </>
             )}
           </div>
-          <p className="m-0 mt-7 border-t border-dashed border-[#cddbd3] pt-5 text-center text-xs text-[#627069]">Terima kasih sudah berbelanja.</p>
+
+          <footer className="m-0 mt-5 border-t border-dashed border-[#cddbd3] pt-4 text-center text-xs text-[#627069]">
+            <p className="m-0">Terima kasih sudah berbelanja.</p>
+            <p className="m-0 mt-1 text-[10px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
+          </footer>
         </article>
       </div>
     </main>
