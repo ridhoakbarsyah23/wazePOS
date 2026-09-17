@@ -28,6 +28,28 @@ npm run dev
 
 Buka `http://localhost:3000`.
 
+## Deploy ke Vercel untuk testing
+
+Gunakan PostgreSQL cloud, misalnya Supabase. Di Supabase buka **Connect**, pilih
+connection string **Transaction pooler** (port `6543`) atau **Session pooler**
+(port `5432`), lalu salin URL PostgreSQL-nya. Pastikan URL tersebut menyertakan
+`sslmode=require`.
+
+Tambahkan environment variables berikut di Vercel pada environment **Production**
+dan **Preview**:
+
+```env
+DATABASE_URL=postgresql://postgres....?sslmode=require
+BETTER_AUTH_SECRET=secret-acak-minimal-32-karakter
+BETTER_AUTH_URL=https://waze-pos.vercel.app
+NEXT_PUBLIC_SITE_URL=https://waze-pos.vercel.app
+```
+
+Script `vercel-build` menjalankan `npm run db:migrate` sebelum build, sehingga
+schema database Supabase dibuat atau diperbarui otomatis saat deployment.
+Setelah env disimpan, lakukan **Redeploy** tanpa build cache, lalu tes `/register`
+dan `/login`.
+
 Sebelum menjalankan migration, nyalakan PostgreSQL lokal dan isi secret autentikasi:
 
 ```bash
