@@ -8,7 +8,9 @@ import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
-export default async function ReportsPage() {
+export default async function ReportsPage({ searchParams }: {
+  searchParams: Promise<{ outlet?: string }>;
+}) {
   const session = await requireSession();
   const membership = await getMembership(session.user.id);
   if (!membership) redirect("/onboarding");
@@ -41,6 +43,21 @@ export default async function ReportsPage() {
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
 
+  const outlets = await db
+    .select({ id: outlet.id, name: outlet.name })
+    .from(outlet)
+    .where(eq(outlet.businessId, membership.businessId))
+    .orderBy(outlet.name);
+  const requestedOutletId = (await searchParams).outlet;
+  const activeOutlet = outlets.find((item) => item.id === requestedOutletId) ?? null;
+  const reportOutlets = [{ id: "all", name: "Semua Gerai" }, ...outlets];
+  const reportFilters = [
+    eq(sale.businessId, membership.businessId),
+    gte(sale.createdAt, start),
+    lt(sale.createdAt, end),
+    ...(activeOutlet ? [eq(sale.outletId, activeOutlet.id)] : []),
+  ];
+
   const [sales, topProducts, voidedSales] = await Promise.all([
     db
       .select({
@@ -55,10 +72,8 @@ export default async function ReportsPage() {
       .innerJoin(outlet, eq(outlet.id, sale.outletId))
       .where(
         and(
-          eq(sale.businessId, membership.businessId),
+          ...reportFilters,
           eq(sale.status, "completed"),
-          gte(sale.createdAt, start),
-          lt(sale.createdAt, end)
         )
       )
       .orderBy(desc(sale.createdAt)),
@@ -73,10 +88,8 @@ export default async function ReportsPage() {
       .innerJoin(sale, eq(sale.id, saleItem.saleId))
       .where(
         and(
-          eq(sale.businessId, membership.businessId),
+          ...reportFilters,
           eq(sale.status, "completed"),
-          gte(sale.createdAt, start),
-          lt(sale.createdAt, end)
         )
       )
       .groupBy(saleItem.productName)
@@ -96,10 +109,8 @@ export default async function ReportsPage() {
       .innerJoin(outlet, eq(outlet.id, sale.outletId))
       .where(
         and(
-          eq(sale.businessId, membership.businessId),
+          ...reportFilters,
           eq(sale.status, "voided"),
-          gte(sale.createdAt, start),
-          lt(sale.createdAt, end)
         )
       )
       .orderBy(desc(sale.createdAt)),
@@ -115,6 +126,9 @@ export default async function ReportsPage() {
     <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
       <AppHeader
         businessName={membership.businessName}
+        outletName={activeOutlet?.name ?? "Semua Gerai"}
+        outlets={reportOutlets}
+        activeOutletId={activeOutlet?.id ?? "all"}
         role={membership.role}
         trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       />

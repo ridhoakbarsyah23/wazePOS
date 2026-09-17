@@ -260,7 +260,7 @@ export default async function DashboardPage({ searchParams }: {
                 size="lg"
                 className="h-11 gap-2 rounded-xl bg-gradient-to-r from-[#198760] to-[#126b4d] px-5 text-sm font-bold text-white shadow-md shadow-[#198760]/25 transition-all duration-200 hover:from-[#147554] hover:to-[#0c533b] hover:shadow-lg active:scale-95"
               >
-                <Link href="/pos">
+                <Link href={selectedOutletId === "all" ? "/pos" : `/pos?outlet=${encodeURIComponent(selectedOutletId)}`}>
                   <ShoppingCart className="size-4" />
                   <span>Buka Kasir POS</span>
                 </Link>
@@ -569,7 +569,7 @@ export default async function DashboardPage({ searchParams }: {
               <CardContent className="pt-0">
                 <div className="grid grid-cols-2 gap-2.5">
                   <Link
-                    href="/pos"
+                    href={selectedOutletId === "all" ? "/pos" : `/pos?outlet=${encodeURIComponent(selectedOutletId)}`}
                     className="group flex flex-col justify-between rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/60 to-emerald-100/30 p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-300 active:scale-95"
                   >
                     <span className="grid size-9 place-items-center rounded-lg bg-emerald-600 text-white shadow-sm transition-transform group-hover:scale-105">

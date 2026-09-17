@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -18,6 +18,8 @@ import { LogoutButton } from "@/components/auth/logout-button";
 type AppHeaderProps = {
   businessName: string;
   outletName?: string;
+  outlets?: { id: string; name: string }[];
+  activeOutletId?: string;
   role?: "owner" | "admin" | "cashier";
   trialDaysRemaining?: number | null;
 };
@@ -25,10 +27,14 @@ type AppHeaderProps = {
 export function AppHeader({
   businessName,
   outletName,
+  outlets = [],
+  activeOutletId,
   role = "owner",
   trialDaysRemaining,
 }: AppHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
   const [prevPathname, setPrevPathname] = useState(pathname);
 
@@ -83,6 +89,17 @@ export function AppHeader({
   ];
 
   const visibleNav = navItems.filter((item) => item.roles.includes(role));
+
+  function changeOutlet(nextOutletId: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextOutletId) {
+      params.set("outlet", nextOutletId);
+    } else {
+      params.delete("outlet");
+    }
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#dfe8e3] bg-white/95 backdrop-blur-xl transition-all">
@@ -155,11 +172,15 @@ export function AppHeader({
                 (item.href !== "/dashboard" && pathname.startsWith(item.href));
               const isPendingNav = navigatingTo === item.href;
               const Icon = item.icon;
+              const itemHref =
+                activeOutletId && activeOutletId !== "all"
+                  ? `${item.href}?outlet=${encodeURIComponent(activeOutletId)}`
+                  : item.href;
 
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={itemHref}
                   onClick={() => {
                     if (!isActive) {
                       setNavigatingTo(item.href);
@@ -186,9 +207,29 @@ export function AppHeader({
           </nav>
         </div>
 
-        {/* Right Action: Logout */}
         <div className="flex items-center gap-3">
-          <LogoutButton />
+          {outlets.length > 1 && activeOutletId && (
+            <label className="flex items-center gap-2 text-xs font-bold text-[#627069]">
+              <span className="sr-only">Pilih gerai aktif</span>
+              <select
+                value={activeOutletId}
+                onChange={(event) => changeOutlet(event.target.value)}
+                className="max-w-44 rounded-xl border border-[#dfe8e3] bg-[#f7faf8] px-3 py-2 text-xs font-bold text-[#29453a] outline-none transition focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/20"
+                aria-label="Pilih gerai aktif"
+              >
+                {outlets.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    Gerai: {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {/* Right Action: Logout */}
+          <div className="flex items-center gap-3">
+            <LogoutButton />
+          </div>
         </div>
       </div>
 
@@ -200,11 +241,15 @@ export function AppHeader({
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
           const isPendingNav = navigatingTo === item.href;
           const Icon = item.icon;
+          const itemHref =
+            activeOutletId && activeOutletId !== "all"
+              ? `${item.href}?outlet=${encodeURIComponent(activeOutletId)}`
+              : item.href;
 
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={itemHref}
               onClick={() => {
                 if (!isActive) {
                   setNavigatingTo(item.href);

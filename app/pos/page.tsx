@@ -8,7 +8,9 @@ import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/plans";
 
-export default async function PosPage() {
+export default async function PosPage({ searchParams }: {
+  searchParams: Promise<{ outlet?: string }>;
+}) {
   const session = await requireSession();
   const membership = await getMembership(session.user.id);
   if (!membership) redirect("/onboarding");
@@ -44,7 +46,8 @@ export default async function PosPage() {
     .where(eq(outlet.businessId, membership.businessId))
     .orderBy(outlet.name);
 
-  const activeOutlet = outlets[0];
+  const requestedOutletId = (await searchParams).outlet;
+  const activeOutlet = outlets.find((item) => item.id === requestedOutletId) ?? outlets[0];
   if (!activeOutlet) redirect("/dashboard");
 
   const products = await db
@@ -82,6 +85,8 @@ export default async function PosPage() {
       <AppHeader
         businessName={membership.businessName}
         outletName={activeOutlet.name}
+        outlets={outlets}
+        activeOutletId={activeOutlet.id}
         role={membership.role}
         trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       />
