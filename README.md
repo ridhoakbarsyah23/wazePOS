@@ -60,6 +60,15 @@ Setelah migration berhasil, lakukan **Redeploy** tanpa build cache, lalu tes
 `/register` dan `/login`. Untuk runtime Vercel, `DATABASE_URL` boleh memakai
 Transaction pooler port `6543` setelah schema selesai dibuat.
 
+Untuk memeriksa deployment tanpa membuka secret, akses:
+
+```text
+https://waze-pos.vercel.app/api/health
+```
+
+Response yang sehat memiliki `"ok": true`, `"connected": true`, dan
+`"authTables": true`.
+
 Sebelum menjalankan migration, nyalakan PostgreSQL lokal dan isi secret autentikasi:
 
 ```bash
