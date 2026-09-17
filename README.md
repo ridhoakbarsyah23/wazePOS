@@ -45,10 +45,20 @@ BETTER_AUTH_URL=https://waze-pos.vercel.app
 NEXT_PUBLIC_SITE_URL=https://waze-pos.vercel.app
 ```
 
-Script `vercel-build` menjalankan `npm run db:migrate` sebelum build, sehingga
-schema database Supabase dibuat atau diperbarui otomatis saat deployment.
-Setelah env disimpan, lakukan **Redeploy** tanpa build cache, lalu tes `/register`
-dan `/login`.
+Migration database tidak dijalankan dari `vercel-build`, karena proses build
+Vercel dapat berjalan paralel dan connection pooler mode transaksi tidak cocok
+untuk migration yang membutuhkan koneksi stabil. Jalankan migration satu kali
+secara manual menggunakan connection string **Session pooler** atau **Direct
+connection** dari Supabase:
+
+```powershell
+$env:DATABASE_URL="postgresql://...:5432/postgres?sslmode=require"
+npm run db:migrate:production
+```
+
+Setelah migration berhasil, lakukan **Redeploy** tanpa build cache, lalu tes
+`/register` dan `/login`. Untuk runtime Vercel, `DATABASE_URL` boleh memakai
+Transaction pooler port `6543` setelah schema selesai dibuat.
 
 Sebelum menjalankan migration, nyalakan PostgreSQL lokal dan isi secret autentikasi:
 
