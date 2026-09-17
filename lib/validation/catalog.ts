@@ -89,3 +89,7 @@ export const productUpdateSchema = z
     message: "Harga modal tidak boleh lebih besar dari harga jual.",
     path: ["costPrice"],
   });
+
+export const productDeleteSchema = z.object({
+  confirm: z.literal(true),
+});

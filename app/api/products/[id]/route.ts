@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { category, product } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { canManageBusiness, getMembership } from "@/lib/auth-session";
-import { productUpdateSchema } from "@/lib/validation/catalog";
+import { productDeleteSchema, productUpdateSchema } from "@/lib/validation/catalog";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -52,4 +52,37 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (!updated) return NextResponse.json({ message: "Produk tidak ditemukan." }, { status: 404 });
   return NextResponse.json({ message: "Produk berhasil diperbarui." });
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return NextResponse.json({ message: "Sesi Anda sudah berakhir." }, { status: 401 });
+
+  const membership = await getMembership(session.user.id);
+  if (!membership) return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
+  if (!canManageBusiness(membership.role)) {
+    return NextResponse.json({ message: "Anda tidak memiliki akses untuk mengelola produk." }, { status: 403 });
+  }
+
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ message: "Konfirmasi penghapusan tidak valid." }, { status: 400 });
+  }
+
+  const parsed = productDeleteSchema.safeParse(payload);
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Konfirmasi penghapusan diperlukan." }, { status: 422 });
+  }
+
+  const { id } = await params;
+  const [updated] = await db
+    .update(product)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(and(eq(product.id, id), eq(product.businessId, membership.businessId)))
+    .returning({ id: product.id });
+
+  if (!updated) return NextResponse.json({ message: "Produk tidak ditemukan." }, { status: 404 });
+  return NextResponse.json({ message: "Produk berhasil dinonaktifkan." });
 }
