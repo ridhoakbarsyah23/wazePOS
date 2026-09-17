@@ -36,8 +36,16 @@ export async function GET() {
     );
   } catch (error) {
     console.error("Health check database failure", error);
+    const errorCode =
+      typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
+        ? error.code
+        : "DATABASE_CONNECTION_FAILED";
     return NextResponse.json(
-      { ok: false, environment, database: { connected: false, authTables: false } },
+      {
+        ok: false,
+        environment,
+        database: { connected: false, authTables: false, errorCode },
+      },
       { status: 503 },
     );
   }
