@@ -81,16 +81,15 @@ export default async function PosPage({ searchParams }: {
     .limit(8);
 
   return (
-    <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-      <AppHeader
-        businessName={membership.businessName}
-        outletName={activeOutlet.name}
-        outlets={outlets}
-        activeOutletId={activeOutlet.id}
-        role={membership.role}
-        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
-      />
-      <section className="mx-auto w-[min(1200px,calc(100%-32px))] py-8 animate-page-enter">
+    <AppHeader
+      businessName={membership.businessName}
+      outletName={activeOutlet.name}
+      outlets={outlets}
+      activeOutletId={activeOutlet.id}
+      role={membership.role}
+      trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+    >
+      <section className="mx-auto w-[min(1280px,calc(100%-32px))] py-8 animate-page-enter">
         <span className="section-kicker">Point of Sale</span>
         <h1 className="mt-3 mb-2 text-3xl tracking-[-1.2px]">Mulai transaksi</h1>
         <p className="m-0 text-sm leading-7 text-[#627069]">Pilih produk, masukkan pembayaran, lalu stok akan berkurang otomatis setelah transaksi berhasil.</p>
@@ -167,6 +166,6 @@ export default async function PosPage({ searchParams }: {
           </div>
         </section>
       </section>
-    </main>
+    </AppHeader>
   );
 }
