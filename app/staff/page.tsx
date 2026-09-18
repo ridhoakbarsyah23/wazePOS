@@ -2,9 +2,11 @@ import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { businessMember, user } from "@/db/schema";
+import { Users } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { StaffManager } from "@/components/staff-manager";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
+import { Badge } from "@/components/ui/badge";
 import { canManageStaff, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getPlanLimits, getSubscriptionStatusDetails, normalizePlan, plans } from "@/lib/plans";
 
@@ -60,21 +62,23 @@ export default async function StaffPage() {
   }));
 
   return (
-    <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-      <AppHeader
-        businessName={membership.businessName}
-        role={membership.role}
-        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
-      />
-
-      <section className="mx-auto w-[min(1080px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
-        <span className="section-kicker">Team & Permissions</span>
-        <h1 className="mt-3 mb-2 text-3xl font-extrabold tracking-[-1.2px] text-[#15211d] sm:text-4xl">
-          Manajemen Karyawan
-        </h1>
-        <p className="m-0 max-w-2xl text-sm leading-7 text-[#627069]">
-          Atur peran akun untuk tim Anda. Kasir hanya memiliki akses ke terminal transaksi kasir, sedangkan Admin dapat membantu mengelola katalog dan stok.
-        </p>
+    <AppHeader
+      businessName={membership.businessName}
+      role={membership.role}
+      trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+    >
+      <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
+        <div className="flex flex-col gap-2">
+          <Badge variant="outline" className="w-fit">
+            <Users className="size-3.5" /> Team & Permissions
+          </Badge>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-[-1.2px] text-[#15211d] sm:text-4xl">
+            Manajemen Karyawan
+          </h1>
+          <p className="m-0 text-sm leading-relaxed text-[#627069]">
+            Atur peran akun staf Anda. Kasir memiliki akses fokus ke terminal kasir POS, sedangkan Admin dapat mengelola katalog produk, stok, dan laporan.
+          </p>
+        </div>
 
         <div className="mt-7">
           <StaffManager
@@ -86,6 +90,6 @@ export default async function StaffPage() {
           />
         </div>
       </section>
-    </main>
+    </AppHeader>
   );
 }

@@ -15,6 +15,14 @@ import { SubscriptionPlanManager } from "@/components/subscription-plan-manager"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { db } from "@/db";
 import { subscriptionPayment } from "@/db/schema";
 import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
@@ -69,13 +77,11 @@ export default async function SubscriptionPage({
   const statusLabel = currentSubscription ? statusLabels[currentSubscription.status] : "Tidak tersedia";
 
   return (
-    <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-      <AppHeader
-        businessName={membership.businessName}
-        role={membership.role}
-        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
-      />
-
+    <AppHeader
+      businessName={membership.businessName}
+      role={membership.role}
+      trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+    >
       <div className="mx-auto w-[min(1080px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
         <Button asChild variant="ghost" size="sm" className="mb-5">
           <Link href="/dashboard">
@@ -175,65 +181,67 @@ export default async function SubscriptionPage({
           )}
         </section>
 
-        <section className="mt-7 rounded-2xl border border-[#dfe8e3] bg-white p-6 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-          <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
-              <History className="size-5" />
-            </span>
-            <div>
-              <h2 className="mb-1 text-lg font-extrabold">Riwayat pembayaran</h2>
-              <p className="m-0 text-xs text-[#627069]">Delapan checkout subscription terbaru.</p>
+        <Card className="mt-7">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="grid size-10 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
+                <History className="size-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-extrabold text-[#15211d]">Riwayat pembayaran</h2>
+                <p className="m-0 text-xs text-[#627069]">Delapan checkout subscription terbaru.</p>
+              </div>
             </div>
-          </div>
-          <div className="mt-5 overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-[#e7efea] text-xs uppercase tracking-[0.06em] text-[#627069]">
-                  <th className="px-3 py-3">Order</th>
-                  <th className="px-3 py-3">Paket</th>
-                  <th className="px-3 py-3">Tanggal</th>
-                  <th className="px-3 py-3 text-right">Nominal</th>
-                  <th className="px-3 py-3 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((payment) => (
-                  <tr key={payment.id} className="border-b border-[#f0f4f1]">
-                    <td className="px-3 py-3 font-mono text-xs">{payment.orderId}</td>
-                    <td className="px-3 py-3 font-semibold">{plans[payment.plan].name}</td>
-                    <td className="px-3 py-3 text-[#627069]">
-                      {payment.createdAt.toLocaleDateString("id-ID", { dateStyle: "medium" })}
-                    </td>
-                    <td className="px-3 py-3 text-right font-bold">
-                      Rp {payment.amount.toLocaleString("id-ID")}
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <Badge
-                        variant={
-                          payment.status === "paid"
-                            ? "default"
-                            : payment.status === "pending"
-                            ? "warning"
-                            : "secondary"
-                        }
-                      >
-                        {paymentStatusLabels[payment.status]}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-                {payments.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-[#627069]">
-                      Belum ada pembayaran subscription.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold">Order ID</TableHead>
+                    <TableHead className="font-bold">Paket</TableHead>
+                    <TableHead className="font-bold">Tanggal</TableHead>
+                    <TableHead className="text-right font-bold">Nominal</TableHead>
+                    <TableHead className="text-right font-bold">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-mono text-xs text-[#52645c]">{payment.orderId}</TableCell>
+                      <TableCell className="font-semibold text-[#15211d]">{plans[payment.plan].name}</TableCell>
+                      <TableCell className="text-[#627069]">
+                        {payment.createdAt.toLocaleDateString("id-ID", { dateStyle: "medium" })}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-[#15211d]">
+                        Rp {payment.amount.toLocaleString("id-ID")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge
+                          variant={
+                            payment.status === "paid"
+                              ? "default"
+                              : payment.status === "pending"
+                              ? "warning"
+                              : "secondary"
+                          }
+                        >
+                          {paymentStatusLabels[payment.status]}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {payments.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-[#627069]">
+                        Belum ada pembayaran subscription.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </main>
+    </AppHeader>
   );
 }

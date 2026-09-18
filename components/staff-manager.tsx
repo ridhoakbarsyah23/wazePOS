@@ -4,27 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  CalendarDays,
   CheckCircle2,
   Crown,
   Eye,
   EyeOff,
   Lock,
   Mail,
-  Plus,
   Shield,
   Trash2,
   User,
-  UserCheck,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-type StaffMember = {
+export type StaffMember = {
   id: string;
   userId: string;
   name: string;
@@ -158,21 +166,21 @@ export function StaffManager({
     }
   }
 
-  const roleBadges = {
+  const roleConfigs = {
     owner: {
-      label: "Pemilik Usaha",
+      label: "Owner",
       icon: Crown,
-      className: "bg-[#fef9c3] text-[#854d0e] border-[#fde047]",
+      variant: "default" as const,
     },
     admin: {
       label: "Admin Toko",
       icon: Shield,
-      className: "bg-[#e0f2fe] text-[#0369a1] border-[#bae6fd]",
+      variant: "secondary" as const,
     },
     cashier: {
       label: "Kasir",
       icon: User,
-      className: "bg-[#eaf7f0] text-[#198760] border-[#bfe0d0]",
+      variant: "outline" as const,
     },
   };
 
@@ -226,11 +234,11 @@ export function StaffManager({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-extrabold tracking-[-0.6px] text-[#15211d]">
-              Daftar Karyawan ({staffList.length})
+              Daftar Staf ({staffList.length})
             </h2>
-            <span className="rounded-full bg-[#f0f4f1] px-2.5 py-0.5 text-xs font-bold text-[#556961] border border-[#dfe8e3]">
+            <Badge variant="outline">
               Kuota: {staffList.length} / {maxStaff >= 999 ? "∞" : maxStaff} ({planName})
-            </span>
+            </Badge>
           </div>
           <p className="mt-1 text-xs text-[#627069]">
             Kelola hak akses kasir, admin, dan pemilik usaha.
@@ -243,7 +251,15 @@ export function StaffManager({
             variant={isAdding ? "outline" : "default"}
             size="sm"
           >
-            {isAdding ? "Tutup Formulir" : <><UserPlus className="size-4" /> Tambah Karyawan</>}
+            {isAdding ? (
+              <>
+                <X className="size-4" /> Tutup Formulir
+              </>
+            ) : (
+              <>
+                <UserPlus className="size-4" /> Tambah Karyawan
+              </>
+            )}
           </Button>
         ) : (
           <Button asChild variant="outline" size="sm" className="border-amber-300 text-amber-800 hover:bg-amber-50">
@@ -254,7 +270,7 @@ export function StaffManager({
 
       {/* Form Tambah Karyawan */}
       {isAdding && !isQuotaReached && (
-        <Card className="border-[#cfe3d9] bg-[#fbfdfc] shadow-sm">
+        <Card className="border-[#63b792]/40 bg-[#f9fcfa] shadow-sm animate-in fade-in duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <UserPlus className="size-4 text-[#198760]" /> Tambah Akun Karyawan Baru
@@ -267,7 +283,7 @@ export function StaffManager({
             <form onSubmit={handleAddStaff} className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="staff-name" className="text-xs font-bold flex items-center gap-1.5">
-                  <User className="size-3.5 text-[#198760]" /> Nama Lengkap
+                  <User className="size-3.5 text-[#198760]" /> Nama Lengkap *
                 </Label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -287,7 +303,7 @@ export function StaffManager({
 
               <div className="space-y-1.5">
                 <Label htmlFor="staff-email" className="text-xs font-bold flex items-center gap-1.5">
-                  <Mail className="size-3.5 text-[#198760]" /> Alamat Email
+                  <Mail className="size-3.5 text-[#198760]" /> Alamat Email *
                 </Label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -308,7 +324,7 @@ export function StaffManager({
 
               <div className="space-y-1.5">
                 <Label htmlFor="staff-password" className="text-xs font-bold flex items-center gap-1.5">
-                  <Lock className="size-3.5 text-[#198760]" /> Kata Sandi Awal
+                  <Lock className="size-3.5 text-[#198760]" /> Kata Sandi Awal *
                 </Label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -344,7 +360,7 @@ export function StaffManager({
 
               <div className="space-y-1.5">
                 <Label htmlFor="staff-role" className="text-xs font-bold flex items-center gap-1.5">
-                  <Shield className="size-3.5 text-[#198760]" /> Peran / Hak Akses
+                  <Shield className="size-3.5 text-[#198760]" /> Peran / Hak Akses *
                 </Label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -354,7 +370,7 @@ export function StaffManager({
                     id="staff-role"
                     value={role}
                     onChange={(e) => setRole(e.target.value as "admin" | "cashier")}
-                    className="h-11 w-full rounded-xl border border-[#dbe5df] bg-white pl-9 pr-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+                    className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-9 pr-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
                     disabled={pending}
                   >
                     <option value="cashier">Kasir (Hanya Akses Terminal POS)</option>
@@ -365,7 +381,7 @@ export function StaffManager({
                 </div>
               </div>
 
-              <div className="sm:col-span-2 pt-2 flex justify-end gap-2">
+              <div className="sm:col-span-2 pt-2 flex justify-end gap-2 border-t border-[#e2ece6]">
                 <Button
                   type="button"
                   variant="ghost"
@@ -384,99 +400,133 @@ export function StaffManager({
         </Card>
       )}
 
-      {/* Staff Cards List */}
-      <div className="grid gap-3">
-        {staffList.map((member) => {
-          const badgeConfig = roleBadges[member.role] ?? roleBadges.cashier;
-          const RoleIcon = badgeConfig.icon;
-          const isCurrentUser = member.userId === currentUserId;
+      {/* Staff Table */}
+      <Card>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-bold">Karyawan</TableHead>
+                <TableHead className="font-bold">Alamat Email</TableHead>
+                <TableHead className="text-center font-bold">Peran Akses</TableHead>
+                <TableHead className="font-bold">Bergabung</TableHead>
+                <TableHead className="text-right font-bold">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {staffList.map((member) => {
+                const config = roleConfigs[member.role] ?? roleConfigs.cashier;
+                const RoleIcon = config.icon;
+                const isCurrentUser = member.userId === currentUserId;
 
-          return (
-            <Card key={member.id} className="transition-all hover:border-[#cde0d5]">
-              <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5">
-                <div className="flex items-center gap-3.5">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#eaf7f0] text-base font-extrabold text-[#198760]">
-                    {member.name.slice(0, 1).toUpperCase()}
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <strong className="text-sm text-[#15211d]">{member.name}</strong>
-                      {isCurrentUser && (
-                        <span className="rounded-md bg-[#edf2ee] px-1.5 py-0.5 text-[10px] font-bold text-[#627069]">
-                          Anda
+                return (
+                  <TableRow key={member.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eaf7f0] text-sm font-extrabold text-[#198760]">
+                          {member.name.slice(0, 1).toUpperCase()}
                         </span>
-                      )}
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#627069]">
-                      <span className="flex items-center gap-1">
-                        <Mail className="size-3" /> {member.email}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-sm text-[#15211d]">{member.name}</span>
+                            {isCurrentUser && (
+                              <Badge variant="secondary" className="text-[10px] px-1 py-0 font-bold">
+                                Anda
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
 
-                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${badgeConfig.className}`}
-                  >
-                    <RoleIcon className="size-3.5" />
-                    <span>{badgeConfig.label}</span>
-                  </span>
+                    <TableCell className="text-xs text-[#52645c]">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="size-3 text-[#758a80]" />
+                        <span>{member.email}</span>
+                      </div>
+                    </TableCell>
 
-                  {/* Role actions for Owner */}
-                  {currentUserRole === "owner" && member.role !== "owner" && (
-                    <div className="flex items-center gap-1.5">
-                      <select
-                        value={member.role}
-                        onChange={(e) => handleChangeRole(member.id, e.target.value as "admin" | "cashier")}
-                        disabled={pending}
-                        className="h-8 rounded-lg border border-[#dbe5df] bg-white px-2 text-xs font-semibold text-[#4d5e57] outline-none"
-                        title="Ubah peran staf"
-                      >
-                        <option value="cashier">Kasir</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                    <TableCell className="text-center">
+                      <Badge variant={config.variant} className="gap-1 inline-flex items-center">
+                        <RoleIcon className="size-3" />
+                        <span>{config.label}</span>
+                      </Badge>
+                    </TableCell>
 
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={pending}
-                        onClick={() => handleDeleteStaff(member.id, member.name)}
-                        className="h-8 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
-                        title="Cabut akses karyawan"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  )}
+                    <TableCell className="text-xs text-[#627069]">
+                      <div className="flex items-center gap-1.5">
+                        <CalendarDays className="size-3 text-[#758a80]" />
+                        <span>
+                          {new Date(member.createdAt).toLocaleDateString("id-ID", {
+                            dateStyle: "medium",
+                          })}
+                        </span>
+                      </div>
+                    </TableCell>
 
-                  {/* Role actions for Admin (only can delete Cashier) */}
-                  {currentUserRole === "admin" && member.role === "cashier" && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => handleDeleteStaff(member.id, member.name)}
-                      className="h-8 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
-                      title="Cabut akses kasir"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {/* Owner can modify non-owner roles */}
+                        {currentUserRole === "owner" && member.role !== "owner" && (
+                          <>
+                            <select
+                              value={member.role}
+                              onChange={(e) =>
+                                handleChangeRole(member.id, e.target.value as "admin" | "cashier")
+                              }
+                              disabled={pending}
+                              className="h-8 rounded-lg border border-[#dbe5df] bg-white px-2 text-xs font-semibold text-[#4d5e57] outline-none"
+                              title="Ubah peran"
+                            >
+                              <option value="cashier">Kasir</option>
+                              <option value="admin">Admin</option>
+                            </select>
 
-        {staffList.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-[#dfe8e3] p-8 text-center text-sm text-[#627069]">
-            Belum ada staf terdaftar.
-          </div>
-        )}
-      </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={pending}
+                              onClick={() => handleDeleteStaff(member.id, member.name)}
+                              className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
+                              title="Cabut akses"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Admin can remove cashier */}
+                        {currentUserRole === "admin" && member.role === "cashier" && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={pending}
+                            onClick={() => handleDeleteStaff(member.id, member.name)}
+                            className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
+                            title="Cabut akses kasir"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+
+              {staffList.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-[#627069]">
+                    Belum ada staf terdaftar.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   );
 }

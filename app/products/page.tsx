@@ -2,9 +2,11 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { category, outlet, product } from "@/db/schema";
+import { Package } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { ProductManager } from "@/components/product-manager";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
+import { Badge } from "@/components/ui/badge";
 import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
@@ -52,20 +54,28 @@ export default async function ProductsPage() {
   ]);
 
   return (
-    <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-      <AppHeader
-        businessName={membership.businessName}
-        role={membership.role}
-        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
-      />
-      <section className="mx-auto w-[min(1000px,calc(100%-32px))] py-10 animate-page-enter">
-        <span className="section-kicker">Catalog</span>
-        <h1 className="mt-3 mb-2 text-3xl tracking-[-1.2px]">Kelola produk</h1>
-        <p className="m-0 text-sm leading-7 text-[#627069]">Perbarui nama, SKU, kategori, harga, dan status produk tanpa menghapus riwayat transaksi.</p>
-        <section className="mt-7 rounded-2xl border border-[#dfe8e3] bg-white p-6 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
+    <AppHeader
+      businessName={membership.businessName}
+      role={membership.role}
+      trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+    >
+      <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
+        <div className="flex flex-col gap-2">
+          <Badge variant="outline" className="w-fit">
+            <Package className="size-3.5" /> Catalog & Menu
+          </Badge>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-[-1.2px] text-[#15211d] sm:text-4xl">
+            Kelola Produk
+          </h1>
+          <p className="m-0 text-sm leading-relaxed text-[#627069]">
+            Perbarui nama, SKU, kategori, harga jual, dan status aktif produk tanpa menghapus riwayat transaksi lama.
+          </p>
+        </div>
+
+        <div className="mt-7">
           <ProductManager products={products} categories={categories} outlets={outlets} />
-        </section>
+        </div>
       </section>
-    </main>
+    </AppHeader>
   );
 }

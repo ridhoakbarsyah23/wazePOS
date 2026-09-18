@@ -1,10 +1,26 @@
 import { and, desc, eq } from "drizzle-orm";
+import {
+  Boxes,
+  History,
+  SlidersHorizontal,
+  Store,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { StockAdjustmentForm } from "@/components/stock-adjustment-form";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
@@ -63,37 +79,199 @@ export default async function InventoryPage() {
       .innerJoin(outlet, eq(outlet.id, stockMovement.outletId))
       .where(eq(stockMovement.businessId, membership.businessId))
       .orderBy(desc(stockMovement.createdAt))
-      .limit(12),
+      .limit(15),
   ]);
 
+  const lowStockCount = stocks.filter((s) => s.quantity <= s.lowStockThreshold).length;
+
   return (
-    <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-      <AppHeader
-        businessName={membership.businessName}
-        role={membership.role}
-        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
-      />
-      <section className="mx-auto w-[min(1180px,calc(100%-32px))] py-10 animate-page-enter">
-        <span className="section-kicker">Inventory</span>
-        <h1 className="mt-3 mb-2 text-3xl tracking-[-1.2px]">Kelola stok</h1>
-        <p className="m-0 max-w-2xl text-sm leading-7 text-[#627069]">Sesuaikan stok aktual per outlet dan simpan riwayat koreksi agar operasional tetap terlacak.</p>
-        <section className="mt-7 rounded-2xl border border-[#dfe8e3] bg-white p-6 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-          <h2 className="text-lg font-extrabold">Penyesuaian stok</h2>
-          <p className="mt-1 text-sm text-[#627069]">Gunakan saat stock opname atau menerima stok baru.</p>
-          <div className="mt-5"><StockAdjustmentForm outlets={outlets} products={products} /></div>
-        </section>
-        <section className="mt-7 rounded-2xl border border-[#dfe8e3] bg-white p-6 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-          <h2 className="text-lg font-extrabold">Stok per outlet</h2>
-          <div className="mt-4 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b border-[#e7efea] text-[#627069]"><th className="px-3 py-2">Produk</th><th className="px-3 py-2">Outlet</th><th className="px-3 py-2">Stok</th><th className="px-3 py-2">Status</th></tr></thead><tbody>
-            {stocks.map((item) => <tr key={item.id} className="border-b border-[#f0f4f1]"><td className="px-3 py-3 font-semibold">{item.productName}</td><td className="px-3 py-3">{item.outletName}</td><td className="px-3 py-3 font-bold">{item.quantity}</td><td className="px-3 py-3"><span className={`rounded-full px-2 py-1 text-xs font-bold ${item.quantity <= item.lowStockThreshold ? "bg-[#fff0e5] text-[#a35f12]" : "bg-[#eaf7f0] text-[#198760]"}`}>{item.quantity <= item.lowStockThreshold ? "Stok rendah" : "Aman"}</span></td></tr>)}
-            {stocks.length === 0 && <tr><td colSpan={4} className="px-3 py-5 text-[#627069]">Belum ada data stok.</td></tr>}
-          </tbody></table></div>
-        </section>
-        <section className="mt-7 rounded-2xl border border-[#dfe8e3] bg-white p-6 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-          <h2 className="text-lg font-extrabold">Riwayat pergerakan stok</h2>
-          <div className="mt-4 space-y-3">{movements.map((item) => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#f7faf8] px-4 py-3 text-sm"><div><strong>{item.productName}</strong><p className="m-0 text-xs text-[#627069]">{item.outletName} · {item.note ?? "Penyesuaian stok"}</p></div><div className="text-right"><strong>{item.quantity}</strong><p className="m-0 text-xs text-[#627069]">{new Date(item.createdAt).toLocaleString("id-ID")}</p></div></div>)}{movements.length === 0 && <p className="m-0 text-sm text-[#627069]">Belum ada riwayat stok.</p>}</div>
-        </section>
+    <AppHeader
+      businessName={membership.businessName}
+      role={membership.role}
+      trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+    >
+      <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline">
+              <Boxes className="size-3.5" /> Inventory & Stock
+            </Badge>
+            {lowStockCount > 0 && (
+              <Badge variant="warning">
+                {lowStockCount} Produk Perlu Restock
+              </Badge>
+            )}
+          </div>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-[-1.2px] text-[#15211d] sm:text-4xl">
+            Kelola Stok Gerai
+          </h1>
+          <p className="m-0 text-sm leading-relaxed text-[#627069]">
+            Sesuaikan stok fisik aktual per gerai, pantau batas minimum, dan audit riwayat pergerakan stok harian.
+          </p>
+        </div>
+
+        {/* Form Penyesuaian Stok */}
+        <Card className="mt-7">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
+                <SlidersHorizontal className="size-5" />
+              </span>
+              <div>
+                <CardTitle className="text-lg">Penyesuaian Stok (Stock Opname)</CardTitle>
+                <CardDescription className="text-xs">
+                  Gunakan saat menerima kiriman barang baru, penyesuaian fisik berkala, atau retur stok rusak.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <StockAdjustmentForm outlets={outlets} products={products} />
+          </CardContent>
+        </Card>
+
+        {/* Tabel Stok Per Outlet */}
+        <Card className="mt-7">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="grid size-10 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
+                  <Boxes className="size-5" />
+                </span>
+                <div>
+                  <CardTitle className="text-lg">Stok per Gerai</CardTitle>
+                  <CardDescription className="text-xs">
+                    Posisi stok real-time yang tersedia untuk transaksi kasir.
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline">{stocks.length} Baris Stok</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-6 sm:pt-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold">Produk</TableHead>
+                    <TableHead className="font-bold">Gerai</TableHead>
+                    <TableHead className="text-right font-bold">Stok Saat Ini</TableHead>
+                    <TableHead className="text-center font-bold">Status Stok</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stocks.map((item) => {
+                    const isLow = item.quantity <= item.lowStockThreshold;
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-semibold text-[#15211d]">
+                          {item.productName}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-xs text-[#52645c]">
+                            <Store className="size-3 text-[#198760]" />
+                            <span>{item.outletName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold text-base text-[#15211d]">
+                          {item.quantity}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={isLow ? "warning" : "default"}>
+                            {isLow ? "Stok Rendah" : "Aman"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {stocks.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-8 text-center text-[#627069]">
+                        Belum ada data stok produk.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Riwayat Pergerakan Stok */}
+        <Card className="mt-7">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
+                <History className="size-5" />
+              </span>
+              <div>
+                <CardTitle className="text-lg">Riwayat Pergerakan Stok</CardTitle>
+                <CardDescription className="text-xs">
+                  Audit 15 log perubahan stok terakhir (penjualan kasir, penyesuaian manual, atau pembatalan void).
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-6 sm:pt-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold">Produk</TableHead>
+                    <TableHead className="font-bold">Gerai</TableHead>
+                    <TableHead className="font-bold">Tipe & Catatan</TableHead>
+                    <TableHead className="text-right font-bold">Perubahan</TableHead>
+                    <TableHead className="text-right font-bold">Waktu</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {movements.map((item) => {
+                    const isPositive = Number(item.quantity) > 0;
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-semibold text-[#15211d]">
+                          {item.productName}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#52645c]">
+                          {item.outletName}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="text-[10px] uppercase font-bold">
+                              {item.type}
+                            </Badge>
+                            <span className="text-xs text-[#627069]">
+                              {item.note ?? "Pergerakan stok"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold">
+                          <span className={isPositive ? "text-[#198760]" : "text-rose-600"}>
+                            {isPositive ? `+${item.quantity}` : item.quantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-[#627069]">
+                          {new Date(item.createdAt).toLocaleString("id-ID", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {movements.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-[#627069]">
+                        Belum ada riwayat pergerakan stok.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </section>
-    </main>
+    </AppHeader>
   );
 }

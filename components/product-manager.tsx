@@ -1,10 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  Boxes,
+  Check,
+  CheckCircle2,
+  Filter,
+  Package,
+  Pencil,
+  Plus,
+  PowerOff,
+  RefreshCw,
+  Search,
+  Store,
+  Tag,
+  TrendingUp,
+  X,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-type Product = {
+export type Product = {
   id: string;
   name: string;
   sku: string | null;
@@ -15,8 +43,8 @@ type Product = {
   isActive: boolean;
 };
 
-type Category = { id: string; name: string };
-type Outlet = { id: string; name: string };
+export type Category = { id: string; name: string };
+export type Outlet = { id: string; name: string };
 
 const emptyProduct = {
   name: "",
@@ -39,25 +67,71 @@ export function ProductManager({
   categories: Category[];
   outlets: Outlet[];
 }) {
-  const [items, setItems] = useState(products);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [items, setItems] = useState<Product[]>(products);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingItem, setEditingItem] = useState<Product | null>(null);
+
   const [newProduct, setNewProduct] = useState({
     ...emptyProduct,
     outletId: outlets[0]?.id ?? "",
   });
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const [pending, setPending] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    categories.forEach((c) => map.set(c.id, c.name));
+    return map;
+  }, [categories]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesCategory =
+        categoryFilter === "all" ||
+        (categoryFilter === "uncategorized" && !item.categoryId) ||
+        item.categoryId === categoryFilter;
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && item.isActive) ||
+        (statusFilter === "inactive" && !item.isActive);
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [items, searchQuery, categoryFilter, statusFilter]);
+
+  // Margin calculation for create form
+  const newMargin = useMemo(() => {
+    if (newProduct.sellingPrice <= 0) return 0;
+    return Math.round(((newProduct.sellingPrice - newProduct.costPrice) / newProduct.sellingPrice) * 100);
+  }, [newProduct.sellingPrice, newProduct.costPrice]);
+
+  // Margin calculation for edit form
+  const editMargin = useMemo(() => {
+    if (!editingItem || editingItem.sellingPrice <= 0) return 0;
+    return Math.round(((editingItem.sellingPrice - editingItem.costPrice) / editingItem.sellingPrice) * 100);
+  }, [editingItem]);
 
   function updateNewProduct(patch: Partial<typeof emptyProduct>) {
-    setNewProduct((current) => ({ ...current, ...patch }));
+    setNewProduct((prev) => ({ ...prev, ...patch }));
   }
 
-  async function create() {
+  async function handleCreateProduct(e: React.FormEvent) {
+    e.preventDefault();
+    setFeedback(null);
     setPending(true);
-    setMessage(null);
+
     try {
-      const response = await fetch("/api/products", {
+      const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,220 +139,647 @@ export function ProductManager({
           categoryId: newProduct.categoryId || null,
         }),
       });
-      const result = await response.json();
-      if (!response.ok) {
-        setMessage({ type: "error", text: result.message ?? "Produk gagal ditambahkan." });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setFeedback({ type: "error", message: data.message ?? "Produk gagal ditambahkan." });
         return;
       }
+
+      setFeedback({ type: "success", message: data.message ?? "Produk berhasil ditambahkan!" });
+      setIsCreating(false);
+      setNewProduct({
+        ...emptyProduct,
+        outletId: outlets[0]?.id ?? "",
+      });
       window.location.reload();
     } catch {
-      setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
+      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
     } finally {
       setPending(false);
     }
   }
 
-  async function save(item: Product) {
+  async function handleUpdateProduct(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingItem) return;
+
+    setFeedback(null);
     setPending(true);
-    setMessage(null);
+
     try {
-      const response = await fetch(`/api/products/${item.id}`, {
+      const res = await fetch(`/api/products/${editingItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
+        body: JSON.stringify(editingItem),
       });
-      const result = await response.json();
-      if (!response.ok) {
-        setMessage({ type: "error", text: result.message ?? "Produk gagal diperbarui." });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setFeedback({ type: "error", message: data.message ?? "Produk gagal diperbarui." });
         return;
       }
-      setItems((current) => current.map((entry) => (entry.id === item.id ? item : entry)));
-      setEditing(null);
-      setMessage({ type: "success", text: result.message });
+
+      setItems((prev) => prev.map((item) => (item.id === editingItem.id ? editingItem : item)));
+      setEditingItem(null);
+      setFeedback({ type: "success", message: data.message ?? "Produk berhasil diperbarui!" });
     } catch {
-      setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
+      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
     } finally {
       setPending(false);
     }
   }
 
-  async function remove(item: Product) {
-    if (!window.confirm(`Nonaktifkan produk "${item.name}"? Histori transaksi tetap aman.`)) return;
+  async function handleToggleStatus(item: Product) {
+    const nextState = !item.isActive;
+    const confirmMsg = nextState
+      ? `Aktifkan kembali produk "${item.name}"?`
+      : `Nonaktifkan produk "${item.name}"? Histori transaksi tetap aman.`;
 
+    if (!window.confirm(confirmMsg)) return;
+
+    setFeedback(null);
     setPending(true);
-    setMessage(null);
+
     try {
-      const response = await fetch(`/api/products/${item.id}`, {
-        method: "DELETE",
+      const res = await fetch(`/api/products/${item.id}`, {
+        method: nextState ? "PATCH" : "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: true }),
+        body: JSON.stringify(nextState ? { isActive: true } : { confirm: true }),
       });
-      const result = await response.json();
-      if (!response.ok) {
-        setMessage({ type: "error", text: result.message ?? "Produk gagal dinonaktifkan." });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setFeedback({ type: "error", message: data.message ?? "Gagal mengubah status produk." });
         return;
       }
-      setItems((current) =>
-        current.map((entry) => (entry.id === item.id ? { ...entry, isActive: false } : entry)),
+
+      setItems((prev) =>
+        prev.map((entry) => (entry.id === item.id ? { ...entry, isActive: nextState } : entry))
       );
-      setMessage({ type: "success", text: result.message });
+      setFeedback({ type: "success", message: data.message });
     } catch {
-      setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
+      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
     } finally {
       setPending(false);
     }
-  }
-
-  function update(id: string, patch: Partial<Product>) {
-    setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, ...patch } : item)),
-    );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-extrabold">Daftar produk</h2>
-          <p className="mt-1 text-sm text-[#627069]">
-            Tambah, ubah, atau nonaktifkan menu tanpa menghapus histori transaksi.
-          </p>
-        </div>
-        <Button type="button" size="sm" onClick={() => setCreating((current) => !current)}>
-          {creating ? "Tutup Form" : "Tambah Produk"}
-        </Button>
-      </div>
-
-      {creating && (
-        <div className="rounded-xl border border-[#cfe3d9] bg-[#f7faf8] p-4">
-          <div className="grid gap-3 md:grid-cols-2">
-            <Input
-              value={newProduct.name}
-              onChange={(event) => updateNewProduct({ name: event.target.value })}
-              placeholder="Nama produk"
-            />
-            <Input
-              value={newProduct.sku}
-              onChange={(event) => updateNewProduct({ sku: event.target.value })}
-              placeholder="SKU (opsional)"
-            />
-            <select
-              value={newProduct.categoryId}
-              onChange={(event) => updateNewProduct({ categoryId: event.target.value })}
-              className="h-11 rounded-xl border border-[#dbe5df] bg-white px-3 text-sm"
-            >
-              <option value="">Tanpa kategori</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={newProduct.outletId}
-              onChange={(event) => updateNewProduct({ outletId: event.target.value })}
-              className="h-11 rounded-xl border border-[#dbe5df] bg-white px-3 text-sm"
-            >
-              <option value="" disabled>
-                Pilih gerai
-              </option>
-              {outlets.map((outlet) => (
-                <option key={outlet.id} value={outlet.id}>
-                  {outlet.name}
-                </option>
-              ))}
-            </select>
-            <Input
-              value={newProduct.sellingPrice}
-              onChange={(event) => updateNewProduct({ sellingPrice: Number(event.target.value) })}
-              type="number"
-              min="0"
-              placeholder="Harga jual"
-            />
-            <Input
-              value={newProduct.costPrice}
-              onChange={(event) => updateNewProduct({ costPrice: Number(event.target.value) })}
-              type="number"
-              min="0"
-              placeholder="Harga modal"
-            />
-            <Input
-              value={newProduct.initialStock}
-              onChange={(event) => updateNewProduct({ initialStock: Number(event.target.value) })}
-              type="number"
-              min="0"
-              placeholder="Stok awal"
-            />
-            <Input
-              value={newProduct.lowStockThreshold}
-              onChange={(event) => updateNewProduct({ lowStockThreshold: Number(event.target.value) })}
-              type="number"
-              min="0"
-              placeholder="Batas stok minimum"
-            />
-            <label className="flex items-center gap-2 text-sm font-semibold md:col-span-2">
-              <input
-                type="checkbox"
-                checked={newProduct.trackStock}
-                onChange={(event) => updateNewProduct({ trackStock: event.target.checked })}
-              />
-              Pantau stok produk ini
-            </label>
-            <div className="flex gap-2 md:col-span-2">
-              <Button type="button" disabled={pending || outlets.length === 0} onClick={create}>
-                Simpan Produk
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setCreating(false)}>
-                Batal
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Alert Feedback */}
+      {feedback && (
+        <div
+          role="status"
+          className={`flex items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${
+            feedback.type === "success"
+              ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]"
+              : "border-[#f2d4b9] bg-[#fff0e5] text-[#a35f12]"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckCircle2 className="size-5 shrink-0 text-[#198760]" />
+          ) : (
+            <AlertTriangle className="size-5 shrink-0 text-[#a35f12]" />
+          )}
+          <span>{feedback.message}</span>
         </div>
       )}
 
-      {items.map((item) => {
-        const isEditing = editing === item.id;
-        return (
-          <div key={item.id} className="rounded-xl border border-[#e5eee8] bg-[#f7faf8] p-4">
-            {isEditing ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                <Input value={item.name} onChange={(event) => update(item.id, { name: event.target.value })} placeholder="Nama produk" />
-                <Input value={item.sku ?? ""} onChange={(event) => update(item.id, { sku: event.target.value })} placeholder="SKU" />
-                <select value={item.categoryId ?? ""} onChange={(event) => update(item.id, { categoryId: event.target.value || null })} className="h-11 rounded-xl border border-[#dbe5df] bg-white px-3 text-sm">
-                  <option value="">Tanpa kategori</option>
-                  {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-                </select>
-                <Input value={item.sellingPrice} onChange={(event) => update(item.id, { sellingPrice: Number(event.target.value) })} type="number" min="0" placeholder="Harga jual" />
-                <Input value={item.costPrice} onChange={(event) => update(item.id, { costPrice: Number(event.target.value) })} type="number" min="0" placeholder="Harga modal" />
-                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={item.trackStock} onChange={(event) => update(item.id, { trackStock: event.target.checked })} /> Pantau stok</label>
-                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={item.isActive} onChange={(event) => update(item.id, { isActive: event.target.checked })} /> Produk aktif</label>
-                <div className="flex gap-2 md:col-span-2">
-                  <Button type="button" disabled={pending} onClick={() => save(item)}>Simpan</Button>
-                  <Button type="button" variant="outline" onClick={() => setEditing(null)}>Batal</Button>
-                </div>
+      {/* Action Header & Search Controls */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-extrabold tracking-[-0.6px] text-[#15211d]">
+              Katalog Produk ({items.length})
+            </h2>
+            <Badge variant="outline">
+              {items.filter((i) => i.isActive).length} Aktif
+            </Badge>
+          </div>
+          <p className="mt-1 text-xs text-[#627069]">
+            Kelola menu, varian SKU, harga jual, dan margin keuntungan gerai Anda.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => {
+            setIsCreating(!isCreating);
+            setEditingItem(null);
+          }}
+          variant={isCreating ? "outline" : "default"}
+          size="sm"
+        >
+          {isCreating ? (
+            <>
+              <X className="size-4" /> Tutup Form
+            </>
+          ) : (
+            <>
+              <Plus className="size-4" /> Tambah Produk
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Form Tambah Produk Baru */}
+      {isCreating && (
+        <Card className="border-[#63b792]/40 bg-[#f9fcfa] shadow-sm animate-in fade-in duration-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="size-4 text-[#198760]" /> Tambah Produk Baru
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Lengkapi detail produk. Produk dapat langsung dijual di kasir setelah disimpan.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateProduct} className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="create-name" className="text-xs font-bold flex items-center gap-1">
+                  <Package className="size-3.5 text-[#198760]" /> Nama Produk *
+                </Label>
+                <Input
+                  id="create-name"
+                  placeholder="Contoh: Kopi Susu Aren"
+                  value={newProduct.name}
+                  onChange={(e) => updateNewProduct({ name: e.target.value })}
+                  required
+                  disabled={pending}
+                />
               </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <strong className="text-sm">{item.name}</strong>
-                  <p className="m-0 mt-1 text-xs text-[#627069]">
-                    {item.sku ?? "Tanpa SKU"} · Rp {Number(item.sellingPrice).toLocaleString("id-ID")}
-                  </p>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="create-sku" className="text-xs font-bold flex items-center gap-1">
+                  <Tag className="size-3.5 text-[#198760]" /> SKU / Barcode (Opsional)
+                </Label>
+                <Input
+                  id="create-sku"
+                  placeholder="Contoh: KSA-001"
+                  value={newProduct.sku}
+                  onChange={(e) => updateNewProduct({ sku: e.target.value })}
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="create-category" className="text-xs font-bold flex items-center gap-1">
+                  <Tag className="size-3.5 text-[#198760]" /> Kategori
+                </Label>
+                <select
+                  id="create-category"
+                  value={newProduct.categoryId}
+                  onChange={(e) => updateNewProduct({ categoryId: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+                  disabled={pending}
+                >
+                  <option value="">Tanpa Kategori</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="create-outlet" className="text-xs font-bold flex items-center gap-1">
+                  <Store className="size-3.5 text-[#198760]" /> Gerai Awal *
+                </Label>
+                <select
+                  id="create-outlet"
+                  value={newProduct.outletId}
+                  onChange={(e) => updateNewProduct({ outletId: e.target.value })}
+                  className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+                  disabled={pending}
+                  required
+                >
+                  {outlets.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="create-price" className="text-xs font-bold">
+                  Harga Jual (Rp) *
+                </Label>
+                <Input
+                  id="create-price"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={newProduct.sellingPrice || ""}
+                  onChange={(e) => updateNewProduct({ sellingPrice: Number(e.target.value) })}
+                  required
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="create-cost" className="text-xs font-bold">
+                    Harga Modal (HPP) (Rp)
+                  </Label>
+                  {newProduct.sellingPrice > 0 && (
+                    <span className="text-[11px] font-bold text-[#198760] flex items-center gap-1">
+                      <TrendingUp className="size-3" /> Margin: {newMargin}%
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="create-cost"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={newProduct.costPrice || ""}
+                  onChange={(e) => updateNewProduct({ costPrice: Number(e.target.value) })}
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="create-stock" className="text-xs font-bold">
+                  Stok Awal
+                </Label>
+                <Input
+                  id="create-stock"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={newProduct.initialStock || ""}
+                  onChange={(e) => updateNewProduct({ initialStock: Number(e.target.value) })}
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="create-threshold" className="text-xs font-bold">
+                  Batas Peringatan Stok Minimum
+                </Label>
+                <Input
+                  id="create-threshold"
+                  type="number"
+                  min="0"
+                  placeholder="5"
+                  value={newProduct.lowStockThreshold || ""}
+                  onChange={(e) => updateNewProduct({ lowStockThreshold: Number(e.target.value) })}
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="create-track"
+                  checked={newProduct.trackStock}
+                  onChange={(e) => updateNewProduct({ trackStock: e.target.checked })}
+                  className="size-4 rounded text-[#198760] focus:ring-[#198760]"
+                  disabled={pending}
+                />
+                <Label htmlFor="create-track" className="text-xs font-bold cursor-pointer text-[#15211d]">
+                  Pantau stok produk ini secara otomatis di kasir
+                </Label>
+              </div>
+
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t border-[#e2ece6]">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsCreating(false)}
+                  disabled={pending}
+                >
+                  Batal
+                </Button>
+                <Button type="submit" size="sm" disabled={pending || outlets.length === 0}>
+                  {pending ? "Menyimpan..." : "Simpan Produk"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Form Edit Produk */}
+      {editingItem && (
+        <Card className="border-[#198760] bg-[#f7fbf9] shadow-md animate-in fade-in duration-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Pencil className="size-4 text-[#198760]" /> Edit Detail Produk
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Mengubah harga atau nama produk tidak akan merusak riwayat invoice yang sudah dicatat.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdateProduct} className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Nama Produk *</Label>
+                <Input
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                  required
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">SKU / Barcode</Label>
+                <Input
+                  value={editingItem.sku ?? ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, sku: e.target.value || null })}
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Kategori</Label>
+                <select
+                  value={editingItem.categoryId ?? ""}
+                  onChange={(e) =>
+                    setEditingItem({ ...editingItem, categoryId: e.target.value || null })
+                  }
+                  className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+                  disabled={pending}
+                >
+                  <option value="">Tanpa Kategori</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold">Harga Jual (Rp) *</Label>
+                  {editingItem.sellingPrice > 0 && (
+                    <span className="text-[11px] font-bold text-[#198760] flex items-center gap-1">
+                      <TrendingUp className="size-3" /> Margin: {editMargin}%
+                    </span>
+                  )}
+                </div>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editingItem.sellingPrice}
+                  onChange={(e) =>
+                    setEditingItem({ ...editingItem, sellingPrice: Number(e.target.value) })
+                  }
+                  required
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Harga Modal (HPP) (Rp)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editingItem.costPrice}
+                  onChange={(e) =>
+                    setEditingItem({ ...editingItem, costPrice: Number(e.target.value) })
+                  }
+                  disabled={pending}
+                />
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="edit-track"
+                    checked={editingItem.trackStock}
+                    onChange={(e) => setEditingItem({ ...editingItem, trackStock: e.target.checked })}
+                    className="size-4 rounded text-[#198760] focus:ring-[#198760]"
+                    disabled={pending}
+                  />
+                  <Label htmlFor="edit-track" className="text-xs font-bold cursor-pointer">
+                    Pantau stok produk ini
+                  </Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${item.isActive ? "bg-[#eaf7f0] text-[#198760]" : "bg-[#f7e7d7] text-[#a35f12]"}`}>
-                    {item.isActive ? "Aktif" : "Nonaktif"}
-                  </span>
-                  <Button type="button" variant="outline" size="sm" onClick={() => setEditing(item.id)}>Edit</Button>
-                  {item.isActive && <button type="button" disabled={pending} onClick={() => remove(item)} className="h-9 rounded-lg border border-rose-200 px-3 text-xs font-bold text-rose-600 disabled:opacity-50">Nonaktifkan</button>}
+                  <input
+                    type="checkbox"
+                    id="edit-active"
+                    checked={editingItem.isActive}
+                    onChange={(e) => setEditingItem({ ...editingItem, isActive: e.target.checked })}
+                    className="size-4 rounded text-[#198760] focus:ring-[#198760]"
+                    disabled={pending}
+                  />
+                  <Label htmlFor="edit-active" className="text-xs font-bold cursor-pointer">
+                    Produk aktif untuk dijual
+                  </Label>
                 </div>
               </div>
-            )}
+
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t border-[#e2ece6]">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingItem(null)}
+                  disabled={pending}
+                >
+                  Batal
+                </Button>
+                <Button type="submit" size="sm" disabled={pending}>
+                  {pending ? "Menyimpan..." : "Simpan Perubahan"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filter & Search Bar */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#71857c]" />
+              <Input
+                placeholder="Cari nama produk atau SKU..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {/* Filter Dropdowns */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <Tag className="size-3.5 text-[#627069]" />
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#15211d] outline-none"
+                >
+                  <option value="all">Semua Kategori</option>
+                  <option value="uncategorized">Tanpa Kategori</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <Filter className="size-3.5 text-[#627069]" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                  className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#15211d] outline-none"
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="active">Aktif Saja</option>
+                  <option value="inactive">Nonaktif Saja</option>
+                </select>
+              </div>
+            </div>
           </div>
-        );
-      })}
-      {items.length === 0 && <p className="text-sm text-[#627069]">Belum ada produk.</p>}
-      {message && <p className={`m-0 text-sm font-semibold ${message.type === "error" ? "text-rose-600" : "text-[#198760]"}`}>{message.text}</p>}
+        </CardContent>
+      </Card>
+
+      {/* Products Table */}
+      <Card>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-bold">Produk</TableHead>
+                <TableHead className="font-bold">Kategori</TableHead>
+                <TableHead className="text-right font-bold">Harga Jual</TableHead>
+                <TableHead className="text-right font-bold">Harga Modal</TableHead>
+                <TableHead className="text-center font-bold">Stok</TableHead>
+                <TableHead className="text-center font-bold">Status</TableHead>
+                <TableHead className="text-right font-bold">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredItems.map((item) => {
+                const categoryName = item.categoryId ? categoryMap.get(item.categoryId) : null;
+                const margin =
+                  item.sellingPrice > 0
+                    ? Math.round(((item.sellingPrice - item.costPrice) / item.sellingPrice) * 100)
+                    : 0;
+
+                return (
+                  <TableRow key={item.id} className={!item.isActive ? "bg-slate-50/60 opacity-75" : ""}>
+                    <TableCell>
+                      <div>
+                        <span className="font-bold text-[#15211d]">{item.name}</span>
+                        {item.sku ? (
+                          <div className="mt-0.5">
+                            <span className="inline-block rounded bg-[#f0f4f1] px-1.5 py-0.5 font-mono text-[10px] text-[#52645c]">
+                              {item.sku}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      {categoryName ? (
+                        <Badge variant="outline" className="font-normal text-xs">
+                          {categoryName}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-[#95a59e]">-</span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-right font-bold text-[#15211d]">
+                      Rp {Number(item.sellingPrice).toLocaleString("id-ID")}
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <span className="text-xs text-[#627069]">
+                        Rp {Number(item.costPrice).toLocaleString("id-ID")}
+                      </span>
+                      {margin > 0 && (
+                        <div className="mt-0.5">
+                          <span className="text-[10px] font-bold text-[#198760]">
+                            +{margin}%
+                          </span>
+                        </div>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {item.trackStock ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf7f0] px-2 py-0.5 text-[11px] font-bold text-[#198760]">
+                          <Boxes className="size-3" /> Dipantau
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[#95a59e]">Manual</span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <Badge variant={item.isActive ? "default" : "secondary"}>
+                        {item.isActive ? "Aktif" : "Nonaktif"}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingItem(item);
+                            setIsCreating(false);
+                          }}
+                          className="h-8 px-2 text-xs text-[#198760] hover:bg-[#eaf7f0]"
+                          title="Edit produk"
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={pending}
+                          onClick={() => handleToggleStatus(item)}
+                          className={`h-8 px-2 text-xs ${
+                            item.isActive
+                              ? "text-rose-600 hover:bg-rose-50"
+                              : "text-emerald-700 hover:bg-emerald-50"
+                          }`}
+                          title={item.isActive ? "Nonaktifkan produk" : "Aktifkan produk"}
+                        >
+                          <PowerOff className="size-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+
+              {filteredItems.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-[#627069]">
+                    <Package className="mx-auto size-8 text-[#95a59e] mb-2" />
+                    <p className="font-semibold text-sm">Tidak ada produk ditemukan.</p>
+                    <p className="text-xs text-[#82928a] mt-1">
+                      {searchQuery || categoryFilter !== "all" || statusFilter !== "all"
+                        ? "Coba ubah kata kunci pencarian atau filter Anda."
+                        : "Klik 'Tambah Produk' untuk mendaftarkan menu perdana gerai Anda."}
+                    </p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   );
 }
