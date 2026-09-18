@@ -1,7 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 import { authInputClass, PasswordField } from "@/components/auth/password-field";
 import { authClient } from "@/lib/auth-client";
 import { loginSchema } from "@/lib/validation/auth";
@@ -10,6 +12,7 @@ type FieldErrors = Partial<Record<"email" | "password", string>>;
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, setIsPending] = useState(false);
@@ -92,10 +95,31 @@ export function LoginForm() {
         onInput={() => clearError("password")}
       />
 
-      <label className="flex w-max cursor-pointer items-center gap-2.5 text-xs font-semibold text-[#5e6d65]">
-        <input name="rememberMe" type="checkbox" defaultChecked disabled={isPending} className="size-4 accent-[#198760]" />
-        Tetap masuk
-      </label>
+      <div className="flex items-center justify-between text-xs">
+        <label className="flex cursor-pointer items-center gap-2 font-semibold text-[#5e6d65]">
+          <input
+            name="rememberMe"
+            type="checkbox"
+            defaultChecked
+            disabled={isPending}
+            className="size-4 accent-[#198760]"
+          />
+          Tetap masuk
+        </label>
+        <Link
+          href="/forgot-password"
+          className="font-bold text-[#198760] hover:text-[#116b4c] hover:underline transition-colors"
+        >
+          Lupa kata sandi?
+        </Link>
+      </div>
+
+      {searchParams.get("reset") === "success" && (
+        <div className="flex items-center gap-2 rounded-xl border border-[#cae8d9] bg-[#eaf7f0] p-3.5 text-xs font-semibold text-[#106348]">
+          <CheckCircle2 className="size-4 shrink-0 text-[#198760]" />
+          <span>Kata sandi berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.</span>
+        </div>
+      )}
 
       {errorMessage && <p className="m-0 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-700" role="alert" aria-live="polite">{errorMessage}</p>}
 

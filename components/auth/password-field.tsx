@@ -10,7 +10,9 @@ type PasswordFieldProps = {
   autoComplete: "current-password" | "new-password";
   disabled: boolean;
   error?: string;
+  value?: string;
   onInput?: () => void;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export const authInputClass = "h-12 w-full rounded-xl border border-[#d9e4de] bg-[#fbfdfc] px-4 text-sm text-[#15211d] outline-none transition placeholder:text-[#9aa69f] hover:border-[#bdd3c7] focus:border-[#198760] focus:bg-white focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:opacity-60";
@@ -30,7 +32,7 @@ function VisibilityIcon({ visible }: { visible: boolean }) {
   );
 }
 
-export function PasswordField({ id, name, label, placeholder, autoComplete, disabled, error, onInput }: PasswordFieldProps) {
+export function PasswordField({ id, name, label, placeholder, autoComplete, disabled, error, value, onInput, onChange }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const [capsLockActive, setCapsLockActive] = useState(false);
   const errorId = `${id}-error`;
@@ -49,9 +51,11 @@ export function PasswordField({ id, name, label, placeholder, autoComplete, disa
           required
           placeholder={placeholder}
           disabled={disabled}
+          value={value}
           aria-invalid={Boolean(error)}
           aria-describedby={[error ? errorId : "", capsLockActive ? capsId : ""].filter(Boolean).join(" ") || undefined}
           onInput={onInput}
+          onChange={onChange}
           onKeyUp={(event) => setCapsLockActive(event.getModifierState("CapsLock"))}
           onBlur={() => setCapsLockActive(false)}
         />
