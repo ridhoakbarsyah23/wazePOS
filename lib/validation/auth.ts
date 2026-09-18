@@ -19,3 +19,18 @@ export const registerSchema = loginSchema
     message: "Konfirmasi kata sandi tidak sama.",
     path: ["confirmPassword"],
   });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Masukkan alamat email yang valid.").trim().toLowerCase(),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, "Token reset kata sandi tidak valid."),
+    password,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Konfirmasi kata sandi tidak sama.",
+    path: ["confirmPassword"],
+  });
