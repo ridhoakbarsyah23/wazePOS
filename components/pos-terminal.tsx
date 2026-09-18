@@ -15,6 +15,9 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { ReceiptModal } from "./receipt-modal";
+import { ReceiptShareData } from "./whatsapp-share-button";
+
 
 type PosProduct = {
   id: string;
@@ -59,6 +62,9 @@ export function PosTerminal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [completedReceipt, setCompletedReceipt] = useState<(ReceiptShareData & { cashierName?: string }) | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+
 
   const categories = useMemo(
     () => ["Semua", ...Array.from(new Set(products.map((item) => item.categoryName ?? "Umum"))).sort()],
@@ -158,6 +164,29 @@ export function PosTerminal({
         setMessage({ type: "error", text: result.message ?? "Transaksi gagal." });
         return;
       }
+      const completedItems = cart.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.sellingPrice,
+        subtotal: item.sellingPrice * item.quantity,
+      }));
+      const activeOutletName = outlets.find((o) => o.id === outletId)?.name ?? "Kasir";
+
+      setCompletedReceipt({
+        businessName,
+        outletName: activeOutletName,
+        invoiceNumber: result.invoiceNumber,
+        createdAt: new Date(),
+        items: completedItems,
+        subtotal: total,
+        total: result.total ?? total,
+        paidAmount: paid,
+        changeAmount: result.changeAmount ?? (paid - total),
+        paymentMethod,
+        saleId: result.saleId,
+      });
+      setShowReceiptModal(true);
+
       setMessage({
         type: "success",
         text:
@@ -169,6 +198,7 @@ export function PosTerminal({
       setCart([]);
       setPaidAmount("");
       setShowQrModal(false);
+
     } catch {
       setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
     } finally {
@@ -230,13 +260,19 @@ export function PosTerminal({
         return;
       }
 
-      // Escape: Close QR modal, clear search, or clear cart
+      // Escape: Close receipt modal, QR modal, clear search, or clear cart
       if (e.key === "Escape") {
+        if (showReceiptModal) {
+          e.preventDefault();
+          setShowReceiptModal(false);
+          return;
+        }
         if (showQrModal) {
           e.preventDefault();
           setShowQrModal(false);
           return;
         }
+
         if (search.length > 0) {
           e.preventDefault();
           setSearch("");
@@ -813,7 +849,18 @@ export function PosTerminal({
           </div>
         </div>
       )}
+
+      {/* SUCCESS RECEIPT MODAL WITH THERMAL PRINT & WHATSAPP */}
+      <ReceiptModal
+        isOpen={showReceiptModal}
+        onClose={() => {
+          setShowReceiptModal(false);
+          searchInputRef.current?.focus();
+        }}
+        receipt={completedReceipt}
+      />
       </div>
     </div>
   );
+
 }

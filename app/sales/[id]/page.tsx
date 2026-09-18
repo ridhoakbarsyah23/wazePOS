@@ -6,6 +6,8 @@ import { business, outlet, sale, saleItem, user } from "@/db/schema";
 import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
 import { PrintButton } from "@/components/print-button";
 import { VoidSaleButton } from "@/components/void-sale-button";
+import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
+
 
 export default async function SaleReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireSession();
@@ -41,6 +43,27 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
   const money = (value: number) => `Rp ${Number(value).toLocaleString("id-ID")}`;
   const isVoided = receipt.status === "voided";
   const userCanVoid = canManageBusiness(membership.role);
+
+  const shareData = {
+    businessName: receipt.businessName,
+    outletName: receipt.outletName,
+    invoiceNumber: receipt.invoiceNumber,
+    createdAt: receipt.createdAt,
+    items: items.map((i) => ({
+      name: i.productName,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+      subtotal: i.subtotal,
+    })),
+    subtotal: receipt.subtotal,
+    discount: receipt.discount,
+    total: receipt.total,
+    paidAmount: receipt.paidAmount,
+    changeAmount: receipt.changeAmount,
+    paymentMethod: receipt.paymentMethod,
+    saleId: receipt.id,
+  };
+
 
   return (
     <main className="min-h-dvh bg-[#f4faf7] px-4 py-8 text-[#15211d] print:bg-white print:p-0 print:m-0">
@@ -98,8 +121,10 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               isVoided={isVoided}
               canVoid={userCanVoid}
             />
+            <WhatsAppShareButton receipt={shareData} />
             <PrintButton />
           </div>
+
         </div>
 
         {/* Struk Card / Thermal Paper */}
