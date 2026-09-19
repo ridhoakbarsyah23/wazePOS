@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { CheckCircle2, MessageSquareShare, Printer, Send, PlusCircle, ArrowRight } from "lucide-react";
+import { createPortal } from "react-dom";
+import { CheckCircle2, MessageSquareShare, Printer, Send, PlusCircle, ArrowRight, X } from "lucide-react";
 import { buildReceiptWhatsAppMessage, ReceiptShareData } from "./whatsapp-share-button";
 
 export type PaperSize = "58mm" | "80mm";
@@ -95,7 +96,10 @@ export function ReceiptModal({
 
   const money = (val: number) => `Rp ${Number(val).toLocaleString("id-ID")}`;
 
-  return (
+  // Portal ke document.body agar #pos-print-root menjadi anak langsung <body>.
+  // CSS print menyembunyikan semua anak body selain #pos-print-root — jika modal
+  // dirender nested di dalam layout, ia ikut ter-hide dan hasil cetak kosong.
+  return createPortal(
     <>
       {/* Printable CSS style specifically for POS print */}
       <style>{`
@@ -115,6 +119,33 @@ export function ReceiptModal({
           /* Hide everything outside modal receipt when printing */
           body > *:not(#pos-print-root) {
             display: none !important;
+          }
+          /* Reset wrapper overlay & kartu modal agar struk tercetak penuh */
+          #pos-print-root {
+            position: static !important;
+            display: block !important;
+            background: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            z-index: auto !important;
+            animation: none !important;
+          }
+          #receipt-print-card,
+          #receipt-print-area {
+            position: static !important;
+            max-width: none !important;
+            max-height: none !important;
+            width: auto !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
           .thermal-receipt-printable {
             display: block !important;
@@ -147,8 +178,21 @@ export function ReceiptModal({
         id="pos-print-root"
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-3 sm:p-4 backdrop-blur-xs animate-fade-in overflow-y-auto"
       >
-        <div className="relative my-auto w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-[#dfe8e3] overflow-hidden">
-          
+        <div
+          id="receipt-print-card"
+          className="relative my-auto w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-[#dfe8e3] overflow-hidden"
+        >
+          {/* Tombol tutup — tidak ikut tercetak */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup struk"
+            title="Tutup (Esc)"
+            className="print-hidden-element absolute right-4 top-4 z-10 grid size-9 place-items-center rounded-full bg-white/90 text-[#627069] shadow-sm border border-[#dfe8e3] backdrop-blur-xs transition hover:bg-[#f0f4f1] hover:text-[#15211d] active:scale-95"
+          >
+            <X className="size-4.5" />
+          </button>
+
           {/* Success Banner */}
           <div className="bg-gradient-to-b from-[#eaf7f0] to-[#f4faf7] p-5 text-center border-b border-[#cae8d9] print-hidden-element">
             <div className="mx-auto grid size-12 place-items-center rounded-full bg-[#198760] text-white shadow-md">
@@ -174,7 +218,7 @@ export function ReceiptModal({
             </div>
           </div>
 
-          <div className="p-5 max-h-[60vh] overflow-y-auto">
+          <div id="receipt-print-area" className="p-5 max-h-[60vh] overflow-y-auto">
             {/* Paper Size selector */}
             <div className="flex items-center justify-between gap-2 mb-3 print-hidden-element">
               <span className="text-xs font-bold text-[#627069]">Pratinjau Kertas Printer:</span>
@@ -341,6 +385,7 @@ export function ReceiptModal({
 
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
