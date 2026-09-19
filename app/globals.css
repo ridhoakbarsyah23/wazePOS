@@ -388,3 +388,46 @@ h1, h2, h3, p { margin-top: 0; }
   will-change: transform;
 }
 
+@keyframes toastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-in {
+  animation: toastIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+@keyframes progress15 {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-progress-15 {
+  animation: progress15 15s linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in,
+  .animate-progress-15 {
+    animation: none;
+  }
+  .animate-progress-15 {
+    width: 100%;
+  }
+}
+
