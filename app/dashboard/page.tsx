@@ -4,10 +4,11 @@ import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
 import { DashboardHeader, PeriodKey } from "@/components/dashboard-header";
 import { DashboardMetrics } from "@/components/dashboard-metrics";
+import { DashboardInsights } from "@/components/dashboard-insights";
 import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
-import { cashShift, category, inventoryStock, outlet, product, sale } from "@/db/schema";
+import { cashShift, category, inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
 import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/plans";
 
@@ -158,6 +159,7 @@ export default async function DashboardPage({
     selectedPeriod === "today"
       ? sql<string>`to_char(timezone('Asia/Jakarta', ${sale.createdAt}), 'HH24')`
       : sql<string>`to_char(timezone('Asia/Jakarta', ${sale.createdAt}), 'YYYY-MM-DD')`;
+  const hourExpression = sql<string>`to_char(timezone('Asia/Jakarta', ${sale.createdAt}), 'HH24')`;
 
   const stockFilters = [
     eq(inventoryStock.businessId, membership.businessId),
@@ -168,7 +170,7 @@ export default async function DashboardPage({
     stockFilters.push(eq(inventoryStock.outletId, selectedOutletId));
   }
 
-  const [currentTotals, previousTotals, trendRows, stockRows, currentShift] = await Promise.all([
+  const [currentTotals, previousTotals, trendRows, stockRows, currentShift, topProductRows, hourlyRows, outletRows] = await Promise.all([
     db
       .select({
         revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
@@ -219,6 +221,50 @@ export default async function DashboardPage({
           )
           .limit(1)
       : Promise.resolve([]),
+    db
+      .select({
+        productId: saleItem.productId,
+        productName: saleItem.productName,
+        quantitySold: sql<number>`COALESCE(SUM(${saleItem.quantity}), 0)::int`,
+        revenue: sql<number>`COALESCE(SUM(${saleItem.subtotal}), 0)::int`,
+        costTotal: sql<number>`COALESCE(SUM(${saleItem.quantity} * ${product.costPrice}), 0)::int`,
+      })
+      .from(saleItem)
+      .innerJoin(sale, eq(sale.id, saleItem.saleId))
+      .innerJoin(product, eq(product.id, saleItem.productId))
+      .where(and(...currentFilters))
+      .groupBy(saleItem.productId, saleItem.productName)
+      .orderBy(sql`SUM(${saleItem.quantity}) DESC`)
+      .limit(5),
+    db
+      .select({
+        bucket: hourExpression,
+        revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
+        transactions: sql<number>`COUNT(*)::int`,
+      })
+      .from(sale)
+      .where(and(...currentFilters))
+      .groupBy(hourExpression),
+    db
+      .select({
+        id: outlet.id,
+        name: outlet.name,
+        revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
+        transactions: sql<number>`COUNT(${sale.id})::int`,
+      })
+      .from(outlet)
+      .leftJoin(
+        sale,
+        and(
+          eq(sale.outletId, outlet.id),
+          eq(sale.status, "completed"),
+          gte(sale.createdAt, periodStart),
+          lt(sale.createdAt, now)
+        )
+      )
+      .where(eq(outlet.businessId, membership.businessId))
+      .groupBy(outlet.id, outlet.name)
+      .orderBy(outlet.name),
   ]);
 
   const currentRevenue = Number(currentTotals[0]?.revenue ?? 0);
@@ -283,6 +329,43 @@ export default async function DashboardPage({
     selectedOutlet?.name ??
     (selectedOutletId === "all" ? "Semua Gerai" : outlets[0]?.name ?? "Gerai Utama");
 
+  const insightTopProducts = topProductRows.map((row) => ({
+    productId: row.productId,
+    productName: row.productName,
+    quantitySold: Number(row.quantitySold),
+    revenue: Number(row.revenue),
+    estimatedProfit: Number(row.revenue) - Number(row.costTotal),
+  }));
+
+  const insightHourPoints = hourlyRows
+    .map((row) => {
+      const hour = Number(row.bucket);
+      return {
+        hour,
+        label: `${row.bucket}.00`,
+        revenue: Number(row.revenue),
+        transactions: Number(row.transactions),
+      };
+    })
+    .sort((a, b) => a.hour - b.hour);
+
+  const insightOutletPerformance =
+    selectedOutletId === "all"
+      ? outletRows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          revenue: Number(row.revenue),
+          transactions: Number(row.transactions),
+        }))
+      : outletRows
+          .filter((row) => row.id === selectedOutletId)
+          .map((row) => ({
+            id: row.id,
+            name: row.name,
+            revenue: Number(row.revenue),
+            transactions: Number(row.transactions),
+          }));
+
   return (
     <AppHeader
       businessName={membership.businessName}
@@ -314,6 +397,14 @@ export default async function DashboardPage({
           currentAov={currentAverage}
           totalStockUnits={totalStock}
           lowStockCount={lowStockCount}
+        />
+
+        {/* Sales Insights: Top Products, Peak Hours, Outlet Comparison */}
+        <DashboardInsights
+          periodLabel={periodLabels[selectedPeriod]}
+          topProducts={insightTopProducts}
+          hourPoints={insightHourPoints}
+          outletPerformance={insightOutletPerformance}
         />
 
         {/* Master Control Workspace: 4 Cohesive Tabs (Overview, Products, Categories, Outlets) */}
