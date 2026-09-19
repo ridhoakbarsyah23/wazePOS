@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -13,14 +13,12 @@ import {
   Package,
   Shield,
   ShoppingCart,
-  Sparkles,
   Store,
   User,
   Users,
   X,
 } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export type AppHeaderProps = {
@@ -33,109 +31,83 @@ export type AppHeaderProps = {
   children?: React.ReactNode;
 };
 
-export function AppHeader({
-  businessName,
-  outletName,
-  outlets = [],
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: Array<"owner" | "admin" | "cashier">;
+  badge: string | null;
+};
+
+const navItems: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
+  {
+    href: "/pos",
+    label: "Kasir POS",
+    icon: ShoppingCart,
+    roles: ["owner", "admin", "cashier"],
+    badge: "Terminal",
+  },
+  {
+    href: "/products",
+    label: "Produk",
+    icon: Package,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
+  {
+    href: "/inventory",
+    label: "Stok",
+    icon: Boxes,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
+  {
+    href: "/reports",
+    label: "Laporan",
+    icon: BarChart3,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
+  {
+    href: "/staff",
+    label: "Karyawan",
+    icon: Users,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
+  {
+    href: "/subscription",
+    label: "Paket",
+    icon: Crown,
+    roles: ["owner"],
+    badge: null,
+  },
+];
+
+function SidebarNavLinks({
+  visibleNav,
+  pathname,
+  navigatingTo,
   activeOutletId,
-  role = "owner",
-  trialDaysRemaining,
-  children,
-}: AppHeaderProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
-
-  // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileOpen(false);
-    setNavigatingTo(null);
-  }, [pathname]);
-
-  const navItems = [
-    {
-      href: "/dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      roles: ["owner", "admin"],
-      badge: null,
-    },
-    {
-      href: "/pos",
-      label: "Kasir POS",
-      icon: ShoppingCart,
-      roles: ["owner", "admin", "cashier"],
-      badge: "Terminal",
-    },
-    {
-      href: "/products",
-      label: "Produk",
-      icon: Package,
-      roles: ["owner", "admin"],
-      badge: null,
-    },
-    {
-      href: "/inventory",
-      label: "Stok",
-      icon: Boxes,
-      roles: ["owner", "admin"],
-      badge: null,
-    },
-    {
-      href: "/reports",
-      label: "Laporan",
-      icon: BarChart3,
-      roles: ["owner", "admin"],
-      badge: null,
-    },
-    {
-      href: "/staff",
-      label: "Karyawan",
-      icon: Users,
-      roles: ["owner", "admin"],
-      badge: null,
-    },
-    {
-      href: "/subscription",
-      label: "Paket",
-      icon: Crown,
-      roles: ["owner"],
-      badge: null,
-    },
-  ];
-
-  const visibleNav = navItems.filter((item) => item.roles.includes(role));
-
-  function changeOutlet(nextOutletId: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (nextOutletId && nextOutletId !== "all") {
-      params.set("outlet", nextOutletId);
-    } else {
-      params.delete("outlet");
-    }
-    const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
-  }
-
-  const roleLabel = {
-    owner: "Pemilik Usaha",
-    admin: "Admin Gerai",
-    cashier: "Kasir",
-  }[role];
-
-  const roleIcon = {
-    owner: Crown,
-    admin: Shield,
-    cashier: User,
-  }[role];
-  const RoleIcon = roleIcon;
-
-  // Sidebar navigation links component
-  const NavLinks = ({ onItemClick }: { onItemClick?: () => void }) => (
-    <nav className="space-y-1.5 px-3 py-2" aria-label="Navigasi Menu">
+  onNavigate,
+  onItemClick,
+}: {
+  visibleNav: NavItem[];
+  pathname: string;
+  navigatingTo: string | null;
+  activeOutletId?: string;
+  onNavigate: (href: string) => void;
+  onItemClick?: () => void;
+}) {
+  return (
+    <nav className="space-y-1 px-3 py-2" aria-label="Navigasi Menu">
       {visibleNav.map((item) => {
         const isActive =
           pathname === item.href ||
@@ -152,18 +124,18 @@ export function AppHeader({
             key={item.href}
             href={itemHref}
             onClick={() => {
-              if (!isActive) setNavigatingTo(item.href);
+              if (!isActive) onNavigate(item.href);
               if (onItemClick) onItemClick();
             }}
-            className={`group relative flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all duration-150 active:scale-[0.98] ${
+            className={`group relative flex items-center justify-between rounded-xl px-3.5 py-2 text-sm font-bold transition-all duration-150 active:scale-[0.98] ${
               isActive
                 ? "bg-[#198760] text-white shadow-md shadow-[#198760]/20 scale-[1.01]"
                 : "text-[#455850] hover:bg-[#eef6f2] hover:text-[#147554]"
             } ${isPendingNav ? "opacity-80 ring-2 ring-[#23a473]/30" : ""}`}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <span
-                className={`grid size-8 place-items-center rounded-lg transition-colors ${
+                className={`grid size-7 place-items-center rounded-lg transition-colors ${
                   isActive
                     ? "bg-white/15 text-white"
                     : "bg-[#f2f7f4] text-[#198760] group-hover:bg-[#198760] group-hover:text-white"
@@ -193,6 +165,70 @@ export function AppHeader({
       })}
     </nav>
   );
+}
+
+export function AppHeader({
+  businessName,
+  outletName,
+  outlets = [],
+  activeOutletId,
+  role = "owner",
+  trialDaysRemaining,
+  children,
+}: AppHeaderProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpenAt, setMobileOpenAt] = useState(pathname);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+
+  // Reset status turunan saat render (pola resmi React "adjusting state when props change"):
+  // drawer tertutup & progress bar dibersihkan begitu pindah halaman.
+  if (mobileOpen && mobileOpenAt !== pathname) {
+    setMobileOpen(false);
+  }
+  if (navigatingTo && navigatingTo !== pathname) {
+    setNavigatingTo(null);
+  }
+
+  const visibleNav = navItems.filter((item) => item.roles.includes(role));
+
+  function handleNavigate(href: string) {
+    setNavigatingTo(href);
+  }
+
+  function openMobileDrawer() {
+    setMobileOpen(true);
+    setMobileOpenAt(pathname);
+  }
+
+  function changeOutlet(nextOutletId: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextOutletId && nextOutletId !== "all") {
+      params.set("outlet", nextOutletId);
+    } else {
+      params.delete("outlet");
+    }
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  }
+
+  const roleLabel = {
+    owner: "Pemilik Usaha",
+    admin: "Admin Gerai",
+    cashier: "Kasir",
+  }[role];
+
+  const roleIcon = {
+    owner: Crown,
+    admin: Shield,
+    cashier: User,
+  }[role];
+  const RoleIcon = roleIcon;
+
+  // Reset status navigasi saat pindah halaman ditangani di atas (render-phase).
 
   return (
     <div className="min-h-dvh flex flex-col lg:flex-row bg-[#f4faf7] text-[#15211d]">
@@ -208,14 +244,14 @@ export function AppHeader({
       {/* ========================================================= */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-40 border-r border-[#dfe8e3] bg-white shadow-[2px_0_12px_rgba(16,65,48,0.03)]">
         {/* Brand Header */}
-        <div className="p-5 pb-4 border-b border-[#edf3f0]">
+        <div className="px-4 py-4 border-b border-[#edf3f0]">
           <Link
             href="/dashboard"
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-95"
             aria-label="Dashboard wazePOS"
           >
-            <span className="grid size-10 place-items-center rounded-xl bg-[#198760] text-white shadow-sm shadow-[#198760]/30">
-              <LayoutDashboard className="size-5" />
+            <span className="grid size-9 place-items-center rounded-xl bg-[#198760] text-white shadow-sm shadow-[#198760]/30">
+              <LayoutDashboard className="size-4.5" />
             </span>
             <div className="min-w-0">
               <span className="block text-lg font-extrabold leading-tight tracking-[-0.6px] text-[#15211d]">
@@ -250,15 +286,21 @@ export function AppHeader({
         </div>
 
         {/* Scrollable Nav Area */}
-        <div className="flex-1 overflow-y-auto py-2">
-          <div className="px-4 py-1 text-[11px] font-bold uppercase tracking-wider text-[#8fa199]">
+        <div className="flex-1 overflow-y-auto py-1.5">
+          <div className="px-4 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-wider text-[#8fa199]">
             Menu Utama
           </div>
-          <NavLinks />
+          <SidebarNavLinks
+            visibleNav={visibleNav}
+            pathname={pathname}
+            navigatingTo={navigatingTo}
+            activeOutletId={activeOutletId}
+            onNavigate={handleNavigate}
+          />
 
           {/* Trial Alert Card in Desktop Sidebar */}
           {typeof trialDaysRemaining === "number" && trialDaysRemaining > 0 && (
-            <div className="p-3 mx-3 mt-4 rounded-xl border border-amber-200/80 bg-linear-to-b from-amber-50 to-orange-50/60 text-amber-900 shadow-xs">
+            <div className="mx-3 mb-3 mt-2 rounded-xl border border-amber-200/80 bg-linear-to-b from-amber-50 to-orange-50/60 p-2.5 text-amber-900 shadow-xs">
               <div className="flex items-center gap-1.5 text-xs font-bold">
                 <span className="flex size-2 rounded-full bg-amber-500 animate-pulse" />
                 <span>Masa Uji Coba Trial</span>
@@ -310,7 +352,7 @@ export function AppHeader({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => openMobileDrawer()}
             className="h-10 w-10 p-0 text-[#15211d] hover:bg-[#eaf7f0]"
             aria-label="Buka menu navigasi"
           >
@@ -371,11 +413,11 @@ export function AppHeader({
           />
 
           {/* Drawer Content */}
-          <div className="relative flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-250">
+          <div className="relative flex w-64 max-w-[84vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-250">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between border-b border-[#edf3f0] p-4">
+            <div className="flex items-center justify-between border-b border-[#edf3f0] px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <span className="grid size-9 place-items-center rounded-xl bg-[#198760] text-white shadow-xs">
+                <span className="grid size-8 place-items-center rounded-xl bg-[#198760] text-white shadow-xs">
                   <LayoutDashboard className="size-4" />
                 </span>
                 <div>
@@ -424,12 +466,19 @@ export function AppHeader({
             )}
 
             {/* Drawer Navigation Links */}
-            <div className="flex-1 overflow-y-auto py-3">
-              <NavLinks onItemClick={() => setMobileOpen(false)} />
+            <div className="flex-1 overflow-y-auto py-2">
+              <SidebarNavLinks
+                visibleNav={visibleNav}
+                pathname={pathname}
+                navigatingTo={navigatingTo}
+                activeOutletId={activeOutletId}
+                onNavigate={handleNavigate}
+                onItemClick={() => setMobileOpen(false)}
+              />
             </div>
 
             {/* Drawer Footer */}
-            <div className="border-t border-[#edf3f0] p-4 bg-[#fafcfb]">
+            <div className="border-t border-[#edf3f0] px-4 py-3 bg-[#fafcfb]">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="m-0 truncate text-xs font-bold text-[#15211d]">

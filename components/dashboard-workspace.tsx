@@ -5,26 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
-  AlertTriangle,
   ArrowRight,
   ArrowUpRight,
   BarChart3,
-  Boxes,
   Building2,
   Check,
   CheckCircle2,
-  ChevronRight,
   Edit2,
   FolderPlus,
-  Layers,
-  LayoutDashboard,
   Loader2,
   LockKeyhole,
   MapPin,
   Package,
   Plus,
   Search,
-  Settings2,
   ShoppingCart,
   Sparkles,
   Store,
@@ -32,7 +26,6 @@ import {
   Tags,
   Trash2,
   TrendingUp,
-  Users,
   Warehouse,
   X,
 } from "lucide-react";
@@ -75,6 +68,13 @@ export type WorkspaceOutlet = {
   address: string | null;
 };
 
+export type WorkspaceShift = {
+  id: string;
+  outletId: string;
+  openingCash: number | string;
+  openedAt: Date | string;
+} | null;
+
 export function DashboardWorkspace({
   chartPoints,
   periodLabel,
@@ -89,7 +89,7 @@ export function DashboardWorkspace({
   chartPoints: Array<{ key: string; label: string; revenue: number; transactions: number }>;
   periodLabel: string;
   currentTransactions: number;
-  currentShift: any;
+  currentShift: WorkspaceShift | WorkspaceShift[];
   shiftManagementEnabled: boolean;
   initialProducts: WorkspaceProduct[];
   initialCategories: WorkspaceCategory[];
@@ -457,12 +457,12 @@ export function DashboardWorkspace({
   return (
     <div className="space-y-6">
       {/* Navigation Workspace Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dfe8e3] pb-1">
-        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+      <div className="flex flex-col gap-3 border-b border-[#dfe8e3] pb-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="-mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-1 sm:gap-2 lg:flex-wrap" role="tablist" aria-label="Tab workspace dashboard">
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition-all ${
+            className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-3 py-2 text-xs font-black transition-all sm:px-4 sm:py-2.5 ${
               activeTab === "overview"
                 ? "bg-[#198760] text-white shadow-md shadow-emerald-700/20 scale-[1.02]"
                 : "bg-white text-[#627069] hover:text-[#15211d] hover:bg-[#f7faf8] border border-transparent"
@@ -475,7 +475,7 @@ export function DashboardWorkspace({
           <button
             type="button"
             onClick={() => setActiveTab("products")}
-            className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition-all ${
+            className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-3 py-2 text-xs font-black transition-all sm:px-4 sm:py-2.5 ${
               activeTab === "products"
                 ? "bg-[#198760] text-white shadow-md shadow-emerald-700/20 scale-[1.02]"
                 : "bg-white text-[#627069] hover:text-[#15211d] hover:bg-[#f7faf8] border border-transparent"
@@ -495,7 +495,7 @@ export function DashboardWorkspace({
           <button
             type="button"
             onClick={() => setActiveTab("categories")}
-            className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition-all ${
+            className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-3 py-2 text-xs font-black transition-all sm:px-4 sm:py-2.5 ${
               activeTab === "categories"
                 ? "bg-[#198760] text-white shadow-md shadow-emerald-700/20 scale-[1.02]"
                 : "bg-white text-[#627069] hover:text-[#15211d] hover:bg-[#f7faf8] border border-transparent"
@@ -515,7 +515,7 @@ export function DashboardWorkspace({
           <button
             type="button"
             onClick={() => setActiveTab("outlets")}
-            className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition-all ${
+            className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-3 py-2 text-xs font-black transition-all sm:px-4 sm:py-2.5 ${
               activeTab === "outlets"
                 ? "bg-[#198760] text-white shadow-md shadow-emerald-700/20 scale-[1.02]"
                 : "bg-white text-[#627069] hover:text-[#15211d] hover:bg-[#f7faf8] border border-transparent"
@@ -590,17 +590,17 @@ export function DashboardWorkspace({
       {/* TAB 1: RINGKASAN & TREN                                      */}
       {/* ============================================================ */}
       {activeTab === "overview" && (
-        <div className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
+        <div className="grid min-w-0 gap-4 sm:gap-6 xl:grid-cols-[1.6fr_0.9fr]">
           {/* Left: Interactive Sales Chart */}
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-[#dfe8e3] bg-white p-6 shadow-sm">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
+            <div className="rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-sm sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#edf2ee]">
                 <div>
-                  <h3 className="text-base font-black flex items-center gap-2 text-[#15211d]">
+                  <h3 className="text-sm sm:text-base font-black flex items-center gap-2 text-[#15211d]">
                     <TrendingUp className="size-4 text-[#198760]" />
                     Tren Omzet Penjualan
                   </h3>
-                  <p className="mt-0.5 text-xs text-[#627069]">
+                  <p className="mt-0.5 text-[11px] sm:text-xs text-[#627069]">
                     Periode {periodLabel}. Sentuh atau arahkan kursor ke batang grafik untuk melihat rincian omzet.
                   </p>
                 </div>
@@ -615,13 +615,13 @@ export function DashboardWorkspace({
             </div>
 
             {/* Top 5 Products Quick Snapshot */}
-            <div className="rounded-3xl border border-[#dfe8e3] bg-white p-6 shadow-sm">
+            <div className="rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-sm sm:p-6">
               <div className="flex items-center justify-between pb-3 border-b border-[#edf2ee]">
                 <div className="flex items-center gap-2">
                   <div className="grid size-8 place-items-center rounded-xl bg-emerald-50 text-[#198760]">
                     <Package className="size-4" />
                   </div>
-                  <h3 className="text-sm font-extrabold text-[#15211d]">
+                  <h3 className="text-xs sm:text-sm font-extrabold text-[#15211d]">
                     Katalog Produk Teratas ({products.length} item)
                   </h3>
                 </div>
@@ -665,9 +665,9 @@ export function DashboardWorkspace({
           </div>
 
           {/* Right: Quick Launchers & Shift Operations */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
             {/* Quick Action Tiles */}
-            <div className="rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-sm">
+            <div className="rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-sm sm:p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="size-4 text-[#198760]" />
                 <h3 className="text-sm font-extrabold text-[#15211d]">Aksi Cepat Kasir &amp; Toko</h3>
@@ -742,13 +742,21 @@ export function DashboardWorkspace({
               <ShiftPanel
                 outlets={outlets}
                 currentShift={
-                  currentShift[0]
-                    ? {
-                        ...currentShift[0],
-                        openingCash: Number(currentShift[0].openingCash),
-                        openedAt: currentShift[0].openedAt.toISOString(),
-                      }
-                    : null
+                  Array.isArray(currentShift)
+                    ? currentShift[0]
+                      ? {
+                          ...currentShift[0],
+                          openingCash: Number(currentShift[0].openingCash),
+                          openedAt: new Date(currentShift[0].openedAt).toISOString(),
+                        }
+                      : null
+                    : currentShift
+                      ? {
+                          ...currentShift,
+                          openingCash: Number(currentShift.openingCash),
+                          openedAt: new Date(currentShift.openedAt).toISOString(),
+                        }
+                      : null
                 }
               />
             ) : (
