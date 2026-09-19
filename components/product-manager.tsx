@@ -1,17 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Boxes,
-  Check,
   CheckCircle2,
   Filter,
   Package,
   Pencil,
   Plus,
   PowerOff,
-  RefreshCw,
   Search,
   Store,
   Tag,
@@ -20,6 +18,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RupiahInput } from "@/components/ui/rupiah-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +81,33 @@ export function ProductManager({
 
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [feedbackKey, setFeedbackKey] = useState(0);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const FEEDBACK_DURATION_MS = 15_000;
+
+  // Alert tampil 15 detik dengan animasi smooth, lalu menghilang otomatis.
+  function showFeedback(type: "success" | "error", message: string) {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setFeedback({ type, message });
+    setFeedbackKey((key) => key + 1);
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedback(null);
+      feedbackTimerRef.current = null;
+    }, FEEDBACK_DURATION_MS);
+  }
+
+  function dismissFeedback() {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = null;
+    setFeedback(null);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    };
+  }, []);
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -142,19 +168,33 @@ export function ProductManager({
 
       const data = await res.json();
       if (!res.ok) {
-        setFeedback({ type: "error", message: data.message ?? "Produk gagal ditambahkan." });
+        showFeedback("error", data.message ?? "Produk gagal ditambahkan.");
         return;
       }
 
-      setFeedback({ type: "success", message: data.message ?? "Produk berhasil ditambahkan!" });
+      showFeedback("success", data.message ?? "Produk berhasil ditambahkan!");
       setIsCreating(false);
       setNewProduct({
         ...emptyProduct,
         outletId: outlets[0]?.id ?? "",
       });
-      window.location.reload();
+      // Tambahkan ke list dari respons API agar alert tetap terlihat
+      // (window.location.reload() akan menghapus feedback sebelum 15 detik).
+      setItems((prev) => [
+        {
+          id: data.id,
+          name: newProduct.name.trim(),
+          sku: newProduct.sku.trim() || null,
+          categoryId: newProduct.categoryId || null,
+          sellingPrice: newProduct.sellingPrice,
+          costPrice: newProduct.costPrice,
+          trackStock: newProduct.trackStock,
+          isActive: true,
+        },
+        ...prev,
+      ]);
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPending(false);
     }
@@ -176,15 +216,15 @@ export function ProductManager({
 
       const data = await res.json();
       if (!res.ok) {
-        setFeedback({ type: "error", message: data.message ?? "Produk gagal diperbarui." });
+        showFeedback("error", data.message ?? "Produk gagal diperbarui.");
         return;
       }
 
       setItems((prev) => prev.map((item) => (item.id === editingItem.id ? editingItem : item)));
       setEditingItem(null);
-      setFeedback({ type: "success", message: data.message ?? "Produk berhasil diperbarui!" });
+      showFeedback("success", data.message ?? "Produk berhasil diperbarui!");
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPending(false);
     }
@@ -210,16 +250,16 @@ export function ProductManager({
 
       const data = await res.json();
       if (!res.ok) {
-        setFeedback({ type: "error", message: data.message ?? "Gagal mengubah status produk." });
+        showFeedback("error", data.message ?? "Gagal mengubah status produk.");
         return;
       }
 
       setItems((prev) =>
         prev.map((entry) => (entry.id === item.id ? { ...entry, isActive: nextState } : entry))
       );
-      setFeedback({ type: "success", message: data.message });
+      showFeedback("success", data.message);
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPending(false);
     }
@@ -230,8 +270,10 @@ export function ProductManager({
       {/* Alert Feedback */}
       {feedback && (
         <div
+          key={feedbackKey}
           role="status"
-          className={`flex items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${
+          aria-live="polite"
+          className={`relative flex items-start gap-3 overflow-hidden rounded-2xl border p-4 text-sm font-semibold shadow-sm animate-toast-in ${
             feedback.type === "success"
               ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]"
               : "border-[#f2d4b9] bg-[#fff0e5] text-[#a35f12]"
@@ -242,7 +284,20 @@ export function ProductManager({
           ) : (
             <AlertTriangle className="size-5 shrink-0 text-[#a35f12]" />
           )}
-          <span>{feedback.message}</span>
+          <span className="flex-1">{feedback.message}</span>
+          <button
+            type="button"
+            onClick={dismissFeedback}
+            aria-label="Tutup notifikasi"
+            className="shrink-0 rounded-lg p-0.5 opacity-60 transition hover:opacity-100"
+          >
+            <X className="size-4" />
+          </button>
+          {/* Progress bar 15 detik */}
+          <span
+            className="absolute bottom-0 left-0 h-[3px] bg-current opacity-30 animate-progress-15"
+            aria-hidden="true"
+          />
         </div>
       )}
 
@@ -364,15 +419,12 @@ export function ProductManager({
 
               <div className="space-y-1.5">
                 <Label htmlFor="create-price" className="text-xs font-bold">
-                  Harga Jual (Rp) *
+                  Harga Jual *
                 </Label>
-                <Input
+                <RupiahInput
                   id="create-price"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={newProduct.sellingPrice || ""}
-                  onChange={(e) => updateNewProduct({ sellingPrice: Number(e.target.value) })}
+                  value={newProduct.sellingPrice}
+                  onChange={(value) => updateNewProduct({ sellingPrice: value })}
                   required
                   disabled={pending}
                 />
@@ -381,7 +433,7 @@ export function ProductManager({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="create-cost" className="text-xs font-bold">
-                    Harga Modal (HPP) (Rp)
+                    Harga Modal (HPP)
                   </Label>
                   {newProduct.sellingPrice > 0 && (
                     <span className="text-[11px] font-bold text-[#198760] flex items-center gap-1">
@@ -389,13 +441,10 @@ export function ProductManager({
                     </span>
                   )}
                 </div>
-                <Input
+                <RupiahInput
                   id="create-cost"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={newProduct.costPrice || ""}
-                  onChange={(e) => updateNewProduct({ costPrice: Number(e.target.value) })}
+                  value={newProduct.costPrice}
+                  onChange={(value) => updateNewProduct({ costPrice: value })}
                   disabled={pending}
                 />
               </div>
@@ -516,19 +565,17 @@ export function ProductManager({
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-bold">Harga Jual (Rp) *</Label>
+                  <Label className="text-xs font-bold">Harga Jual *</Label>
                   {editingItem.sellingPrice > 0 && (
                     <span className="text-[11px] font-bold text-[#198760] flex items-center gap-1">
                       <TrendingUp className="size-3" /> Margin: {editMargin}%
                     </span>
                   )}
                 </div>
-                <Input
-                  type="number"
-                  min="0"
+                <RupiahInput
                   value={editingItem.sellingPrice}
-                  onChange={(e) =>
-                    setEditingItem({ ...editingItem, sellingPrice: Number(e.target.value) })
+                  onChange={(value) =>
+                    setEditingItem({ ...editingItem, sellingPrice: value })
                   }
                   required
                   disabled={pending}
@@ -536,13 +583,11 @@ export function ProductManager({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Harga Modal (HPP) (Rp)</Label>
-                <Input
-                  type="number"
-                  min="0"
+                <Label className="text-xs font-bold">Harga Modal (HPP)</Label>
+                <RupiahInput
                   value={editingItem.costPrice}
-                  onChange={(e) =>
-                    setEditingItem({ ...editingItem, costPrice: Number(e.target.value) })
+                  onChange={(value) =>
+                    setEditingItem({ ...editingItem, costPrice: value })
                   }
                   disabled={pending}
                 />
