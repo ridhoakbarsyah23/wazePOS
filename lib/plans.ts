@@ -14,8 +14,7 @@ export type PlanFeature =
   | "exportReports"
   | "unlimitedStaff"
   | "unlimitedProducts"
-  | "multiOutlet"
-  | "shiftManagement";
+  | "multiOutlet";
 
 export type PlanConfig = {
   name: string;
@@ -42,7 +41,6 @@ export const plans: Record<PlanId, PlanConfig> = {
       unlimitedStaff: false,
       unlimitedProducts: false,
       multiOutlet: false,
-      shiftManagement: false,
     },
   },
   bisnis: {
@@ -61,7 +59,6 @@ export const plans: Record<PlanId, PlanConfig> = {
       unlimitedStaff: true,
       unlimitedProducts: true,
       multiOutlet: true,
-      shiftManagement: true,
     },
   },
 };

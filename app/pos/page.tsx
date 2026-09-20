@@ -1,22 +1,19 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { cashShift, category, inventoryStock, outlet, product, sale } from "@/db/schema";
+import { category, inventoryStock, outlet, product, sale } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { PosTerminal } from "@/components/pos-terminal";
-import { ShiftPanel } from "@/components/shift-panel";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
-import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
+import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/plans";
 
 export default async function PosPage({ searchParams }: {
   searchParams: Promise<{ outlet?: string }>;
 }) {
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
-
-  const currentSubscription = await getBusinessSubscription(membership.businessId);
   const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
   if (!subDetails.isValid) {
@@ -41,7 +38,6 @@ export default async function PosPage({ searchParams }: {
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const allowNonCashPayments = hasPlanFeature(selectedPlan, "allPaymentMethods");
   const allowQrisPayments = hasPlanFeature(selectedPlan, "qrisPayments");
-  const shiftManagementEnabled = hasPlanFeature(selectedPlan, "shiftManagement");
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name })
@@ -53,54 +49,36 @@ export default async function PosPage({ searchParams }: {
   const activeOutlet = outlets.find((item) => item.id === requestedOutletId) ?? outlets[0];
   if (!activeOutlet) redirect("/dashboard");
 
-  const [currentShift] = shiftManagementEnabled
-    ? await db
-        .select({
-          id: cashShift.id,
-          outletId: cashShift.outletId,
-          openingCash: cashShift.openingCash,
-          openedAt: cashShift.openedAt,
-        })
-        .from(cashShift)
-        .where(
-          and(
-            eq(cashShift.businessId, membership.businessId),
-            eq(cashShift.cashierId, session.user.id),
-            eq(cashShift.status, "open"),
-          ),
-        )
-        .limit(1)
-    : [];
-
-  const products = await db
-    .select({
-      id: product.id,
-      name: product.name,
-      sku: product.sku,
-      sellingPrice: product.sellingPrice,
-      trackStock: product.trackStock,
-      categoryName: category.name,
-      stock: sql<number>`COALESCE(${inventoryStock.quantity}, 0)::int`,
-    })
-    .from(product)
-    .leftJoin(category, eq(category.id, product.categoryId))
-    .leftJoin(inventoryStock, and(eq(inventoryStock.productId, product.id), eq(inventoryStock.outletId, activeOutlet.id)))
-    .where(and(eq(product.businessId, membership.businessId), eq(product.isActive, true)))
-    .orderBy(product.name);
-
-  const recentSales = await db
-    .select({
-      id: sale.id,
-      invoiceNumber: sale.invoiceNumber,
-      status: sale.status,
-      total: sale.total,
-      paymentMethod: sale.paymentMethod,
-      createdAt: sale.createdAt,
-    })
-    .from(sale)
-    .where(and(eq(sale.businessId, membership.businessId), eq(sale.outletId, activeOutlet.id)))
-    .orderBy(desc(sale.createdAt))
-    .limit(8);
+  const [products, recentSales] = await Promise.all([
+    db
+      .select({
+        id: product.id,
+        name: product.name,
+        sku: product.sku,
+        sellingPrice: product.sellingPrice,
+        trackStock: product.trackStock,
+        categoryName: category.name,
+        stock: sql<number>`COALESCE(${inventoryStock.quantity}, 0)::int`,
+      })
+      .from(product)
+      .leftJoin(category, eq(category.id, product.categoryId))
+      .leftJoin(inventoryStock, and(eq(inventoryStock.productId, product.id), eq(inventoryStock.outletId, activeOutlet.id)))
+      .where(and(eq(product.businessId, membership.businessId), eq(product.isActive, true)))
+      .orderBy(product.name),
+    db
+      .select({
+        id: sale.id,
+        invoiceNumber: sale.invoiceNumber,
+        status: sale.status,
+        total: sale.total,
+        paymentMethod: sale.paymentMethod,
+        createdAt: sale.createdAt,
+      })
+      .from(sale)
+      .where(and(eq(sale.businessId, membership.businessId), eq(sale.outletId, activeOutlet.id)))
+      .orderBy(desc(sale.createdAt))
+      .limit(8),
+  ]);
 
   return (
     <AppHeader
@@ -111,29 +89,16 @@ export default async function PosPage({ searchParams }: {
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
     >
-      <section className="mx-auto w-[min(1280px,calc(100%-32px))] py-8 animate-page-enter">
-        <span className="section-kicker">Point of Sale</span>
-        <h1 className="mt-3 mb-2 text-3xl tracking-[-1.2px]">Mulai transaksi</h1>
-        <p className="m-0 text-sm leading-7 text-[#627069]">Pilih produk, masukkan pembayaran, lalu stok akan berkurang otomatis setelah transaksi berhasil.</p>
+      <section className="mx-auto w-[min(1400px,calc(100%-24px))] py-5 animate-page-enter sm:w-[min(1400px,calc(100%-40px))] sm:py-6">
+        <header className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-[-0.7px] text-[#17211d]">Kasir</h1>
+            <p className="mt-1 text-sm text-[#6c7a73]">Cari produk, cek pesanan, lalu selesaikan pembayaran.</p>
+          </div>
+          <p className="m-0 text-xs text-[#87928d]">Stok diperbarui otomatis setelah transaksi tersimpan.</p>
+        </header>
 
-        <div className="mt-7">
-          {shiftManagementEnabled && (
-            <div className="mb-5">
-              <ShiftPanel
-                key={currentShift?.id ?? `new:${activeOutlet.id}`}
-                outlets={currentShift ? outlets : [activeOutlet]}
-                currentShift={
-                  currentShift
-                    ? {
-                        ...currentShift,
-                        openingCash: Number(currentShift.openingCash),
-                        openedAt: new Date(currentShift.openedAt).toISOString(),
-                      }
-                    : null
-                }
-              />
-            </div>
-          )}
+        <div className="mt-5">
           <PosTerminal
             key={activeOutlet.id}
             businessName={membership.businessName}
@@ -142,27 +107,23 @@ export default async function PosPage({ searchParams }: {
             initialOutletId={activeOutlet.id}
             allowNonCashPayments={allowNonCashPayments}
             allowQrisPayments={allowQrisPayments}
-            checkoutDisabledReason={
-              shiftManagementEnabled
-                ? !currentShift
-                  ? "Buka shift kasir terlebih dahulu sebelum menyimpan transaksi."
-                  : currentShift.outletId !== activeOutlet.id
-                    ? `Shift Anda sedang aktif di ${outlets.find((item) => item.id === currentShift.outletId)?.name ?? "gerai lain"}. Pilih gerai tersebut atau tutup shift sebelum bertransaksi di sini.`
-                    : null
-                : null
-            }
+            checkoutDisabledReason={null}
           />
         </div>
-        <section className="mt-8 rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-          <h2 className="text-lg font-extrabold">Transaksi terbaru</h2>
-          <div className="mt-4 overflow-x-auto">
+        <details className="group mt-4 border border-[#d9e2dd] bg-white">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-[#33423b] [&::-webkit-details-marker]:hidden">
+            <span>Transaksi terakhir</span>
+            <span className="text-xs font-normal text-[#78857f] group-open:hidden">Lihat {recentSales.length} transaksi</span>
+            <span className="hidden text-xs font-normal text-[#78857f] group-open:inline">Tutup daftar</span>
+          </summary>
+          <div className="overflow-x-auto border-t border-[#e5ebe8]">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-[#e7efea] text-[#627069]">
-                  <th className="px-3 py-2">Invoice</th>
-                  <th className="px-3 py-2">Waktu</th>
-                  <th className="px-3 py-2">Pembayaran</th>
-                  <th className="px-3 py-2 text-right">Total</th>
+                <tr className="border-b border-[#e7efea] bg-[#fafbfa] text-xs font-semibold text-[#6c7a73]">
+                  <th className="px-4 py-2.5">Invoice</th>
+                  <th className="px-4 py-2.5">Waktu</th>
+                  <th className="px-4 py-2.5">Pembayaran</th>
+                  <th className="px-4 py-2.5 text-right">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -173,7 +134,7 @@ export default async function PosPage({ searchParams }: {
                       item.status === "voided" ? "bg-rose-50/40 opacity-75" : ""
                     }`}
                   >
-                    <td className="px-3 py-3 font-semibold">
+                    <td className="px-4 py-3 font-semibold">
                       <div className="flex items-center gap-2">
                         <a
                           href={`/sales/${item.id}`}
@@ -190,12 +151,12 @@ export default async function PosPage({ searchParams }: {
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-[#627069]">
+                    <td className="px-4 py-3 text-[#627069]">
                       {new Date(item.createdAt).toLocaleString("id-ID")}
                     </td>
-                    <td className="px-3 py-3 uppercase">{item.paymentMethod}</td>
+                    <td className="px-4 py-3 capitalize">{item.paymentMethod}</td>
                     <td
-                      className={`px-3 py-3 text-right font-bold ${
+                      className={`px-4 py-3 text-right font-bold ${
                         item.status === "voided" ? "text-rose-600 line-through" : ""
                       }`}
                     >
@@ -205,7 +166,7 @@ export default async function PosPage({ searchParams }: {
                 ))}
                 {recentSales.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-3 py-5 text-[#627069]">
+                    <td colSpan={4} className="px-4 py-5 text-[#627069]">
                       Belum ada transaksi.
                     </td>
                   </tr>
@@ -213,7 +174,7 @@ export default async function PosPage({ searchParams }: {
               </tbody>
             </table>
           </div>
-        </section>
+        </details>
       </section>
     </AppHeader>
   );

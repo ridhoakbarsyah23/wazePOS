@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowRight,
-  ArrowUpRight,
   BarChart3,
   Building2,
   Check,
@@ -14,7 +13,6 @@ import {
   Edit2,
   FolderPlus,
   Loader2,
-  LockKeyhole,
   MapPin,
   Package,
   Plus,
@@ -30,7 +28,6 @@ import {
   X,
 } from "lucide-react";
 import { DashboardSalesChart } from "@/components/dashboard-sales-chart";
-import { ShiftPanel } from "@/components/shift-panel";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
@@ -70,19 +67,10 @@ export type WorkspaceOutlet = {
   address: string | null;
 };
 
-export type WorkspaceShift = {
-  id: string;
-  outletId: string;
-  openingCash: number | string;
-  openedAt: Date | string;
-} | null;
-
 export function DashboardWorkspace({
   chartPoints,
   periodLabel,
   currentTransactions,
-  currentShift,
-  shiftManagementEnabled,
   initialProducts,
   initialCategories,
   initialOutlets,
@@ -91,8 +79,6 @@ export function DashboardWorkspace({
   chartPoints: Array<{ key: string; label: string; revenue: number; transactions: number }>;
   periodLabel: string;
   currentTransactions: number;
-  currentShift: WorkspaceShift | WorkspaceShift[];
-  shiftManagementEnabled: boolean;
   initialProducts: WorkspaceProduct[];
   initialCategories: WorkspaceCategory[];
   initialOutlets: WorkspaceOutlet[];
@@ -660,7 +646,7 @@ export function DashboardWorkspace({
             </div>
           </div>
 
-          {/* Right: Quick Launchers & Shift Operations */}
+          {/* Right: Quick Launchers */}
           <div className="min-w-0 space-y-4 sm:space-y-6">
             {/* Quick Action Tiles */}
             <div className="rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-sm sm:p-5">
@@ -733,48 +719,6 @@ export function DashboardWorkspace({
               </div>
             </div>
 
-            {/* Shift Operational Panel */}
-            {shiftManagementEnabled ? (
-              <ShiftPanel
-                outlets={outlets}
-                currentShift={
-                  Array.isArray(currentShift)
-                    ? currentShift[0]
-                      ? {
-                          ...currentShift[0],
-                          openingCash: Number(currentShift[0].openingCash),
-                          openedAt: new Date(currentShift[0].openedAt).toISOString(),
-                        }
-                      : null
-                    : currentShift
-                      ? {
-                          ...currentShift,
-                          openingCash: Number(currentShift.openingCash),
-                          openedAt: new Date(currentShift.openedAt).toISOString(),
-                        }
-                      : null
-                }
-              />
-            ) : (
-              <div className="rounded-3xl border border-[#d7e7df] bg-gradient-to-br from-white to-[#f2faf6] p-5 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="grid size-10 place-items-center rounded-2xl bg-emerald-50 text-[#198760] shrink-0 border border-emerald-100">
-                    <LockKeyhole className="size-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-[#15211d]">Manajemen Shift Kasir</h4>
-                    <p className="mt-1 text-xs leading-relaxed text-[#627069]">
-                      Tersedia pada Paket Bisnis untuk mengunci saldo kasir awal dan rekap pergantian shift tanpa selisih.
-                    </p>
-                    <Button asChild variant="outline" size="sm" className="mt-3 h-8 text-xs font-bold">
-                      <Link href="/subscription">
-                        Upgrade ke Paket Bisnis <ArrowUpRight className="size-3" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

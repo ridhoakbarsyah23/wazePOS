@@ -19,7 +19,6 @@ const includedFeatures: Record<PlanId, string[]> = {
   ],
   bisnis: [
     "Pembayaran Tunai, Kartu Debit & Kredit EDC",
-    "Manajemen Shift & Rekonsiliasi Kas",
     "Hingga 5 Gerai / Multi-Cabang",
     "Akun Staf Kasir & Admin Tanpa Batas",
     "Katalog Produk Tanpa Batas",

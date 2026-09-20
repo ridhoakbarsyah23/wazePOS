@@ -129,7 +129,7 @@ const pricingPlans = [
     features: [
       "Seluruh fitur Paket Tumbuh",
       "Pembayaran tunai, kartu debit & kredit EDC",
-      "Manajemen shift dan rekonsiliasi kas",
+      "Ekspor laporan penjualan Excel",
       "Hingga 5 gerai / multi-cabang",
       "Akun staf kasir & admin tanpa batas",
       "Katalog produk tanpa batas",
@@ -153,7 +153,7 @@ const featureComparison = [
     category: "Metode pembayaran & laporan",
     items: [
       { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", tumbuh: false, bisnis: true },
-      { name: "Manajemen shift kasir", detail: "Mencatat modal awal, kas yang diharapkan, dan selisih saat penutupan shift.", tumbuh: false, bisnis: true },
+      { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", tumbuh: false, bisnis: true },
       { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", tumbuh: true, bisnis: true },
     ],
   },

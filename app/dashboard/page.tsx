@@ -8,9 +8,9 @@ import { DashboardInsights } from "@/components/dashboard-insights";
 import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
-import { cashShift, category, inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
-import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/plans";
+import { category, inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
+import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
+import { getSubscriptionStatusDetails, normalizePlan } from "@/lib/plans";
 
 const dayInMilliseconds = 86_400_000;
 const jakartaDateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -38,11 +38,9 @@ export default async function DashboardPage({
 }) {
   const feedback = await searchParams;
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
   if (membership.role === "cashier") redirect("/pos");
-
-  const currentSubscription = await getBusinessSubscription(membership.businessId);
   const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
   if (!subDetails.isValid) {
@@ -65,7 +63,6 @@ export default async function DashboardPage({
   }
 
   const selectedPlan = normalizePlan(currentSubscription?.plan);
-  const shiftManagementEnabled = hasPlanFeature(selectedPlan, "shiftManagement");
   const selectedPeriod: PeriodKey =
     feedback.period === "today" || feedback.period === "30d" ? feedback.period : "7d";
 
@@ -170,7 +167,7 @@ export default async function DashboardPage({
     stockFilters.push(eq(inventoryStock.outletId, selectedOutletId));
   }
 
-  const [currentTotals, previousTotals, trendRows, stockRows, currentShift, topProductRows, hourlyRows, outletRows] = await Promise.all([
+  const [currentTotals, previousTotals, trendRows, stockRows, topProductRows, hourlyRows, outletRows] = await Promise.all([
     db
       .select({
         revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
@@ -204,24 +201,6 @@ export default async function DashboardPage({
       .from(inventoryStock)
       .innerJoin(product, eq(product.id, inventoryStock.productId))
       .where(and(...stockFilters)),
-    shiftManagementEnabled
-      ? db
-          .select({
-            id: cashShift.id,
-            outletId: cashShift.outletId,
-            openingCash: cashShift.openingCash,
-            openedAt: cashShift.openedAt,
-          })
-          .from(cashShift)
-          .where(
-            and(
-              eq(cashShift.businessId, membership.businessId),
-              eq(cashShift.cashierId, session.user.id),
-              eq(cashShift.status, "open")
-            )
-          )
-          .limit(1)
-      : Promise.resolve([]),
     db
       .select({
         productId: saleItem.productId,
@@ -423,8 +402,6 @@ export default async function DashboardPage({
           chartPoints={chartPoints}
           periodLabel={periodLabels[selectedPeriod]}
           currentTransactions={currentTransactions}
-          currentShift={currentShift}
-          shiftManagementEnabled={shiftManagementEnabled}
           initialProducts={productRows.map((p) => ({
             ...p,
             sellingPrice: Number(p.sellingPrice),

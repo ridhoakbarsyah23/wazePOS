@@ -130,26 +130,10 @@ describe("POST /api/sales", () => {
     expect(await response.json()).toMatchObject({ message: "Gerai tidak ditemukan." });
   });
 
-  it("mewajibkan shift untuk Paket Bisnis", async () => {
+  it("menyimpan penjualan Paket Bisnis tanpa shift, mengurangi stok, dan mengambil snapshot harga modal", async () => {
     mocks.getBusinessSubscription.mockResolvedValue(activeSubscription("bisnis"));
-    const queryResults = [[{ id: outletId }], []];
-    const tx = {
-      select: vi.fn(() => selectBuilder(queryResults.shift() ?? [])),
-    };
-    mocks.transaction.mockImplementation(async (callback) => callback(tx));
-
-    const response = await POST(saleRequest());
-
-    expect(response.status).toBe(409);
-    expect(await response.json()).toMatchObject({
-      message: "Buka shift kasir untuk gerai ini sebelum menyimpan transaksi.",
-    });
-  });
-
-  it("menyimpan penjualan, mengurangi stok, dan mengambil snapshot harga modal", async () => {
     const queryResults = [
       [{ id: outletId }],
-      [],
       [{
         id: productId,
         name: "Kopi Susu",

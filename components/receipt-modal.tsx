@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle2, MessageSquareShare, Printer, Send, PlusCircle, ArrowRight, X } from "lucide-react";
-import { buildReceiptWhatsAppMessage, ReceiptShareData } from "./whatsapp-share-button";
+import { ArrowRight, CheckCircle2, ChevronDown, MessageSquareShare, PlusCircle, Printer, ReceiptText, Send, X } from "lucide-react";
+import { buildReceiptWhatsAppMessage, type ReceiptShareData } from "./whatsapp-share-button";
 
 export type PaperSize = "58mm" | "80mm";
 
@@ -25,13 +25,21 @@ export function ReceiptModal({
   });
 
   const [customerPhone, setCustomerPhone] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
+  const primaryActionRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       document.documentElement.setAttribute("data-receipt-paper", paperSize);
     }
   }, [isOpen, paperSize]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const frame = requestAnimationFrame(() => primaryActionRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen]);
 
   function changePaperSize(size: PaperSize) {
     setPaperSize(size);
@@ -68,6 +76,7 @@ export function ReceiptModal({
     function handleKeyDown(e: KeyboardEvent) {
       const activeEl = document.activeElement;
       const isInputActive = activeEl?.tagName === "INPUT";
+      const isActionActive = activeEl?.tagName === "BUTTON" || activeEl?.tagName === "A";
 
       if (e.key === "Escape") {
         e.preventDefault();
@@ -81,7 +90,7 @@ export function ReceiptModal({
         return;
       }
 
-      if ((e.key === "Enter" || e.key === " ") && !isInputActive) {
+      if ((e.key === "Enter" || e.key === " ") && !isInputActive && !isActionActive) {
         e.preventDefault();
         onClose();
         return;
@@ -176,11 +185,14 @@ export function ReceiptModal({
       {/* Screen Backdrop & Modal */}
       <div
         id="pos-print-root"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-3 sm:p-4 backdrop-blur-xs animate-fade-in overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-3 backdrop-blur-xs animate-fade-in sm:p-4"
       >
         <div
           id="receipt-print-card"
-          className="relative my-auto w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-[#dfe8e3] overflow-hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="receipt-success-title"
+          className="relative my-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#d9e3de] bg-white shadow-[0_24px_70px_rgba(5,35,25,.28)]"
         >
           {/* Tombol tutup — tidak ikut tercetak */}
           <button
@@ -188,46 +200,65 @@ export function ReceiptModal({
             onClick={onClose}
             aria-label="Tutup struk"
             title="Tutup (Esc)"
-            className="print-hidden-element absolute right-4 top-4 z-10 grid size-9 place-items-center rounded-full bg-white/90 text-[#627069] shadow-sm border border-[#dfe8e3] backdrop-blur-xs transition hover:bg-[#f0f4f1] hover:text-[#15211d] active:scale-95"
+            className="print-hidden-element absolute right-4 top-4 z-10 grid size-8 place-items-center rounded-full border border-[#d9e2dd] bg-white text-[#627069] transition hover:bg-[#f3f6f4] hover:text-[#15211d] active:scale-95"
           >
             <X className="size-4.5" />
           </button>
 
-          {/* Success Banner */}
-          <div className="bg-gradient-to-b from-[#eaf7f0] to-[#f4faf7] p-5 text-center border-b border-[#cae8d9] print-hidden-element">
-            <div className="mx-auto grid size-12 place-items-center rounded-full bg-[#198760] text-white shadow-md">
-              <CheckCircle2 className="size-7" />
+          <header className="border-b border-[#dfe7e3] bg-[#f3faf6] p-4 pr-14 print-hidden-element sm:p-5 sm:pr-14">
+            <div className="flex items-center gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[#187c59] text-white">
+                <CheckCircle2 className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 id="receipt-success-title" className="text-base font-bold text-[#17211d]">Transaksi berhasil</h3>
+                <p className="mt-0.5 truncate text-xs text-[#68766f]">{receipt.invoiceNumber}</p>
+              </div>
             </div>
-            <h3 className="mt-2 text-lg font-black text-[#15211d]">Transaksi Berhasil Disimpan</h3>
-            <p className="text-xs text-[#627069] mt-0.5">Invoice #{receipt.invoiceNumber}</p>
 
-            {/* Big Change Display */}
-            <div className="mt-3 inline-block rounded-2xl bg-white px-5 py-2.5 shadow-xs border border-[#cae8d9]">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#627069]">
-                {receipt.paymentMethod === "cash"
-                  ? receipt.changeAmount > 0
-                    ? "Kembalian Kasir"
-                    : "Uang Pas (Lunas)"
-                  : `Lunas via ${receipt.paymentMethod.toUpperCase()}`}
-              </span>
-              <span className="text-2xl font-black text-[#198760]">
-                {receipt.paymentMethod === "cash"
-                  ? money(receipt.changeAmount)
-                  : money(receipt.total)}
-              </span>
+            <div className="mt-4 grid grid-cols-2 divide-x divide-[#dbe7e0] border border-[#cfe1d8] bg-white">
+              <div className="px-3 py-2.5">
+                <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-[#78857f]">Total</span>
+                <strong className="mt-0.5 block text-base text-[#17211d]">{money(receipt.total)}</strong>
+              </div>
+              <div className="px-3 py-2.5">
+                <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-[#78857f]">
+                  {receipt.paymentMethod === "cash"
+                    ? receipt.changeAmount > 0
+                      ? "Kembalian"
+                      : "Pembayaran"
+                    : "Pembayaran"}
+                </span>
+                <strong className="mt-0.5 block text-base text-[#187c59]">
+                  {receipt.paymentMethod === "cash"
+                    ? receipt.changeAmount > 0
+                      ? money(receipt.changeAmount)
+                      : "Uang pas"
+                    : receipt.paymentMethod.toUpperCase()}
+                </strong>
+              </div>
             </div>
-          </div>
+          </header>
 
-          <div id="receipt-print-area" className="p-5 max-h-[60vh] overflow-y-auto">
-            {/* Paper Size selector */}
-            <div className="flex items-center justify-between gap-2 mb-3 print-hidden-element">
-              <span className="text-xs font-bold text-[#627069]">Pratinjau Kertas Printer:</span>
-              <div className="flex rounded-lg border border-[#dfe8e3] bg-[#f7faf8] p-0.5 text-xs font-bold">
+          <div id="receipt-print-area" className="max-h-[55vh] overflow-y-auto p-4">
+            <div className="flex items-center justify-between gap-3 print-hidden-element">
+              <button
+                type="button"
+                aria-expanded={previewOpen}
+                onClick={() => setPreviewOpen((current) => !current)}
+                className="inline-flex h-9 items-center gap-2 text-xs font-semibold text-[#44534c] hover:text-[#187c59]"
+              >
+                <ReceiptText className="size-4 text-[#187c59]" />
+                {previewOpen ? "Tutup rincian" : "Lihat rincian struk"}
+                <ChevronDown className={`size-3.5 transition-transform ${previewOpen ? "rotate-180" : ""}`} />
+              </button>
+              <div className="flex border border-[#d9e2dd] bg-[#f7f9f8] p-0.5 text-[11px] font-semibold">
                 <button
                   type="button"
                   onClick={() => changePaperSize("58mm")}
-                  className={`rounded-md px-2.5 py-1 transition ${
-                    paperSize === "58mm" ? "bg-[#198760] text-white shadow-2xs" : "text-[#627069]"
+                  aria-pressed={paperSize === "58mm"}
+                  className={`px-2.5 py-1 transition ${
+                    paperSize === "58mm" ? "bg-[#187c59] text-white" : "text-[#68766f]"
                   }`}
                 >
                   58mm
@@ -235,8 +266,9 @@ export function ReceiptModal({
                 <button
                   type="button"
                   onClick={() => changePaperSize("80mm")}
-                  className={`rounded-md px-2.5 py-1 transition ${
-                    paperSize === "80mm" ? "bg-[#198760] text-white shadow-2xs" : "text-[#627069]"
+                  aria-pressed={paperSize === "80mm"}
+                  className={`px-2.5 py-1 transition ${
+                    paperSize === "80mm" ? "bg-[#187c59] text-white" : "text-[#68766f]"
                   }`}
                 >
                   80mm
@@ -246,7 +278,7 @@ export function ReceiptModal({
 
             {/* Receipt Preview (Also used for direct printing) */}
             <div
-              className={`thermal-receipt-printable mx-auto rounded-xl border border-dashed border-[#cddbd3] bg-[#fafcfb] p-4 text-[#15211d] shadow-inner transition-all ${
+              className={`thermal-receipt-printable mx-auto border border-dashed border-[#cddbd3] bg-[#fafcfb] p-4 text-[#15211d] transition-all ${previewOpen ? "mt-3 block" : "hidden"} ${
                 paperSize === "58mm" ? "max-w-[280px] text-xs" : "max-w-[360px] text-sm"
               }`}
             >
@@ -323,64 +355,62 @@ export function ReceiptModal({
               </div>
             </div>
 
-            {/* Send to WhatsApp Form */}
-            <div className="mt-4 rounded-2xl border border-[#dfe8e3] bg-[#fbfdfc] p-3.5 print-hidden-element">
-              <label className="grid gap-1 text-xs font-bold text-[#15211d]">
-                <span className="flex items-center gap-1 text-[#1a8e48]">
-                  <MessageSquareShare className="size-3.5" />
-                  Kirim Struk ke WhatsApp Pelanggan:
-                </span>
-                <div className="flex gap-2 mt-1">
-                  <input
-                    ref={phoneInputRef}
-                    type="tel"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="08123456789 (bisa dikosongkan)"
-                    className="h-10 flex-1 rounded-xl border border-[#dbe5df] px-3 text-xs focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSendWhatsApp}
-                    className="flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3.5 text-xs font-bold text-white shadow-2xs hover:bg-[#20ba59] transition active:scale-[0.98]"
-                  >
-                    <Send className="size-3.5" />
-                    <span>Kirim WA</span>
-                  </button>
-                </div>
+            <div className="mt-4 border-t border-[#e5ebe8] pt-4 print-hidden-element">
+              <label htmlFor="receipt-customer-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#44534c]">
+                <MessageSquareShare className="size-3.5 text-[#1a8e48]" />
+                Kirim struk melalui WhatsApp
               </label>
+              <div className="flex gap-2">
+                <input
+                  id="receipt-customer-phone"
+                  ref={phoneInputRef}
+                  type="tel"
+                  inputMode="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="Nomor WhatsApp (opsional)"
+                  className="h-10 min-w-0 flex-1 border border-[#cfd9d4] px-3 text-xs outline-none focus:border-[#187c59] focus:ring-2 focus:ring-[#187c59]/10"
+                />
+                <button
+                  type="button"
+                  onClick={handleSendWhatsApp}
+                  className="inline-flex h-10 shrink-0 items-center gap-1.5 bg-[#1fa855] px-3.5 text-xs font-bold text-white transition hover:bg-[#198d48] active:scale-[0.98]"
+                >
+                  <Send className="size-3.5" />
+                  <span>Kirim</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Modal Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#dfe8e3] bg-[#f8faf9] px-5 py-3.5 print-hidden-element">
+          <div className="grid grid-cols-2 gap-2 border-t border-[#dfe8e3] bg-[#f8faf9] p-4 print-hidden-element">
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 rounded-xl border border-[#198760] bg-white px-4 py-2.5 text-xs font-bold text-[#198760] shadow-xs hover:bg-[#eaf7f0] transition active:scale-[0.98]"
+              title="Cetak struk (P)"
+              className="inline-flex h-10 items-center justify-center gap-1.5 border border-[#b9cbc2] bg-white px-3 text-xs font-semibold text-[#187c59] transition hover:bg-[#edf7f2] active:scale-[0.98]"
             >
               <Printer className="size-4" />
-              <span>Cetak Struk [P]</span>
+              <span>Cetak</span>
             </button>
 
-            <div className="flex items-center gap-2">
-              <a
-                href={`/sales/${receipt.saleId}`}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#627069] hover:text-[#198760]"
-              >
-                <span>Halaman Nota</span>
-                <ArrowRight className="size-3" />
-              </a>
+            <button
+              ref={primaryActionRef}
+              type="button"
+              onClick={onClose}
+              title="Mulai transaksi baru (Enter atau Space)"
+              className="inline-flex h-10 items-center justify-center gap-1.5 bg-[#187c59] px-3 text-xs font-bold text-white transition hover:bg-[#126a4b] focus:outline-none focus:ring-2 focus:ring-[#187c59]/25 focus:ring-offset-2 active:scale-[0.98]"
+            >
+              <PlusCircle className="size-4" />
+              <span>Transaksi baru</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex items-center gap-1.5 rounded-xl bg-[#198760] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#14714f] transition active:scale-[0.98]"
-              >
-                <PlusCircle className="size-4" />
-                <span>Transaksi Baru [Space]</span>
-              </button>
-            </div>
+            <a
+              href={`/sales/${receipt.saleId}`}
+              className="col-span-2 inline-flex items-center justify-center gap-1 py-1 text-xs font-medium text-[#68766f] hover:text-[#187c59]"
+            >
+              Lihat nota lengkap <ArrowRight className="size-3" />
+            </a>
           </div>
 
         </div>

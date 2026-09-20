@@ -1,0 +1,192 @@
+.productCard {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.productCard:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgb(22 86 62 / 8%);
+}
+
+.productCard:not(:disabled):active {
+  transform: scale(0.985);
+}
+
+.productCardAdded {
+  border-color: #54a985;
+  background-color: #f1f8f4;
+}
+
+.addedConfirmation {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: #187c59;
+  padding: 4px 7px;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  animation: added-confirmation 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: 0 4px 12px rgb(24 124 89 / 18%);
+}
+
+.quantityPulse {
+  animation: quantity-pulse 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cartCountPulse {
+  animation: cart-count-pulse 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cartNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 16px 0;
+  border-left: 2px solid #187c59;
+  background: #edf7f2;
+  padding: 8px 10px;
+  color: #126b4b;
+  font-size: 12px;
+  line-height: 1.35;
+  animation: cart-notice-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cartItemAdded {
+  animation: cart-item-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cartItemRemoving {
+  pointer-events: none;
+  overflow: hidden;
+  transform-origin: top right;
+  animation: cart-item-remove 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.quantityButton,
+.removeButton {
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.quantityButton:not(:disabled):active,
+.removeButton:not(:disabled):active {
+  transform: scale(0.86);
+}
+
+.quantityIncrease {
+  animation: quantity-increase 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.quantityDecrease {
+  animation: quantity-decrease 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes added-confirmation {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes quantity-pulse {
+  0% { transform: scale(0.72); }
+  65% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cart-count-pulse {
+  50% { color: #126b4b; transform: translateY(-1px); }
+}
+
+@keyframes cart-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cart-item-in {
+  0% {
+    opacity: 0;
+    background-color: rgb(218 242 229 / 75%);
+    transform: translateX(9px);
+  }
+  100% {
+    opacity: 1;
+    background-color: transparent;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cart-item-remove {
+  0% {
+    opacity: 1;
+    max-height: 130px;
+    padding-block: 14px;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+    padding-block: 0;
+    transform: translateX(14px) scale(0.97);
+  }
+}
+
+@keyframes quantity-increase {
+  0% { background-color: transparent; transform: scale(0.82); }
+  55% { background-color: #e5f5ed; color: #126b4b; transform: scale(1.12); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+
+@keyframes quantity-decrease {
+  0% { background-color: transparent; transform: scale(1.08); }
+  55% { background-color: #fff4e6; color: #9a4b28; transform: scale(0.9); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .productCard,
+  .productCard:not(:disabled):hover,
+  .productCard:not(:disabled):active {
+    transform: none;
+    transition: none;
+  }
+
+  .addedConfirmation,
+  .quantityPulse,
+  .cartCountPulse,
+  .cartNotice,
+  .cartItemAdded,
+  .cartItemRemoving,
+  .quantityIncrease,
+  .quantityDecrease {
+    animation: none;
+  }
+
+  .quantityButton,
+  .removeButton {
+    transition: none;
+  }
+}

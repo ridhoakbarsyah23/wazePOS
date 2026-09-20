@@ -216,7 +216,7 @@ export function DashboardInsights({
                   <strong className="text-[#15211d]">
                     {peakHour?.transactions} transaksi
                   </strong>{" "}
-                  ({formatMoney(peakHour?.revenue ?? 0)}). Siapkan stok &amp; shift ekstra
+                  ({formatMoney(peakHour?.revenue ?? 0)}). Siapkan stok dan personel ekstra
                   menjelang jam ini.
                 </p>
               </div>

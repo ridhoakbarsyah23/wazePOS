@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { cashShift, inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
+import { inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
@@ -39,7 +39,6 @@ export async function POST(request: Request) {
 
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
   const allowsQrisPayments = hasPlanFeature(currentSubscription?.plan, "qrisPayments");
-  const requiresShift = hasPlanFeature(currentSubscription?.plan, "shiftManagement");
 
   let payload: unknown;
   try {
@@ -81,21 +80,6 @@ export async function POST(request: Request) {
 
       if (!selectedOutlet) {
         throw new Error("OUTLET_NOT_FOUND");
-      }
-
-      const [currentShift] = await tx
-        .select({ id: cashShift.id })
-        .from(cashShift)
-        .where(and(
-          eq(cashShift.businessId, membership.businessId),
-          eq(cashShift.outletId, parsed.data.outletId),
-          eq(cashShift.cashierId, session.user.id),
-          eq(cashShift.status, "open"),
-        ))
-        .limit(1);
-
-      if (requiresShift && !currentShift) {
-        throw new Error("SHIFT_REQUIRED");
       }
 
       const catalog = await tx
@@ -169,7 +153,6 @@ export async function POST(request: Request) {
         businessId: membership.businessId,
         outletId: parsed.data.outletId,
         cashierId: session.user.id,
-        cashShiftId: currentShift?.id ?? null,
         invoiceNumber,
         subtotal,
         discount: 0,
@@ -220,12 +203,6 @@ export async function POST(request: Request) {
     }
     if (message === "PRODUCT_NOT_FOUND") {
       return NextResponse.json({ message: "Ada produk yang sudah tidak aktif." }, { status: 422 });
-    }
-    if (message === "SHIFT_REQUIRED") {
-      return NextResponse.json(
-        { message: "Buka shift kasir untuk gerai ini sebelum menyimpan transaksi." },
-        { status: 409 },
-      );
     }
     if (message === "INSUFFICIENT_PAYMENT") {
       return NextResponse.json({ message: "Jumlah pembayaran kurang dari total transaksi." }, { status: 422 });

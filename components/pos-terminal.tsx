@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/lib/pos-calculations";
 import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/lib/pos-product-search";
 import {
@@ -9,13 +10,24 @@ import {
   Banknote,
   CheckCircle2,
   CreditCard,
+  Minus,
+  Plus,
   QrCode,
   ScanBarcode,
-  Sparkles,
+  Search,
+  ShoppingBasket,
+  ShoppingCart,
+  Store,
+  Trash2,
 } from "lucide-react";
-import { ReceiptModal } from "./receipt-modal";
-import { ReceiptShareData } from "./whatsapp-share-button";
+import { RupiahInput } from "@/components/ui/rupiah-input";
+import type { ReceiptShareData } from "./whatsapp-share-button";
+import styles from "./pos-terminal.module.css";
 
+const ReceiptModal = dynamic(
+  () => import("./receipt-modal").then((module) => module.ReceiptModal),
+  { ssr: false },
+);
 
 type PosProduct = {
   id: string;
@@ -53,6 +65,9 @@ export function PosTerminal({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeBufferRef = useRef<string>("");
   const lastKeyTimeRef = useRef<number>(0);
+  const addedFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quantityFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const removalTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Semua");
@@ -64,6 +79,17 @@ export function PosTerminal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedReceipt, setCompletedReceipt] = useState<(ReceiptShareData & { cashierName?: string }) | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [addedFeedback, setAddedFeedback] = useState<{
+    productId: string;
+    productName: string;
+    sequence: number;
+  } | null>(null);
+  const [quantityFeedback, setQuantityFeedback] = useState<{
+    productId: string;
+    direction: "increase" | "decrease";
+    sequence: number;
+  } | null>(null);
+  const [removingItemIds, setRemovingItemIds] = useState<string[]>([]);
 
 
   const categories = useMemo(
@@ -80,7 +106,24 @@ export function PosTerminal({
     searchInputRef.current?.focus();
   }, []);
 
+  useEffect(() => () => {
+    if (addedFeedbackTimerRef.current) clearTimeout(addedFeedbackTimerRef.current);
+    if (quantityFeedbackTimerRef.current) clearTimeout(quantityFeedbackTimerRef.current);
+    removalTimersRef.current.forEach((timer) => clearTimeout(timer));
+    removalTimersRef.current.clear();
+  }, []);
+
   const quickCashOptions = getQuickCashOptions(total);
+
+  const showAddedFeedback = useCallback((product: PosProduct) => {
+    if (addedFeedbackTimerRef.current) clearTimeout(addedFeedbackTimerRef.current);
+    setAddedFeedback((current) => ({
+      productId: product.id,
+      productName: product.name,
+      sequence: (current?.sequence ?? 0) + 1,
+    }));
+    addedFeedbackTimerRef.current = setTimeout(() => setAddedFeedback(null), 900);
+  }, []);
 
   const addProduct = useCallback((product: PosProduct) => {
     const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
@@ -101,9 +144,10 @@ export function PosTerminal({
       }
       return [...current, { ...product, quantity: 1 }];
     });
+    showAddedFeedback(product);
     setMessage(null);
     return true;
-  }, [cart]);
+  }, [cart, showAddedFeedback]);
 
   const addProductFromEntry = useCallback((rawValue: string) => {
     const resolved = resolveProductEntry(products, rawValue);
@@ -129,12 +173,36 @@ export function PosTerminal({
     }
   }, [addProduct, products]);
 
+  function removeCartItem(id: string) {
+    if (removingItemIds.includes(id)) return;
+    setRemovingItemIds((current) => [...current, id]);
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = setTimeout(() => {
+      setCart((current) => current.filter((item) => item.id !== id));
+      setRemovingItemIds((current) => current.filter((itemId) => itemId !== id));
+      removalTimersRef.current.delete(timer);
+    }, reduceMotion ? 0 : 220);
+    removalTimersRef.current.add(timer);
+  }
+
   function updateQuantity(id: string, quantity: number) {
-    setCart((current) =>
-      current
-        .map((item) => (item.id === id ? { ...item, quantity } : item))
-        .filter((item) => item.quantity > 0),
-    );
+    const currentItem = cart.find((item) => item.id === id);
+    if (!currentItem || removingItemIds.includes(id)) return;
+    if (quantity <= 0) {
+      removeCartItem(id);
+      return;
+    }
+
+    const direction = quantity > currentItem.quantity ? "increase" : "decrease";
+    if (quantityFeedbackTimerRef.current) clearTimeout(quantityFeedbackTimerRef.current);
+    setQuantityFeedback((current) => ({
+      productId: id,
+      direction,
+      sequence: (current?.sequence ?? 0) + 1,
+    }));
+    quantityFeedbackTimerRef.current = setTimeout(() => setQuantityFeedback(null), 360);
+    setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity } : item)));
   }
 
   async function completeSale() {
@@ -327,410 +395,410 @@ export function PosTerminal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [products, cart, total, allowNonCashPayments, allowQrisPayments, paymentMethod, showReceiptModal, search, addProductFromEntry]);
 
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const activeOutletName = outlets.find((outlet) => outlet.id === outletId)?.name ?? "Gerai";
+
   return (
-    <div className="space-y-4">
-      {/* Shortcut & Hardware Scanner Status Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#dfe8e3] bg-white px-4 py-2.5 text-xs text-[#627069] shadow-xs">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-1.5 font-bold text-[#15211d]">
-            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">F2 / /</kbd>
-            <span>Cari Produk</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5 font-bold text-[#15211d]">
-            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">F4</kbd>
-            <span>Ganti Pembayaran</span>
-          </div>
-          <div className="flex items-center gap-1.5 font-bold text-[#15211d]">
-            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">F9 / Space</kbd>
-            <span>Uang Pas</span>
-          </div>
-          <div className="hidden md:flex items-center gap-1.5 font-bold text-[#15211d]">
-            <kbd className="rounded-md border border-[#cddbd3] bg-[#f7faf8] px-1.5 py-0.5 font-mono text-[10px] text-[#198760] shadow-2xs">Esc</kbd>
-            <span>Bersihkan / Batal</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
-          <span className="relative flex size-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-          </span>
-          <ScanBarcode className="size-3.5 text-emerald-700" />
-          <span>Mode Scanner Aktif</span>
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_390px]">
-        <section className="min-w-0 rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="grid flex-1 gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
-              Gerai aktif
-              <select
-                value={outletId}
-                disabled
-                className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-semibold normal-case tracking-normal text-[#15211d] disabled:opacity-100"
-              >
-                {outlets.map((outlet) => (
-                  <option key={outlet.id} value={outlet.id}>
-                    {outlet.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid flex-[2] gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
-              Cari produk
-              <input
-                ref={searchInputRef}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter") return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  addProductFromEntry(event.currentTarget.value);
-                }}
-                placeholder="Ketik nama atau scan SKU, lalu Enter... [F2]"
-                aria-label="Cari produk berdasarkan nama atau SKU"
-                className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-normal normal-case tracking-normal text-[#15211d] focus:border-[#198760] focus:outline-hidden focus:ring-1 focus:ring-[#198760]"
-              />
-            </label>
-          </div>
-
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-          {categories.map((category) => (
-            <button
-              type="button"
-              key={category}
-              onClick={() => setCategoryFilter(category)}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
-                categoryFilter === category ? "bg-[#198760] text-white" : "bg-[#eef7f2] text-[#198760] hover:bg-[#e2f2e9]"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredProducts.map((product) => {
-            const unavailable = product.trackStock && product.stock < 1;
-            return (
-              <button
-                type="button"
-                disabled={unavailable}
-                key={product.id}
-                onClick={() => addProduct(product)}
-                className="rounded-xl border border-[#e4ece7] bg-[#fbfdfc] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#8cc9aa] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#198760]">
-                  {product.categoryName ?? "Umum"}
-                </span>
-                <strong className="mt-2 block text-sm text-[#15211d]">{product.name}</strong>
-                <span className="mt-2 block text-sm font-bold text-[#198760]">{money(product.sellingPrice)}</span>
-                <span className="mt-1 block text-xs text-[#627069]">
-                  {product.trackStock ? `Stok ${product.stock}` : "Stok tidak dilacak"}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        {filteredProducts.length === 0 && (
-          <p className="mt-6 rounded-xl bg-[#f7faf8] p-5 text-sm text-[#627069]">Produk tidak ditemukan.</p>
-        )}
-      </section>
-
-      <aside className="h-fit rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">Keranjang</h2>
-          <span className="rounded-full bg-[#eaf7f0] px-2.5 py-1 text-xs font-bold text-[#198760]">
-            {cart.reduce((sum, item) => sum + item.quantity, 0)} item
-          </span>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          {cart.map((item) => (
-            <div key={item.id} className="rounded-xl border border-[#edf2ee] bg-[#f7faf8] p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <strong className="text-sm">{item.name}</strong>
-                  <p className="m-0 mt-1 text-xs text-[#627069]">{money(item.sellingPrice)} / item</p>
-                </div>
-                <strong className="text-sm">{money(item.sellingPrice * item.quantity)}</strong>
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="h-8 w-8 rounded-lg bg-white text-lg font-bold text-[#198760]"
-                >
-                  -
-                </button>
-                <span className="min-w-6 text-center text-sm font-bold">{item.quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  disabled={item.trackStock && item.quantity >= item.stock}
-                  className="h-8 w-8 rounded-lg bg-white text-lg font-bold text-[#198760] disabled:opacity-40"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(item.id, 0)}
-                  className="ml-auto text-xs font-bold text-[#a35f12]"
-                >
-                  Hapus
-                </button>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+      <section className="min-w-0 border border-[#d9e2dd] bg-white">
+        <div className="border-b border-[#e5ebe8] p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <label htmlFor="pos-product-search" className="mb-1.5 block text-xs font-semibold text-[#44534c]">
+                Cari atau pindai produk
+              </label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#78857f]" />
+                <input
+                  id="pos-product-search"
+                  ref={searchInputRef}
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    addProductFromEntry(event.currentTarget.value);
+                  }}
+                  placeholder="Nama produk atau SKU"
+                  aria-label="Cari produk berdasarkan nama atau SKU"
+                  className="h-11 w-full border border-[#cbd6d0] bg-white pl-10 pr-16 text-sm text-[#17211d] outline-none placeholder:text-[#96a19b] focus:border-[#187c59] focus:ring-2 focus:ring-[#187c59]/10"
+                />
+                <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border border-[#d9e2dd] bg-[#f6f8f7] px-1.5 py-0.5 font-mono text-[10px] text-[#6c7a73]">F2</kbd>
               </div>
             </div>
-          ))}
-          {cart.length === 0 && (
-            <p className="rounded-xl border border-dashed border-[#dfe8e3] p-5 text-sm text-[#627069]">
-              Keranjang masih kosong.
-            </p>
+            <div className="flex h-11 items-center gap-2 border border-[#d9e2dd] bg-[#f8faf9] px-3 text-sm text-[#44534c] sm:min-w-48">
+              <Store className="size-4 text-[#187c59]" />
+              <span className="truncate font-semibold">{activeOutletName}</span>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-4 border-b border-[#e5ebe8]">
+            <div className="flex min-w-0 gap-5 overflow-x-auto">
+              {categories.map((category) => (
+                <button
+                  type="button"
+                  key={category}
+                  onClick={() => setCategoryFilter(category)}
+                  className={`relative shrink-0 pb-2.5 text-sm font-semibold transition-colors ${
+                    categoryFilter === category
+                      ? "text-[#126b4b] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-[#187c59]"
+                      : "text-[#6c7a73] hover:text-[#17211d]"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+            <div className="hidden shrink-0 items-center gap-1.5 pb-2.5 text-xs text-[#6c7a73] sm:flex">
+              <ScanBarcode className="size-3.5" /> Scanner siap
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between text-xs text-[#6c7a73]">
+            <span>{filteredProducts.length} produk</span>
+            {search && <span>Hasil untuk “{search}”</span>}
+          </div>
+
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {filteredProducts.map((product) => {
+              const unavailable = product.trackStock && product.stock < 1;
+              const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
+              const isJustAdded = addedFeedback?.productId === product.id;
+              return (
+                <button
+                  type="button"
+                  disabled={unavailable}
+                  key={product.id}
+                  onClick={() => addProduct(product)}
+                  className={`group min-h-32 border border-[#dde5e1] bg-white p-3.5 text-left hover:border-[#7fb59e] hover:bg-[#f6faf8] disabled:cursor-not-allowed disabled:bg-[#f6f7f6] disabled:opacity-55 ${styles.productCard} ${isJustAdded ? styles.productCardAdded : ""}`}
+                >
+                  {isJustAdded && (
+                    <span
+                      key={addedFeedback.sequence}
+                      className={styles.addedConfirmation}
+                      aria-hidden="true"
+                    >
+                      <ShoppingCart className="size-3.5" /> Ditambahkan
+                    </span>
+                  )}
+                  <span className="block truncate text-xs text-[#6c7a73]">{product.categoryName ?? "Umum"}</span>
+                  <strong className="mt-1.5 block min-h-10 text-sm leading-5 text-[#17211d]">{product.name}</strong>
+                  <div className="mt-2 flex items-end justify-between gap-3">
+                    <div>
+                      <span className="block text-sm font-bold text-[#126b4b]">{money(product.sellingPrice)}</span>
+                      <span className={`mt-0.5 block text-xs ${unavailable ? "font-semibold text-rose-600" : "text-[#78857f]"}`}>
+                        {product.trackStock ? (unavailable ? "Stok habis" : `Stok ${product.stock}`) : "Tanpa stok"}
+                      </span>
+                    </div>
+                    {quantityInCart > 0 && (
+                      <span
+                        key={isJustAdded ? addedFeedback.sequence : 0}
+                        className={`grid size-7 place-items-center bg-[#187c59] text-xs font-bold text-white ${isJustAdded ? styles.quantityPulse : ""}`}
+                        aria-label={`${quantityInCart} di keranjang`}
+                      >
+                        {quantityInCart}
+                      </span>
+                    )}
+                    {quantityInCart === 0 && (
+                      <span
+                        className="grid size-7 place-items-center border border-[#cbd8d1] text-[#187c59] transition-colors group-hover:border-[#7fb59e] group-hover:bg-[#eaf5ef]"
+                        aria-hidden="true"
+                      >
+                        <Plus className="size-3.5" />
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="grid min-h-56 place-items-center border border-dashed border-[#d9e2dd] text-center">
+              <div>
+                <Search className="mx-auto size-5 text-[#9aa69f]" />
+                <p className="mt-2 text-sm font-semibold text-[#44534c]">Produk tidak ditemukan</p>
+                <p className="mt-1 text-xs text-[#78857f]">Coba nama, kategori, atau SKU lain.</p>
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="mt-5 border-t border-[#e7efea] pt-4">
-          <div className="flex justify-between text-sm text-[#627069]">
-            <span>Subtotal</span>
-            <strong className="text-[#15211d]">{money(total)}</strong>
+        <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[#e5ebe8] bg-[#fafbfa] px-4 py-2.5 text-[11px] text-[#78857f] sm:px-5">
+          <span><kbd className="font-mono font-semibold text-[#44534c]">F2</kbd> cari</span>
+          <span><kbd className="font-mono font-semibold text-[#44534c]">F4</kbd> metode bayar</span>
+          <span><kbd className="font-mono font-semibold text-[#44534c]">F9</kbd> uang pas</span>
+          <span><kbd className="font-mono font-semibold text-[#44534c]">Esc</kbd> bersihkan</span>
+        </footer>
+      </section>
+
+      <aside className="border border-[#d9e2dd] bg-white xl:sticky xl:top-4">
+        <div className="flex items-center justify-between border-b border-[#e5ebe8] px-4 py-3.5">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-bold text-[#17211d]">
+              <ShoppingCart className="size-4 text-[#187c59]" /> Pesanan
+            </h2>
+            <p
+              key={addedFeedback?.sequence ?? 0}
+              className={`mt-0.5 text-xs text-[#78857f] ${addedFeedback ? styles.cartCountPulse : ""}`}
+            >
+              {cartItemCount} item dipilih
+            </p>
           </div>
-          <div className="mt-2 flex justify-between text-lg font-extrabold">
-            <span>Total</span>
-            <span className="text-[#198760]">{money(total)}</span>
-          </div>
+          {cart.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setCart([]);
+                setPaidAmount("");
+                setMessage(null);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9a4b28] hover:text-[#7d3518]"
+            >
+              <Trash2 className="size-3.5" /> Kosongkan
+            </button>
+          )}
         </div>
 
-        <div className="mt-4 grid gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#627069]">
-              Metode Pembayaran
-            </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#198760]">
-              <Sparkles className="size-3" /> Siap Digunakan
-            </span>
+        {addedFeedback && (
+          <div
+            key={addedFeedback.sequence}
+            className={styles.cartNotice}
+            role="status"
+            aria-live="polite"
+          >
+            <CheckCircle2 className="size-4 shrink-0" />
+            <span className="truncate"><strong>{addedFeedback.productName}</strong> ditambahkan ke pesanan</span>
+          </div>
+        )}
+
+        <div className="max-h-[340px] overflow-y-auto px-4">
+          {cart.map((item) => {
+            const isJustAdded = addedFeedback?.productId === item.id;
+            const quantityChange = quantityFeedback?.productId === item.id ? quantityFeedback : null;
+            const isRemoving = removingItemIds.includes(item.id);
+            return (
+            <div
+              key={`${item.id}:${isJustAdded ? addedFeedback.sequence : 0}`}
+              className={`border-b border-[#edf1ef] py-3.5 ${isJustAdded ? styles.cartItemAdded : ""} ${isRemoving ? styles.cartItemRemoving : ""}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <strong className="block truncate text-sm text-[#17211d]">{item.name}</strong>
+                  <p className="mt-0.5 text-xs text-[#78857f]">{money(item.sellingPrice)} / item</p>
+                </div>
+                <strong className="shrink-0 text-sm text-[#17211d]">{money(item.sellingPrice * item.quantity)}</strong>
+              </div>
+              <div className="mt-2.5 flex items-center">
+                <div className="flex items-center border border-[#d9e2dd]">
+                  <button
+                    type="button"
+                    aria-label={`Kurangi ${item.name}`}
+                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    disabled={isRemoving}
+                    className={`grid size-8 place-items-center text-[#44534c] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                  <span
+                    key={quantityChange?.sequence ?? 0}
+                    className={`min-w-9 border-x border-[#d9e2dd] text-center text-sm font-bold leading-8 ${
+                      quantityChange?.direction === "increase"
+                        ? styles.quantityIncrease
+                        : quantityChange?.direction === "decrease"
+                          ? styles.quantityDecrease
+                          : ""
+                    }`}
+                  >
+                    {item.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Tambah ${item.name}`}
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    disabled={isRemoving || (item.trackStock && item.quantity >= item.stock)}
+                    className={`grid size-8 place-items-center text-[#126b4b] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Hapus ${item.name} dari pesanan`}
+                  title={`Hapus ${item.name}`}
+                  disabled={isRemoving}
+                  onClick={() => removeCartItem(item.id)}
+                  className={`ml-auto inline-flex items-center gap-1.5 px-1 py-1 text-xs text-[#78857f] hover:text-rose-600 disabled:pointer-events-none ${styles.removeButton}`}
+                >
+                  <Trash2 className="size-3.5" /> Hapus
+                </button>
+              </div>
+            </div>
+            );
+          })}
+
+          {cart.length === 0 && (
+            <div className="grid min-h-44 place-items-center text-center">
+              <div>
+                <ShoppingBasket className="mx-auto size-6 text-[#a3ada8]" />
+                <p className="mt-2 text-sm font-semibold text-[#44534c]">Pesanan masih kosong</p>
+                <p className="mt-1 max-w-52 text-xs leading-5 text-[#78857f]">Pilih produk di sebelah kiri atau pindai SKU.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-[#d9e2dd] p-4">
+          <div className="flex items-end justify-between gap-4">
+            <span className="text-sm text-[#6c7a73]">Total</span>
+            <strong className="text-2xl tracking-[-0.5px] text-[#17211d]">{money(total)}</strong>
+          </div>
+
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold text-[#44534c]">Metode pembayaran</p>
+            <div className={`grid gap-2 ${allowNonCashPayments ? "grid-cols-4" : "grid-cols-2"}`}>
+              <button
+                type="button"
+                aria-pressed={paymentMethod === "cash"}
+                onClick={() => {
+                  setPaymentMethod("cash");
+                  setMessage(null);
+                }}
+                className={`flex h-10 items-center justify-center gap-1.5 border text-xs font-semibold ${paymentMethod === "cash" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8]"}`}
+              >
+                <Banknote className="size-3.5" /> Tunai
+              </button>
+              <button
+                type="button"
+                aria-pressed={paymentMethod === "qris"}
+                disabled={!allowQrisPayments}
+                title={allowQrisPayments ? "Gunakan pembayaran QRIS" : "QRIS belum tersedia"}
+                onClick={() => {
+                  if (!allowQrisPayments) return;
+                  setPaymentMethod("qris");
+                  setMessage(null);
+                }}
+                className={`flex h-10 items-center justify-center gap-1.5 border text-xs font-semibold ${paymentMethod === "qris" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8] disabled:cursor-not-allowed disabled:bg-[#f5f6f5] disabled:text-[#a4ada8]"}`}
+              >
+                <QrCode className="size-3.5" /> QRIS
+              </button>
+              {allowNonCashPayments && (
+                <>
+                  <button
+                    type="button"
+                    aria-pressed={paymentMethod === "debit"}
+                    onClick={() => setPaymentMethod("debit")}
+                    className={`h-10 border text-xs font-semibold ${paymentMethod === "debit" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8]"}`}
+                  >
+                    Debit
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={paymentMethod === "credit"}
+                    onClick={() => setPaymentMethod("credit")}
+                    className={`h-10 border text-xs font-semibold ${paymentMethod === "credit" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8]"}`}
+                  >
+                    Kredit
+                  </button>
+                </>
+              )}
+            </div>
+            {!allowQrisPayments && <p className="mt-1.5 text-[11px] text-[#87928d]">QRIS menunggu integrasi pembayaran resmi.</p>}
           </div>
 
           {checkoutDisabledReason && (
-            <p className="m-0 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm font-semibold text-amber-800">
+            <p className="m-0 mt-3 border-l-2 border-amber-500 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
               {checkoutDisabledReason}
             </p>
           )}
 
-          {/* Payment Method Selector Pills */}
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#eef4f1] p-1 border border-[#dfe8e3]">
-            <button
-              type="button"
-              onClick={() => {
-                setPaymentMethod("cash");
-                setMessage(null);
-              }}
-              className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-extrabold transition ${
-                paymentMethod === "cash"
-                  ? "bg-white text-[#198760] shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-[#cbe0d4]"
-                  : "text-[#627069] hover:text-[#15211d]"
-              }`}
-            >
-              <Banknote className="size-4" />
-              <span>Tunai (Cash)</span>
-            </button>
-            <button
-              type="button"
-              disabled={!allowQrisPayments}
-              onClick={() => {
-                if (!allowQrisPayments) return;
-                setPaymentMethod("qris");
-                setMessage(null);
-              }}
-              title={
-                allowQrisPayments
-                  ? "Gunakan pembayaran QRIS"
-                  : "Menunggu integrasi penyedia pembayaran resmi"
-              }
-              className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-extrabold transition ${
-                paymentMethod === "qris"
-                  ? "bg-white text-[#198760] shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-[#cbe0d4]"
-                  : allowQrisPayments
-                    ? "text-[#627069] hover:text-[#15211d]"
-                    : "cursor-not-allowed text-[#94a39c] opacity-70"
-              }`}
-            >
-              <QrCode className="size-4" />
-              <span>{allowQrisPayments ? "QRIS Digital" : "QRIS Belum Tersedia"}</span>
-            </button>
-          </div>
-
-          {/* Optional Debit/Credit toggle if plan allows */}
-          {allowNonCashPayments && (
-            <div className="flex items-center justify-end gap-2 text-xs text-[#627069]">
-              <span className="text-[11px]">Opsi kartu:</span>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("debit")}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-                  paymentMethod === "debit"
-                    ? "bg-[#198760] text-white border-[#198760]"
-                    : "bg-white border-[#dfe8e3] text-[#627069]"
-                }`}
-              >
-                Debit
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("credit")}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-                  paymentMethod === "credit"
-                    ? "bg-[#198760] text-white border-[#198760]"
-                    : "bg-white border-[#dfe8e3] text-[#627069]"
-                }`}
-              >
-                Kredit
-              </button>
-            </div>
-          )}
-
-          {/* TUNAI MODE */}
           {paymentMethod === "cash" && (
-            <div className="space-y-3 rounded-2xl border border-[#dfe8e3] bg-[#fafcfb] p-3.5">
-              <label className="grid gap-1 text-xs font-bold text-[#15211d]">
-                <span>Uang Diterima dari Pembeli</span>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 text-sm font-bold text-[#627069]">Rp</span>
-                  <input
-                    value={paidAmount}
-                    onChange={(event) => setPaidAmount(event.target.value)}
-                    type="number"
-                    min="0"
-                    max="2000000000"
-                    placeholder="0"
-                    className="h-11 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-sm font-bold text-[#15211d] focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/20"
-                  />
-                </div>
+            <div className="mt-4 border-t border-[#edf1ef] pt-4">
+              <label className="grid gap-1.5 text-xs font-semibold text-[#44534c]">
+                Uang diterima
+                <RupiahInput
+                  value={Number(paidAmount) || 0}
+                  onChange={(value) => setPaidAmount(String(value))}
+                  onEmpty={() => setPaidAmount("")}
+                  max={2_000_000_000}
+                  className="h-11 w-full border border-[#cbd6d0] bg-white pl-10 pr-3 text-base font-bold text-[#17211d] outline-none focus:border-[#187c59] focus:ring-2 focus:ring-[#187c59]/10"
+                />
               </label>
 
-              {/* Quick Cash Presets */}
               {total > 0 && (
-                <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-[#627069]">Pilihan Uang Cepat:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {quickCashOptions.map((amount) => (
-                      <button
-                        key={amount}
-                        type="button"
-                        onClick={() => setPaidAmount(String(amount))}
-                        className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition ${
-                          Number(paidAmount) === amount
-                            ? "bg-[#198760] text-white border-[#198760]"
-                            : "bg-white border-[#dbe5df] text-[#15211d] hover:border-[#198760] hover:bg-[#f0f8f4]"
-                        }`}
-                      >
-                        {amount === total ? `Uang Pas (${money(amount)})` : money(amount)}
-                      </button>
-                    ))}
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {quickCashOptions.map((amount) => (
                     <button
+                      key={amount}
                       type="button"
-                      onClick={() => setPaidAmount((curr) => String((Number(curr) || 0) + 10_000))}
-                      className="rounded-lg border border-[#dbe5df] bg-white px-2 py-1 text-xs font-bold text-[#627069] hover:text-[#198760]"
+                      onClick={() => setPaidAmount(String(amount))}
+                      className={`border px-2.5 py-1.5 text-xs font-semibold ${Number(paidAmount) === amount ? "border-[#187c59] bg-[#187c59] text-white" : "border-[#d9e2dd] bg-white text-[#44534c] hover:border-[#9aaca2]"}`}
                     >
-                      +10rb
+                      {amount === total ? "Uang pas" : money(amount)}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaidAmount((curr) => String((Number(curr) || 0) + 50_000))}
-                      className="rounded-lg border border-[#dbe5df] bg-white px-2 py-1 text-xs font-bold text-[#627069] hover:text-[#198760]"
-                    >
-                      +50rb
-                    </button>
-                  </div>
+                  ))}
                 </div>
               )}
 
-              {/* Kembalian / Status Pembayaran */}
               {paid > 0 && (
-                <div
-                  className={`flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-bold ${
-                    paid >= total
-                      ? "bg-[#eaf7f0] text-[#198760] border border-[#cae8d9]"
-                      : "bg-[#fff3ea] text-[#c25e1a] border border-[#fed7aa]"
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    {paid >= total ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}
-                    <span>{paid >= total ? "Kembalian Kasir" : "Pembayaran Kurang"}</span>
-                  </span>
-                  <span className="text-base">{money(paid >= total ? change : shortfall)}</span>
+                <div className={`mt-3 flex items-center justify-between border-l-2 px-3 py-2.5 text-sm ${paid >= total ? "border-[#187c59] bg-[#f1f8f4] text-[#126b4b]" : "border-amber-500 bg-amber-50 text-amber-900"}`}>
+                  <span>{paid >= total ? "Kembalian" : "Kurang"}</span>
+                  <strong>{money(paid >= total ? change : shortfall)}</strong>
                 </div>
               )}
             </div>
           )}
 
-          {/* DEBIT / CREDIT CARD MODE */}
           {(paymentMethod === "debit" || paymentMethod === "credit") && (
-            <div className="rounded-2xl border border-[#dfe8e3] bg-[#fafcfb] p-4 text-xs text-[#627069] space-y-2">
-              <div className="flex items-center gap-2 font-bold text-[#15211d]">
-                <CreditCard className="size-4 text-[#198760]" />
-                <span className="capitalize">Mesin EDC / Kartu {paymentMethod}</span>
-              </div>
-              <p className="m-0 leading-5">
-                Gesek atau tap kartu di mesin EDC gerai dengan nominal sesuai tagihan:
-                <strong className="text-[#198760] ml-1">{money(total)}</strong>.
-              </p>
+            <div className="mt-3 flex gap-2 border-l-2 border-[#187c59] bg-[#f4f8f6] px-3 py-2.5 text-xs leading-5 text-[#44534c]">
+              <CreditCard className="mt-0.5 size-4 shrink-0 text-[#187c59]" />
+              Proses {paymentMethod === "debit" ? "kartu debit" : "kartu kredit"} di mesin EDC sebesar {money(total)}.
             </div>
           )}
 
-          {/* Notification Messages */}
           {message && (
-            <p
-              className={`m-0 rounded-xl px-3.5 py-3 text-sm font-semibold flex items-center gap-2 ${
-                message.type === "success"
-                  ? "bg-[#eaf7f0] text-[#198760] border border-[#cae8d9]"
-                  : "bg-[#fff0e5] text-[#a35f12] border border-[#fed7aa]"
-              }`}
-            >
-              {message.type === "success" ? <CheckCircle2 className="size-4 shrink-0" /> : <AlertCircle className="size-4 shrink-0" />}
+            <p className={`m-0 mt-3 flex items-start gap-2 border-l-2 px-3 py-2.5 text-xs leading-5 ${message.type === "success" ? "border-[#187c59] bg-[#f1f8f4] text-[#126b4b]" : "border-amber-500 bg-amber-50 text-amber-900"}`} role="status">
+              {message.type === "success" ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0" /> : <AlertCircle className="mt-0.5 size-3.5 shrink-0" />}
               <span>{message.text}</span>
             </p>
           )}
 
           {invoiceId && (
-            <a
-              href={`/sales/${invoiceId}`}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-[#198760] bg-[#eaf7f0] py-2.5 text-center text-xs font-bold text-[#198760] hover:bg-[#d8f0e3] transition"
-            >
-              <span>Lihat & Cetak Struk Penjualan</span>
-              <ArrowRight className="size-3.5" />
+            <a href={`/sales/${invoiceId}`} className="mt-3 flex items-center justify-center gap-1.5 border border-[#b8cbc1] py-2 text-xs font-semibold text-[#126b4b] hover:bg-[#f4f8f6]">
+              Lihat struk terakhir <ArrowRight className="size-3.5" />
             </a>
           )}
 
-          {/* Submit Button */}
           <button
             type="button"
             disabled={isSubmitting || cart.length === 0 || Boolean(checkoutDisabledReason)}
             onClick={completeSale}
-            className="h-12 w-full rounded-xl bg-[#198760] text-sm font-bold text-white shadow-[0_4px_14px_rgba(25,135,96,.3)] transition hover:bg-[#14714f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            className="mt-3 h-12 w-full bg-[#187c59] px-4 text-sm font-bold text-white transition-colors hover:bg-[#126a4b] disabled:cursor-not-allowed disabled:bg-[#c8d0cc]"
           >
             {isSubmitting
               ? "Menyimpan transaksi..."
               : paymentMethod === "qris"
-              ? `Konfirmasi Bayar QRIS (${money(total)})`
-              : paymentMethod === "cash"
-              ? `Bayar Tunai (${money(total)})`
-              : `Selesaikan Transaksi (${money(total)})`}
+                ? `Bayar QRIS · ${money(total)}`
+                : paymentMethod === "cash"
+                  ? `Bayar tunai · ${money(total)}`
+                  : `Selesaikan transaksi · ${money(total)}`}
           </button>
         </div>
       </aside>
 
-      {/* SUCCESS RECEIPT MODAL WITH THERMAL PRINT & WHATSAPP */}
-      <ReceiptModal
-        isOpen={showReceiptModal}
-        onClose={() => {
-          setShowReceiptModal(false);
-          searchInputRef.current?.focus();
-        }}
-        receipt={completedReceipt}
-      />
-      </div>
+      {showReceiptModal && (
+        <ReceiptModal
+          isOpen
+          onClose={() => {
+            setShowReceiptModal(false);
+            searchInputRef.current?.focus();
+          }}
+          receipt={completedReceipt}
+        />
+      )}
     </div>
   );
 
