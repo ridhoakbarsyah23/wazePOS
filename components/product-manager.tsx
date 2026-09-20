@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { RupiahInput } from "@/components/ui/rupiah-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -232,12 +233,6 @@ export function ProductManager({
 
   async function handleToggleStatus(item: Product) {
     const nextState = !item.isActive;
-    const confirmMsg = nextState
-      ? `Aktifkan kembali produk "${item.name}"?`
-      : `Nonaktifkan produk "${item.name}"? Histori transaksi tetap aman.`;
-
-    if (!window.confirm(confirmMsg)) return;
-
     setFeedback(null);
     setPending(true);
 
@@ -788,20 +783,33 @@ export function ProductManager({
                           <Pencil className="size-3.5" />
                         </Button>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={pending}
-                          onClick={() => handleToggleStatus(item)}
-                          className={`h-8 px-2 text-xs ${
+                        <ConfirmationDialog
+                          title={`${item.isActive ? "Nonaktifkan" : "Aktifkan kembali"} produk “${item.name}”?`}
+                          description={
                             item.isActive
-                              ? "text-rose-600 hover:bg-rose-50"
-                              : "text-emerald-700 hover:bg-emerald-50"
-                          }`}
-                          title={item.isActive ? "Nonaktifkan produk" : "Aktifkan produk"}
-                        >
-                          <PowerOff className="size-3.5" />
-                        </Button>
+                              ? "Produk tidak akan tampil di kasir, tetapi histori transaksi tetap aman."
+                              : "Produk akan kembali tersedia di katalog dan dapat ditampilkan di kasir."
+                          }
+                          confirmLabel={item.isActive ? "Nonaktifkan produk" : "Aktifkan produk"}
+                          destructive={item.isActive}
+                          disabled={pending}
+                          onConfirm={() => void handleToggleStatus(item)}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={pending}
+                              className={`h-8 px-2 text-xs ${
+                                item.isActive
+                                  ? "text-rose-600 hover:bg-rose-50"
+                                  : "text-emerald-700 hover:bg-emerald-50"
+                              }`}
+                              title={item.isActive ? "Nonaktifkan produk" : "Aktifkan produk"}
+                            >
+                              <PowerOff className="size-3.5" />
+                            </Button>
+                          }
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

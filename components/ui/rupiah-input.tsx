@@ -4,6 +4,7 @@ type RupiahInputProps = {
   id?: string;
   value: number;
   onChange: (value: number) => void;
+  onEmpty?: () => void;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
@@ -27,6 +28,7 @@ export function RupiahInput({
   id,
   value,
   onChange,
+  onEmpty,
   placeholder = "0",
   required,
   disabled,
@@ -40,7 +42,8 @@ export function RupiahInput({
   function handleChange(rawValue: string) {
     const digits = rawValue.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
     if (digits === "") {
-      onChange(0);
+      if (onEmpty) onEmpty();
+      else onChange(0);
       return;
     }
     const numeric = Number(digits);

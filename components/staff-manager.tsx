@@ -15,12 +15,12 @@ import {
   Trash2,
   User,
   UserPlus,
-  Users,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -141,9 +141,7 @@ export function StaffManager({
     }
   }
 
-  async function handleDeleteStaff(memberId: string, memberName: string) {
-    if (!confirm(`Apakah Anda yakin ingin mencabut akses karyawan "${memberName}"?`)) return;
-
+  async function handleDeleteStaff(memberId: string) {
     setFeedback(null);
     setPending(true);
 
@@ -482,33 +480,49 @@ export function StaffManager({
                               <option value="admin">Admin</option>
                             </select>
 
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
+                            <ConfirmationDialog
+                              title={`Cabut akses “${member.name}”?`}
+                              description="Karyawan ini tidak akan dapat mengakses bisnis lagi. Akun pengguna dan histori transaksi yang sudah tercatat tetap aman."
+                              confirmLabel="Cabut akses"
                               disabled={pending}
-                              onClick={() => handleDeleteStaff(member.id, member.name)}
-                              className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
-                              title="Cabut akses"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
+                              onConfirm={() => void handleDeleteStaff(member.id)}
+                              trigger={
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={pending}
+                                  className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
+                                  title="Cabut akses"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              }
+                            />
                           </>
                         )}
 
                         {/* Admin can remove cashier */}
                         {currentUserRole === "admin" && member.role === "cashier" && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
+                          <ConfirmationDialog
+                            title={`Cabut akses “${member.name}”?`}
+                            description="Kasir ini tidak akan dapat mengakses bisnis lagi. Akun pengguna dan histori transaksi yang sudah tercatat tetap aman."
+                            confirmLabel="Cabut akses"
                             disabled={pending}
-                            onClick={() => handleDeleteStaff(member.id, member.name)}
-                            className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
-                            title="Cabut akses kasir"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
+                            onConfirm={() => void handleDeleteStaff(member.id)}
+                            trigger={
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                disabled={pending}
+                                className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50"
+                                title="Cabut akses kasir"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            }
+                          />
                         )}
                       </div>
                     </TableCell>

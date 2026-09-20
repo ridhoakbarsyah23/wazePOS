@@ -14,21 +14,44 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Option = { id: string; name: string };
+type StockSetting = { outletId: string; productId: string; lowStockThreshold: number };
 
 export function StockAdjustmentForm({
   outlets,
   products,
+  stockSettings,
+  initialOutletId,
+  initialProductId,
 }: {
   outlets: Option[];
   products: Option[];
+  stockSettings: StockSetting[];
+  initialOutletId?: string;
+  initialProductId?: string;
 }) {
-  const [outletId, setOutletId] = useState(outlets[0]?.id ?? "");
-  const [productId, setProductId] = useState(products[0]?.id ?? "");
+  const defaultOutletId = outlets.some((item) => item.id === initialOutletId)
+    ? initialOutletId!
+    : outlets[0]?.id ?? "";
+  const defaultProductId = products.some((item) => item.id === initialProductId)
+    ? initialProductId!
+    : products[0]?.id ?? "";
+  const initialStockSetting = stockSettings.find(
+    (item) => item.outletId === defaultOutletId && item.productId === defaultProductId
+  );
+  const [outletId, setOutletId] = useState(defaultOutletId);
+  const [productId, setProductId] = useState(defaultProductId);
   const [quantity, setQuantity] = useState("");
-  const [threshold, setThreshold] = useState("5");
+  const [threshold, setThreshold] = useState(String(initialStockSetting?.lowStockThreshold ?? 5));
   const [note, setNote] = useState("");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [pending, setPending] = useState(false);
+
+  function syncThreshold(nextOutletId: string, nextProductId: string) {
+    const setting = stockSettings.find(
+      (item) => item.outletId === nextOutletId && item.productId === nextProductId
+    );
+    setThreshold(String(setting?.lowStockThreshold ?? 5));
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,6 +90,18 @@ export function StockAdjustmentForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      {initialProductId && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-sm text-blue-900">
+          <Boxes className="mt-0.5 size-4 shrink-0" />
+          <div>
+            <strong className="block text-xs font-extrabold uppercase tracking-wide">Restock cepat aktif</strong>
+            <span className="mt-1 block text-xs leading-5">
+              Produk dan gerai sudah dipilih. Masukkan jumlah stok aktual setelah barang diterima, bukan jumlah penambahannya.
+            </span>
+          </div>
+        </div>
+      )}
+
       {feedback && (
         <div
           role="status"
@@ -93,7 +128,11 @@ export function StockAdjustmentForm({
           <select
             id="adj-outlet"
             value={outletId}
-            onChange={(event) => setOutletId(event.target.value)}
+            onChange={(event) => {
+              const nextOutletId = event.target.value;
+              setOutletId(nextOutletId);
+              syncThreshold(nextOutletId, productId);
+            }}
             className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
             disabled={pending || outlets.length === 0}
             required
@@ -113,7 +152,11 @@ export function StockAdjustmentForm({
           <select
             id="adj-product"
             value={productId}
-            onChange={(event) => setProductId(event.target.value)}
+            onChange={(event) => {
+              const nextProductId = event.target.value;
+              setProductId(nextProductId);
+              syncThreshold(outletId, nextProductId);
+            }}
             className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
             disabled={pending || products.length === 0}
             required
@@ -139,6 +182,7 @@ export function StockAdjustmentForm({
             required
             placeholder="0"
             disabled={pending}
+            autoFocus={Boolean(initialProductId)}
           />
         </div>
 

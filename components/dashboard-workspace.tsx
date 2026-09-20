@@ -32,8 +32,10 @@ import {
 import { DashboardSalesChart } from "@/components/dashboard-sales-chart";
 import { ShiftPanel } from "@/components/shift-panel";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RupiahInput } from "@/components/ui/rupiah-input";
 import {
   Table,
   TableBody,
@@ -352,9 +354,6 @@ export function DashboardWorkspace({
   }
 
   async function handleDeleteCategory(item: WorkspaceCategory) {
-    if (!window.confirm(`Hapus kategori "${item.name}"? Produk di dalamnya akan otomatis beralih ke kategori Umum.`)) {
-      return;
-    }
     setLoading(true);
     try {
       const res = await fetch(`/api/categories/${item.id}`, { method: "DELETE" });
@@ -435,9 +434,6 @@ export function DashboardWorkspace({
   }
 
   async function handleDeleteOutlet(item: WorkspaceOutlet) {
-    if (!window.confirm(`Hapus gerai "${item.name}"? Gerai yang belum memiliki transaksi penjualan dapat dihapus.`)) {
-      return;
-    }
     setLoading(true);
     try {
       const res = await fetch(`/api/outlets/${item.id}`, { method: "DELETE" });
@@ -1019,14 +1015,22 @@ export function DashboardWorkspace({
                           >
                             <Edit2 className="size-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCategory(c)}
-                            className="grid size-8 place-items-center rounded-xl border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
-                            title="Hapus kategori"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
+                          <ConfirmationDialog
+                            title={`Hapus kategori “${c.name}”?`}
+                            description="Produk dalam kategori ini akan otomatis dialihkan ke kategori Umum. Tindakan ini tidak dapat dibatalkan."
+                            confirmLabel="Hapus kategori"
+                            disabled={loading}
+                            onConfirm={() => void handleDeleteCategory(c)}
+                            trigger={
+                              <button
+                                type="button"
+                                className="grid size-8 place-items-center rounded-xl border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
+                                title="Hapus kategori"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            }
+                          />
                         </div>
                       </>
                     )}
@@ -1129,14 +1133,22 @@ export function DashboardWorkspace({
                             <Edit2 className="size-3.5" />
                           </button>
                           {outlets.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteOutlet(o)}
-                              className="grid size-8 place-items-center rounded-xl border border-[#fed7d7] text-rose-600 hover:bg-rose-50 transition"
-                              title="Hapus gerai"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
+                            <ConfirmationDialog
+                              title={`Hapus gerai “${o.name}”?`}
+                              description="Gerai hanya dapat dihapus jika belum memiliki transaksi. Stok dan riwayat pergerakan pada gerai ini juga akan dihapus."
+                              confirmLabel="Hapus gerai"
+                              disabled={loading}
+                              onConfirm={() => void handleDeleteOutlet(o)}
+                              trigger={
+                                <button
+                                  type="button"
+                                  className="grid size-8 place-items-center rounded-xl border border-[#fed7d7] text-rose-600 hover:bg-rose-50 transition"
+                                  title="Hapus gerai"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              }
+                            />
                           )}
                         </div>
                       </div>
@@ -1218,29 +1230,23 @@ export function DashboardWorkspace({
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-[#15211d]">Harga Jual (Rp) *</Label>
-                  <Input
+                  <Label className="text-xs font-bold text-[#15211d]">Harga Jual *</Label>
+                  <RupiahInput
                     required
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={productForm.sellingPrice}
-                    onChange={(e) => setProductForm({ ...productForm, sellingPrice: e.target.value })}
+                    value={Number(productForm.sellingPrice) || 0}
+                    onChange={(value) => setProductForm({ ...productForm, sellingPrice: String(value) })}
                     placeholder="25000"
-                    className="h-10 text-xs rounded-xl font-bold"
+                    className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-xs font-bold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <Label className="text-xs font-bold text-[#15211d]">Harga Modal (HPP)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={productForm.costPrice}
-                    onChange={(e) => setProductForm({ ...productForm, costPrice: e.target.value })}
+                  <RupiahInput
+                    value={Number(productForm.costPrice) || 0}
+                    onChange={(value) => setProductForm({ ...productForm, costPrice: String(value) })}
                     placeholder="15000"
-                    className="h-10 text-xs rounded-xl"
+                    className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-xs text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
                   />
                 </div>
 
@@ -1385,27 +1391,21 @@ export function DashboardWorkspace({
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-[#15211d]">Harga Jual (Rp) *</Label>
-                  <Input
+                  <Label className="text-xs font-bold text-[#15211d]">Harga Jual *</Label>
+                  <RupiahInput
                     required
-                    type="number"
-                    min="0"
-                    step="100"
                     value={editingProduct.sellingPrice}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, sellingPrice: Number(e.target.value) })}
-                    className="h-10 text-xs rounded-xl font-bold"
+                    onChange={(value) => setEditingProduct({ ...editingProduct, sellingPrice: value })}
+                    className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-xs font-bold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-[#15211d]">Harga Modal (Rp)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="100"
+                  <Label className="text-xs font-bold text-[#15211d]">Harga Modal</Label>
+                  <RupiahInput
                     value={editingProduct.costPrice ?? 0}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, costPrice: Number(e.target.value) })}
-                    className="h-10 text-xs rounded-xl"
+                    onChange={(value) => setEditingProduct({ ...editingProduct, costPrice: value })}
+                    className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-xs text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
                   />
                 </div>
               </div>

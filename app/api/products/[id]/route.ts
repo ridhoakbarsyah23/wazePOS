@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { category, product } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { canManageBusiness, getMembership } from "@/lib/auth-session";
+import { isUniqueConstraintViolation } from "@/lib/product-errors";
 import { productDeleteSchema, productUpdateSchema } from "@/lib/validation/catalog";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -43,7 +44,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updatedAt: new Date(),
     }).where(and(eq(product.id, id), eq(product.businessId, membership.businessId))).returning({ id: product.id });
   } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+    if (isUniqueConstraintViolation(error)) {
       return NextResponse.json({ message: "SKU tersebut sudah digunakan oleh produk lain." }, { status: 409 });
     }
     console.error("Failed to update product", error);

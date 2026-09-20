@@ -17,13 +17,14 @@ import {
   Sparkles,
   Store,
   Tag,
-  Tags,
   Trash2,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RupiahInput } from "@/components/ui/rupiah-input";
 
 type CategoryItem = {
   id: string;
@@ -137,9 +138,6 @@ export function DashboardSetupManager({
   }
 
   async function handleDeleteCategory(item: CategoryItem) {
-    if (!window.confirm(`Hapus kategori "${item.name}"? Produk dalam kategori ini akan otomatis dialihkan ke kategori Umum.`)) {
-      return;
-    }
     setLoading(true);
     try {
       const res = await fetch(`/api/categories/${item.id}`, { method: "DELETE" });
@@ -219,9 +217,6 @@ export function DashboardSetupManager({
   }
 
   async function handleDeleteOutlet(item: OutletItem) {
-    if (!window.confirm(`Hapus gerai "${item.name}"? Gerai yang belum memiliki transaksi dapat dihapus.`)) {
-      return;
-    }
     setLoading(true);
     try {
       const res = await fetch(`/api/outlets/${item.id}`, { method: "DELETE" });
@@ -496,14 +491,22 @@ export function DashboardSetupManager({
                           >
                             <Edit2 className="size-3" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCategory(item)}
-                            className="grid size-7 place-items-center rounded-lg border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
-                            title="Hapus kategori"
-                          >
-                            <Trash2 className="size-3" />
-                          </button>
+                          <ConfirmationDialog
+                            title={`Hapus kategori “${item.name}”?`}
+                            description="Produk dalam kategori ini akan otomatis dialihkan ke kategori Umum. Tindakan ini tidak dapat dibatalkan."
+                            confirmLabel="Hapus kategori"
+                            disabled={loading}
+                            onConfirm={() => void handleDeleteCategory(item)}
+                            trigger={
+                              <button
+                                type="button"
+                                className="grid size-7 place-items-center rounded-lg border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
+                                title="Hapus kategori"
+                              >
+                                <Trash2 className="size-3" />
+                              </button>
+                            }
+                          />
                         </div>
                       </>
                     )}
@@ -656,14 +659,22 @@ export function DashboardSetupManager({
                             <span>Edit</span>
                           </button>
                           {outlets.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteOutlet(item)}
-                              className="grid size-8 place-items-center rounded-lg border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
-                              title="Hapus gerai"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
+                            <ConfirmationDialog
+                              title={`Hapus gerai “${item.name}”?`}
+                              description="Gerai hanya dapat dihapus jika belum memiliki transaksi. Stok dan riwayat pergerakan pada gerai ini juga akan dihapus."
+                              confirmLabel="Hapus gerai"
+                              disabled={loading}
+                              onConfirm={() => void handleDeleteOutlet(item)}
+                              trigger={
+                                <button
+                                  type="button"
+                                  className="grid size-8 place-items-center rounded-lg border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
+                                  title="Hapus gerai"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              }
+                            />
                           )}
                         </div>
                       </div>
@@ -733,29 +744,23 @@ export function DashboardSetupManager({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-[#15211d]">Harga Jual (Rp) *</Label>
-              <Input
+              <Label className="text-xs font-bold text-[#15211d]">Harga Jual *</Label>
+              <RupiahInput
                 required
-                type="number"
-                min="0"
-                step="100"
-                value={productForm.sellingPrice}
-                onChange={(e) => setProductForm({ ...productForm, sellingPrice: e.target.value })}
+                value={Number(productForm.sellingPrice) || 0}
+                onChange={(value) => setProductForm({ ...productForm, sellingPrice: String(value) })}
                 placeholder="20000"
-                className="h-10 text-xs rounded-xl font-bold"
+                className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-xs font-bold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
               />
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-[#15211d]">Harga Modal / HPP (Rp)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="100"
-                value={productForm.costPrice}
-                onChange={(e) => setProductForm({ ...productForm, costPrice: e.target.value })}
+              <Label className="text-xs font-bold text-[#15211d]">Harga Modal / HPP</Label>
+              <RupiahInput
+                value={Number(productForm.costPrice) || 0}
+                onChange={(value) => setProductForm({ ...productForm, costPrice: String(value) })}
                 placeholder="12000"
-                className="h-10 text-xs rounded-xl"
+                className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-10 pr-3 text-xs text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
               />
             </div>
 

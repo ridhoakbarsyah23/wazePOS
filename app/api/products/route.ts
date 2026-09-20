@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { category, inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { canManageBusiness, getMembership } from "@/lib/auth-session";
+import { isUniqueConstraintViolation } from "@/lib/product-errors";
 import { productSchema } from "@/lib/validation/catalog";
 
 export async function POST(request: Request) {
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+    if (isUniqueConstraintViolation(error)) {
       return NextResponse.json({ message: "SKU tersebut sudah digunakan oleh produk lain." }, { status: 409 });
     }
     console.error("Failed to create product", error);
