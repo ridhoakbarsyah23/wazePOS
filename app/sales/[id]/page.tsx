@@ -15,6 +15,12 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
   if (!membership) redirect("/onboarding");
   const { id } = await params;
 
+  const receiptFilters = [
+    eq(sale.id, id),
+    eq(sale.businessId, membership.businessId),
+    ...(membership.role === "cashier" ? [eq(sale.cashierId, session.user.id)] : []),
+  ];
+
   const [receipt] = await db
     .select({
       id: sale.id,
@@ -27,6 +33,9 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
       changeAmount: sale.changeAmount,
       paymentMethod: sale.paymentMethod,
       createdAt: sale.createdAt,
+      voidedAt: sale.voidedAt,
+      voidedById: sale.voidedById,
+      voidReason: sale.voidReason,
       businessName: business.name,
       outletName: outlet.name,
       cashierName: user.name,
@@ -35,11 +44,16 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
     .innerJoin(business, eq(business.id, sale.businessId))
     .innerJoin(outlet, eq(outlet.id, sale.outletId))
     .innerJoin(user, eq(user.id, sale.cashierId))
-    .where(and(eq(sale.id, id), eq(sale.businessId, membership.businessId)))
+    .where(and(...receiptFilters))
     .limit(1);
 
   if (!receipt) notFound();
-  const items = await db.select().from(saleItem).where(eq(saleItem.saleId, receipt.id)).orderBy(saleItem.createdAt);
+  const [items, voidedBy] = await Promise.all([
+    db.select().from(saleItem).where(eq(saleItem.saleId, receipt.id)).orderBy(saleItem.createdAt),
+    receipt.voidedById
+      ? db.select({ name: user.name }).from(user).where(eq(user.id, receipt.voidedById)).limit(1)
+      : Promise.resolve([]),
+  ]);
   const money = (value: number) => `Rp ${Number(value).toLocaleString("id-ID")}`;
   const isVoided = receipt.status === "voided";
   const userCanVoid = canManageBusiness(membership.role);
@@ -106,13 +120,18 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
       <div className="mx-auto max-w-xl print:max-w-none print:w-full print:m-0 print:p-0">
         {/* Header Action Bar */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <a
-            href="/pos"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#198760] transition hover:text-[#14714f]"
-          >
-            <ArrowLeft className="size-3.5" />
-            <span>Kembali ke kasir</span>
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="/transactions"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#198760] transition hover:text-[#14714f]"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Kembali ke riwayat</span>
+            </a>
+            <a href="/pos" className="text-xs font-semibold text-[#627069] transition hover:text-[#15211d]">
+              Buka kasir
+            </a>
+          </div>
 
           <div className="flex items-center gap-2">
             <VoidSaleButton
@@ -143,6 +162,17 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               <p className="m-0 mt-0.5 text-[10px] text-rose-600">
                 Stok produk telah dikembalikan dan nominal tidak dihitung ke omzet gerai.
               </p>
+              {(receipt.voidedAt || receipt.voidReason) && (
+                <div className="mt-2 border-t border-rose-200 pt-2 text-left text-[10px] leading-4 text-rose-700">
+                  {receipt.voidedAt && (
+                    <p className="m-0">
+                      Dibatalkan {new Date(receipt.voidedAt).toLocaleString("id-ID")}
+                      {voidedBy[0]?.name ? ` oleh ${voidedBy[0].name}` : ""}
+                    </p>
+                  )}
+                  {receipt.voidReason && <p className="m-0 mt-0.5">Alasan: {receipt.voidReason}</p>}
+                </div>
+              )}
             </div>
           )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -8,9 +8,11 @@ import {
   BarChart3,
   Boxes,
   Crown,
+  History,
   LayoutDashboard,
   Menu,
   Package,
+  Settings,
   Shield,
   ShoppingCart,
   Store,
@@ -55,6 +57,13 @@ const navItems: NavItem[] = [
     badge: "Terminal",
   },
   {
+    href: "/transactions",
+    label: "Riwayat",
+    icon: History,
+    roles: ["owner", "admin", "cashier"],
+    badge: null,
+  },
+  {
     href: "/products",
     label: "Produk",
     icon: Package,
@@ -89,6 +98,13 @@ const navItems: NavItem[] = [
     roles: ["owner"],
     badge: null,
   },
+  {
+    href: "/settings",
+    label: "Pengaturan",
+    icon: Settings,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
 ];
 
 function SidebarNavLinks({
@@ -97,6 +113,7 @@ function SidebarNavLinks({
   navigatingTo,
   activeOutletId,
   onNavigate,
+  onWarm,
   onItemClick,
 }: {
   visibleNav: NavItem[];
@@ -104,6 +121,7 @@ function SidebarNavLinks({
   navigatingTo: string | null;
   activeOutletId?: string;
   onNavigate: (href: string) => void;
+  onWarm: (href: string) => void;
   onItemClick?: () => void;
 }) {
   return (
@@ -123,6 +141,9 @@ function SidebarNavLinks({
           <Link
             key={item.href}
             href={itemHref}
+            onPointerEnter={() => onWarm(itemHref)}
+            onFocus={() => onWarm(itemHref)}
+            onPointerDown={() => onWarm(itemHref)}
             onClick={() => {
               if (!isActive) onNavigate(item.href);
               if (onItemClick) onItemClick();
@@ -183,13 +204,17 @@ export function AppHeader({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileOpenAt, setMobileOpenAt] = useState(pathname);
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const warmedRoutes = useRef(new Set<string>());
 
   // Reset status turunan saat render (pola resmi React "adjusting state when props change"):
   // drawer tertutup & progress bar dibersihkan begitu pindah halaman.
   if (mobileOpen && mobileOpenAt !== pathname) {
     setMobileOpen(false);
   }
-  if (navigatingTo && navigatingTo !== pathname) {
+  if (
+    navigatingTo &&
+    (pathname === navigatingTo || (navigatingTo !== "/dashboard" && pathname.startsWith(navigatingTo)))
+  ) {
     setNavigatingTo(null);
   }
 
@@ -197,6 +222,12 @@ export function AppHeader({
 
   function handleNavigate(href: string) {
     setNavigatingTo(href);
+  }
+
+  function warmRoute(href: string) {
+    if (warmedRoutes.current.has(href)) return;
+    warmedRoutes.current.add(href);
+    router.prefetch(href);
   }
 
   function openMobileDrawer() {
@@ -296,6 +327,7 @@ export function AppHeader({
             navigatingTo={navigatingTo}
             activeOutletId={activeOutletId}
             onNavigate={handleNavigate}
+            onWarm={warmRoute}
           />
 
           {/* Trial Alert Card in Desktop Sidebar */}
@@ -473,6 +505,7 @@ export function AppHeader({
                 navigatingTo={navigatingTo}
                 activeOutletId={activeOutletId}
                 onNavigate={handleNavigate}
+                onWarm={warmRoute}
                 onItemClick={() => setMobileOpen(false)}
               />
             </div>

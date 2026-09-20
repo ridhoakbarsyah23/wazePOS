@@ -30,15 +30,20 @@ export async function POST(
 
   const { id } = await params;
 
-  let body: { reason?: unknown } = {};
+  let body: { reason?: unknown };
   try {
     body = await request.json();
   } catch {
-    // Body bersifat opsional
+    return NextResponse.json({ message: "Format pembatalan tidak valid." }, { status: 400 });
   }
 
   const rawReason = typeof body.reason === "string" ? body.reason.trim() : "";
-  const reason = rawReason.length > 0 ? rawReason.slice(0, 200) : "Pembatalan transaksi oleh pengelola";
+  if (rawReason.length < 5 || rawReason.length > 200) {
+    return NextResponse.json(
+      { message: "Alasan pembatalan wajib diisi antara 5 sampai 200 karakter." },
+      { status: 422 },
+    );
+  }
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -46,7 +51,8 @@ export async function POST(
         .select()
         .from(sale)
         .where(and(eq(sale.id, id), eq(sale.businessId, membership.businessId)))
-        .limit(1);
+        .limit(1)
+        .for("update");
 
       if (!saleRecord) {
         throw new Error("NOT_FOUND");
@@ -56,14 +62,27 @@ export async function POST(
         throw new Error("ALREADY_VOIDED");
       }
 
-      // Update status penjualan menjadi voided
-      await tx
+      const [voidedSale] = await tx
         .update(sale)
         .set({
           status: "voided",
+          voidedAt: new Date(),
+          voidedById: session.user.id,
+          voidReason: rawReason,
           updatedAt: new Date(),
         })
-        .where(eq(sale.id, saleRecord.id));
+        .where(
+          and(
+            eq(sale.id, saleRecord.id),
+            eq(sale.businessId, membership.businessId),
+            eq(sale.status, "completed"),
+          ),
+        )
+        .returning({ id: sale.id });
+
+      if (!voidedSale) {
+        throw new Error("ALREADY_VOIDED");
+      }
 
       // Ambil seluruh item penjualan bersangkutan
       const items = await tx
@@ -103,7 +122,7 @@ export async function POST(
           userId: session.user.id,
           type: "adjustment",
           quantity: item.quantity,
-          note: `Void ${saleRecord.invoiceNumber}: ${reason}`,
+          note: `Void ${saleRecord.invoiceNumber}: ${rawReason}`,
         });
       }
 

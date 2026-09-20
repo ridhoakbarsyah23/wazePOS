@@ -111,9 +111,9 @@ Salin hasil perintah kedua ke `BETTER_AUTH_SECRET` di `.env.local`. Database Doc
 - Dashboard pemilik menyediakan kategori, gerai, produk, harga jual, harga modal, SKU, dan stok awal.
 - Halaman `/products` digunakan untuk memperbarui produk tanpa menghapus histori transaksi.
 - Halaman `/inventory` menyimpan stok per gerai dan riwayat perubahan dalam bentuk selisih stok.
-- Paket Tumbuh mendukung transaksi tunai tanpa shift. Paket Bisnis menambahkan pembayaran non-tunai dan mewajibkan shift kasir pada gerai aktif.
-- Setiap transaksi baru menyimpan snapshot nama, harga jual, dan harga modal produk, mengurangi stok secara atomik, serta terhubung ke shift kasir ketika fitur shift tersedia.
-- Penutupan shift menghitung kas yang diharapkan dari modal awal dan transaksi tunai saja; pembayaran debit dan kredit tidak menambah kas fisik.
+- Paket Tumbuh mendukung transaksi tunai, sedangkan Paket Bisnis menambahkan pembayaran kartu debit dan kredit EDC.
+- Setiap transaksi baru menyimpan snapshot nama, harga jual, dan harga modal produk serta mengurangi stok secara atomik.
+- Void transaksi mewajibkan alasan serta menyimpan waktu dan pengguna yang membatalkan untuk kebutuhan audit.
 - Pembayaran QRIS POS dinonaktifkan sampai integrasi penyedia pembayaran resmi, verifikasi status, dan webhook tersedia. QRIS tidak boleh dikonfirmasi lunas secara manual.
 - Halaman `/reports` menampilkan ringkasan penjualan harian, produk terlaris, dan distribusi metode pembayaran.
 - Pengelolaan produk, stok, dan laporan dibatasi untuk role `owner` atau `admin`; role `cashier` diarahkan ke kasir.

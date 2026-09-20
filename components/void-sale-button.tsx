@@ -9,6 +9,7 @@ type VoidSaleButtonProps = {
   invoiceNumber: string;
   isVoided: boolean;
   canVoid: boolean;
+  disabledReason?: string | null;
 };
 
 export function VoidSaleButton({
@@ -16,6 +17,7 @@ export function VoidSaleButton({
   invoiceNumber,
   isVoided,
   canVoid,
+  disabledReason,
 }: VoidSaleButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +36,12 @@ export function VoidSaleButton({
   }
 
   if (!canVoid) {
-    return null;
+    return disabledReason ? (
+      <span className="inline-flex max-w-xs items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-800 print:hidden">
+        <AlertCircle className="size-4 shrink-0" />
+        {disabledReason}
+      </span>
+    ) : null;
   }
 
   async function handleVoid() {
@@ -111,6 +118,9 @@ export function VoidSaleButton({
                   rows={2}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
+                  minLength={5}
+                  maxLength={200}
+                  required
                   placeholder="Contoh: Salah input pesanan, Pelanggan retur barang, dll."
                   className="w-full rounded-xl border border-[#cddbd3] p-3 text-xs text-[#15211d] placeholder:text-[#8b9991] focus:border-rose-500 focus:outline-hidden focus:ring-1 focus:ring-rose-500"
                 />
@@ -142,7 +152,7 @@ export function VoidSaleButton({
               </button>
               <button
                 type="button"
-                disabled={isLoading}
+                disabled={isLoading || reason.trim().length < 5}
                 onClick={handleVoid}
                 className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 active:scale-[0.98] disabled:opacity-50"
               >
