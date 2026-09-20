@@ -212,7 +212,11 @@ export function ProductManager({
       const res = await fetch(`/api/products/${editingItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingItem),
+        body: JSON.stringify({
+          ...editingItem,
+          sku: editingItem.sku?.trim() ?? "",
+          categoryId: editingItem.categoryId || null,
+        }),
       });
 
       const data = await res.json();

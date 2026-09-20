@@ -14,6 +14,20 @@ const rupiahValue = (label: string) =>
     .min(0, `${label} tidak boleh negatif.`)
     .max(2_000_000_000, `${label} terlalu besar.`);
 
+const optionalSku = z.preprocess(
+  (value) => (value == null ? "" : value),
+  z
+    .string()
+    .trim()
+    .max(50, "SKU maksimal 50 karakter.")
+    .transform((value) => value.toUpperCase()),
+);
+
+const optionalCategoryId = z.preprocess(
+  (value) => (value == null || value === "" ? null : value),
+  z.string().uuid("Kategori tidak valid.").nullable(),
+);
+
 export const categorySchema = z.object({
   name: requiredText("Nama kategori", 80),
 });
@@ -26,15 +40,8 @@ export const outletSchema = z.object({
 export const productSchema = z
   .object({
     name: requiredText("Nama produk", 120),
-    sku: z
-      .string()
-      .trim()
-      .max(50, "SKU maksimal 50 karakter.")
-      .transform((value) => value.toUpperCase()),
-    categoryId: z.preprocess(
-      (value) => (value === "" ? null : value),
-      z.string().uuid("Kategori tidak valid.").nullable(),
-    ),
+    sku: optionalSku,
+    categoryId: optionalCategoryId,
     outletId: z.string().uuid("Gerai tidak valid."),
     sellingPrice: rupiahValue("Harga jual"),
     costPrice: rupiahValue("Harga modal"),
@@ -78,8 +85,8 @@ export const productStatusSchema = z.object({
 export const productUpdateSchema = z
   .object({
     name: requiredText("Nama produk", 120),
-    sku: z.string().trim().max(50, "SKU maksimal 50 karakter.").transform((value) => value.toUpperCase()),
-    categoryId: z.string().uuid("Kategori tidak valid.").nullable(),
+    sku: optionalSku,
+    categoryId: optionalCategoryId,
     sellingPrice: rupiahValue("Harga jual"),
     costPrice: rupiahValue("Harga modal"),
     trackStock: z.boolean(),

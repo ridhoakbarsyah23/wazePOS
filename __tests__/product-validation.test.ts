@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isUniqueConstraintViolation } from "@/lib/product-errors";
-import { productSchema } from "@/lib/validation/catalog";
+import { productSchema, productUpdateSchema } from "@/lib/validation/catalog";
 
 const validProduct = {
   name: "Kopi Susu",
@@ -28,6 +28,34 @@ describe("validasi produk", () => {
     if (!parsed.success) {
       expect(parsed.error.issues[0]?.message).toBe("Harga modal tidak boleh lebih besar dari harga jual.");
     }
+  });
+
+  it("menerima edit produk dengan SKU dan kategori kosong", () => {
+    const parsed = productUpdateSchema.parse({
+      name: "Teh Manis",
+      sku: null,
+      categoryId: null,
+      sellingPrice: 5_000,
+      costPrice: 3_000,
+      trackStock: true,
+      isActive: true,
+    });
+
+    expect(parsed.sku).toBe("");
+    expect(parsed.categoryId).toBeNull();
+  });
+
+  it("menerima edit data lama tanpa properti opsional", () => {
+    const parsed = productUpdateSchema.parse({
+      name: "Teh Manis",
+      sellingPrice: 5_000,
+      costPrice: 3_000,
+      trackStock: true,
+      isActive: true,
+    });
+
+    expect(parsed.sku).toBe("");
+    expect(parsed.categoryId).toBeNull();
   });
 
   it("mengenali konflik unique PostgreSQL untuk respons SKU duplikat", () => {
