@@ -3,7 +3,9 @@ import {
   Ban,
   Banknote,
   BarChart3,
+  CalendarDays,
   CreditCard,
+  Download,
   ExternalLink,
   QrCode,
   Receipt,
@@ -30,12 +32,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails } from "@/lib/plans";
+import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
+import { formatReportDay, getReportDayRange } from "@/lib/reporting";
 
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ outlet?: string }>;
+  searchParams: Promise<{ outlet?: string; date?: string }>;
 }) {
   const session = await requireSession();
   const membership = await getMembership(session.user.id);
@@ -64,17 +67,15 @@ export default async function ReportsPage({
     );
   }
 
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  const params = await searchParams;
+  const { dateKey, start, end } = getReportDayRange(params.date);
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name })
     .from(outlet)
     .where(eq(outlet.businessId, membership.businessId))
     .orderBy(outlet.name);
-  const requestedOutletId = (await searchParams).outlet;
+  const requestedOutletId = params.outlet;
   const activeOutlet = outlets.find((item) => item.id === requestedOutletId) ?? null;
   const reportOutlets = [{ id: "all", name: "Semua Gerai" }, ...outlets];
   const reportFilters = [
@@ -133,6 +134,10 @@ export default async function ReportsPage({
     result[item.paymentMethod] = (result[item.paymentMethod] ?? 0) + Number(item.total);
     return result;
   }, {});
+  const canExportReports = hasPlanFeature(currentSubscription?.plan, "exportReports");
+  const exportParams = new URLSearchParams({ date: dateKey });
+  if (activeOutlet) exportParams.set("outlet", activeOutlet.id);
+  const selectedDayLabel = formatReportDay(dateKey);
 
   function getPaymentIcon(method: string) {
     switch (method.toLowerCase()) {
@@ -161,16 +166,47 @@ export default async function ReportsPage({
             <BarChart3 className="size-3.5" /> Analytics & Reports
           </Badge>
           <h1 className="mt-1 text-3xl font-extrabold tracking-[-1.2px] text-[#15211d] sm:text-4xl">
-            Laporan Penjualan Hari Ini
+            Laporan Penjualan
           </h1>
           <p className="m-0 text-sm leading-relaxed text-[#627069]">
-            {start.toLocaleDateString("id-ID", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {selectedDayLabel}
           </p>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#dfe8e3] bg-white p-4 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+          <form action="/reports" method="get" className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            {activeOutlet && <input type="hidden" name="outlet" value={activeOutlet.id} />}
+            <label className="grid gap-1 text-xs font-bold text-[#52645c]">
+              <span className="flex items-center gap-1.5">
+                <CalendarDays className="size-3.5 text-[#198760]" /> Tanggal laporan
+              </span>
+              <input
+                type="date"
+                name="date"
+                defaultValue={dateKey}
+                className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10"
+              />
+            </label>
+            <Button type="submit" variant="outline" size="sm">
+              Tampilkan
+            </Button>
+          </form>
+
+          {canExportReports ? (
+            <Button asChild size="sm">
+              <a href={`/api/reports/export?${exportParams.toString()}`} download>
+                <Download className="size-4" /> Ekspor CSV
+              </a>
+            </Button>
+          ) : membership.role === "owner" ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link href="/subscription">Ekspor CSV tersedia di Paket Bisnis</Link>
+            </Button>
+          ) : (
+            <span className="rounded-xl bg-[#f2f7f4] px-3 py-2 text-xs font-semibold text-[#627069]">
+              Ekspor CSV tersedia di Paket Bisnis.
+            </span>
+          )}
         </div>
 
         {/* 3 Fintech Summary Cards */}
@@ -231,7 +267,7 @@ export default async function ReportsPage({
                   <TrendingUp className="size-4" />
                 </span>
                 <div>
-                  <CardTitle className="text-base">Produk Terlaris Hari Ini</CardTitle>
+                  <CardTitle className="text-base">Produk Terlaris</CardTitle>
                   <CardDescription className="text-xs">
                     Peringkat menu dengan volume penjualan tertinggi.
                   </CardDescription>
@@ -270,7 +306,7 @@ export default async function ReportsPage({
                   {topProducts.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className="py-6 text-center text-[#627069]">
-                        Belum ada penjualan produk hari ini.
+                        Belum ada penjualan produk pada tanggal ini.
                       </TableCell>
                     </TableRow>
                   )}
@@ -337,7 +373,7 @@ export default async function ReportsPage({
                   <Receipt className="size-5" />
                 </span>
                 <div>
-                  <CardTitle className="text-lg">Transaksi Berhasil Hari Ini</CardTitle>
+                  <CardTitle className="text-lg">Transaksi Berhasil</CardTitle>
                   <CardDescription className="text-xs">
                     Klik nomor invoice untuk melihat rincian nota dan opsi cetak thermal atau kirim WhatsApp.
                   </CardDescription>
@@ -396,7 +432,7 @@ export default async function ReportsPage({
                   {sales.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-8 text-center text-[#627069]">
-                        Belum ada transaksi berhasil hari ini.
+                        Belum ada transaksi berhasil pada tanggal ini.
                       </TableCell>
                     </TableRow>
                   )}
@@ -416,7 +452,7 @@ export default async function ReportsPage({
                 </span>
                 <div>
                   <CardTitle className="text-lg text-rose-900">
-                    Transaksi Dibatalkan (VOID) Hari Ini
+                    Transaksi Dibatalkan (VOID)
                   </CardTitle>
                   <CardDescription className="text-xs text-rose-700">
                     Transaksi berikut telah dibatalkan oleh pengelola, stok barang telah otomatis dikembalikan, dan tidak dihitung ke dalam omzet.

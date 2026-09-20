@@ -197,6 +197,7 @@ export default async function DashboardPage({
       .orderBy(bucketExpression),
     db
       .select({
+        productId: product.id,
         quantity: inventoryStock.quantity,
         threshold: inventoryStock.lowStockThreshold,
       })
@@ -227,11 +228,11 @@ export default async function DashboardPage({
         productName: saleItem.productName,
         quantitySold: sql<number>`COALESCE(SUM(${saleItem.quantity}), 0)::int`,
         revenue: sql<number>`COALESCE(SUM(${saleItem.subtotal}), 0)::int`,
-        costTotal: sql<number>`COALESCE(SUM(${saleItem.quantity} * ${product.costPrice}), 0)::int`,
+        costTotal: sql<number>`COALESCE(SUM(${saleItem.quantity} * ${saleItem.unitCost}), 0)::int`,
+        missingCostCount: sql<number>`COUNT(*) FILTER (WHERE ${saleItem.unitCost} IS NULL)::int`,
       })
       .from(saleItem)
       .innerJoin(sale, eq(sale.id, saleItem.saleId))
-      .innerJoin(product, eq(product.id, saleItem.productId))
       .where(and(...currentFilters))
       .groupBy(saleItem.productId, saleItem.productName)
       .orderBy(sql`SUM(${saleItem.quantity}) DESC`)
@@ -275,9 +276,15 @@ export default async function DashboardPage({
     currentTransactions > 0 ? Math.round(currentRevenue / currentTransactions) : 0;
 
   const totalStock = stockRows.reduce((sum, item) => sum + Number(item.quantity), 0);
-  const lowStockCount = stockRows.filter(
-    (item) => Number(item.quantity) <= Number(item.threshold)
-  ).length;
+  const lowStockCount = new Set(
+    stockRows
+      .filter((item) => Number(item.quantity) <= Number(item.threshold))
+      .map((item) => item.productId)
+  ).size;
+  const lowStockHref =
+    selectedOutletId === "all"
+      ? "/inventory?status=low"
+      : `/inventory?status=low&outlet=${encodeURIComponent(selectedOutletId)}`;
 
   const trendMap = new Map(trendRows.map((item) => [item.bucket, item]));
   const currentJakartaHour = Number(
@@ -334,7 +341,10 @@ export default async function DashboardPage({
     productName: row.productName,
     quantitySold: Number(row.quantitySold),
     revenue: Number(row.revenue),
-    estimatedProfit: Number(row.revenue) - Number(row.costTotal),
+    estimatedProfit:
+      Number(row.missingCostCount) > 0
+        ? null
+        : Number(row.revenue) - Number(row.costTotal),
   }));
 
   const insightHourPoints = hourlyRows
@@ -397,6 +407,7 @@ export default async function DashboardPage({
           currentAov={currentAverage}
           totalStockUnits={totalStock}
           lowStockCount={lowStockCount}
+          lowStockHref={lowStockHref}
         />
 
         {/* Sales Insights: Top Products, Peak Hours, Outlet Comparison */}

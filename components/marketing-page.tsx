@@ -112,7 +112,7 @@ const pricingPlans = [
       "Maksimal 1 gerai aktif",
       "Maksimal 2 akun staf (Owner + Kasir)",
       "Hingga 100 produk aktif",
-      "Pembayaran kasir: Tunai & QRIS Digital",
+      "Pembayaran kasir tunai",
       "Stok otomatis & peringatan stok menipis",
       "Laporan penjualan harian di layar",
       "Cetak struk kasir 58 mm / 80 mm",
@@ -123,17 +123,16 @@ const pricingPlans = [
   {
     id: "bisnis",
     name: "Bisnis",
-    description: "Kapasitas tanpa batas dan seluruh metode pembayaran untuk usaha berkembang.",
+    description: "Kapasitas lebih besar dan metode pembayaran tambahan untuk usaha berkembang.",
     price: "Rp950.000",
     priceNote: "Ditagihkan satu kali setiap tahun",
     features: [
       "Seluruh fitur Paket Tumbuh",
-      "Seluruh metode pembayaran (Tunai, QRIS, Kartu Debit & Kredit EDC)",
+      "Pembayaran tunai, kartu debit & kredit EDC",
+      "Manajemen shift dan rekonsiliasi kas",
       "Hingga 5 gerai / multi-cabang",
       "Akun staf kasir & admin tanpa batas",
       "Katalog produk tanpa batas",
-      "Ekspor laporan penjualan CSV / XLSX",
-      "Pengaturan struk kustom & logo",
     ],
     cta: "Pilih Paket Bisnis",
     popular: false,
@@ -144,7 +143,7 @@ const featureComparison = [
   {
     category: "Operasional inti",
     items: [
-      { name: "Kasir transaksi Tunai & QRIS", detail: "Melayani transaksi kasir harian dengan Tunai & QRIS resmi.", tumbuh: true, bisnis: true },
+      { name: "Kasir transaksi tunai", detail: "Melayani transaksi kasir harian dan menghitung kembalian.", tumbuh: true, bisnis: true },
       { name: "Katalog produk, SKU, & varian", detail: "Hingga 100 produk di Paket Tumbuh, tanpa batas di Paket Bisnis.", tumbuh: true, bisnis: true },
       { name: "Stok otomatis & peringatan stok", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", tumbuh: true, bisnis: true },
       { name: "Riwayat transaksi & cetak struk", detail: "Mencetak struk thermal 58mm / 80mm untuk pelanggan.", tumbuh: true, bisnis: true },
@@ -153,10 +152,9 @@ const featureComparison = [
   {
     category: "Metode pembayaran & laporan",
     items: [
-      { name: "Pembayaran QRIS Digital Dinamis", detail: "Mendukung BCA, Mandiri, BRI, GoPay, OVO, DANA, ShopeePay.", tumbuh: true, bisnis: true },
       { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", tumbuh: false, bisnis: true },
+      { name: "Manajemen shift kasir", detail: "Mencatat modal awal, kas yang diharapkan, dan selisih saat penutupan shift.", tumbuh: false, bisnis: true },
       { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", tumbuh: true, bisnis: true },
-      { name: "Ekspor laporan CSV / XLSX (Excel)", detail: "Mengunduh data transaksi dan pembukuan toko.", tumbuh: false, bisnis: true },
     ],
   },
   {

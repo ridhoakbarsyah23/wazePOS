@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "qrcode";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/lib/pos-calculations";
+import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/lib/pos-product-search";
 import {
   AlertCircle,
   ArrowRight,
   Banknote,
   CheckCircle2,
   CreditCard,
-  Maximize2,
   QrCode,
   ScanBarcode,
-  ShieldCheck,
   Sparkles,
-  X,
 } from "lucide-react";
 import { ReceiptModal } from "./receipt-modal";
 import { ReceiptShareData } from "./whatsapp-share-button";
@@ -39,12 +37,16 @@ export function PosTerminal({
   outlets,
   initialOutletId,
   allowNonCashPayments,
+  allowQrisPayments,
+  checkoutDisabledReason,
   businessName = "wazePOS Store",
 }: {
   products: PosProduct[];
   outlets: PosOutlet[];
   initialOutletId: string;
   allowNonCashPayments: boolean;
+  allowQrisPayments: boolean;
+  checkoutDisabledReason: string | null;
   businessName?: string;
 }) {
   const outletId = initialOutletId;
@@ -60,8 +62,6 @@ export function PosTerminal({
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-  const [showQrModal, setShowQrModal] = useState(false);
   const [completedReceipt, setCompletedReceipt] = useState<(ReceiptShareData & { cashierName?: string }) | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
@@ -71,63 +71,63 @@ export function PosTerminal({
     [products],
   );
 
-  const filteredProducts = products.filter((item) => {
-    const query = search.trim().toLowerCase();
-    const matchesSearch = !query || item.name.toLowerCase().includes(query) || (item.sku ?? "").toLowerCase().includes(query);
-    const matchesCategory = categoryFilter === "Semua" || (item.categoryName ?? "Umum") === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = filterPosProducts(products, search, categoryFilter);
 
-  const total = cart.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
-  const paid = paymentMethod === "cash" ? Number(paidAmount) || 0 : total;
-  const change = paymentMethod === "cash" ? Math.max(0, paid - total) : 0;
+  const total = calculateCartTotal(cart);
+  const { paid, change, shortfall } = calculatePayment(total, paymentMethod, paidAmount);
 
   useEffect(() => {
-    if (paymentMethod === "qris" && total > 0) {
-      const activeOutletName = outlets.find((o) => o.id === outletId)?.name ?? "Kasir";
-      const payload = `00020101021226590014ID.LINKAJA.WWW01189360091800000000000215000000000000000520454115303360540${total.toString().length}${total}5802ID59${businessName.length.toString().padStart(2, "0")}${businessName}6007JAKARTA62240120${activeOutletName.replace(/\s+/g, "")}${Date.now().toString().slice(-4)}6304`;
-      
-      QRCode.toDataURL(payload, {
-        width: 380,
-        margin: 1,
-        color: { dark: "#102a20", light: "#ffffff" },
-      })
-        .then(setQrCodeUrl)
-        .catch(() => setQrCodeUrl(null));
+    searchInputRef.current?.focus();
+  }, []);
+
+  const quickCashOptions = getQuickCashOptions(total);
+
+  const addProduct = useCallback((product: PosProduct) => {
+    const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
+    const stockIssue = getProductStockIssue(product, quantityInCart);
+    if (stockIssue === "out-of-stock") {
+      setMessage({ type: "error", text: `Stok produk ${product.name} sudah habis.` });
+      return false;
     }
-  }, [paymentMethod, total, businessName, outletId, outlets]);
-
-  const quickCashOptions = useMemo(() => {
-    if (total <= 0) return [];
-    const suggestions = new Set<number>();
-    suggestions.add(total);
-
-    const standardPresets = [10_000, 20_000, 50_000, 100_000, 200_000, 500_000];
-    for (const p of standardPresets) {
-      if (p > total) suggestions.add(p);
+    if (stockIssue === "stock-limit") {
+      setMessage({ type: "error", text: `Jumlah ${product.name} di keranjang sudah mencapai stok tersedia.` });
+      return false;
     }
-    const nextTen = Math.ceil(total / 10_000) * 10_000;
-    if (nextTen > total) suggestions.add(nextTen);
-    const nextFifty = Math.ceil(total / 50_000) * 50_000;
-    if (nextFifty > total) suggestions.add(nextFifty);
 
-    return Array.from(suggestions)
-      .filter((val) => val >= total)
-      .sort((a, b) => a - b)
-      .slice(0, 4);
-  }, [total]);
-
-  function addProduct(product: PosProduct) {
-    setMessage(null);
     setCart((current) => {
       const existing = current.find((item) => item.id === product.id);
       if (existing) {
-        if (product.trackStock && existing.quantity >= product.stock) return current;
         return current.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
       }
       return [...current, { ...product, quantity: 1 }];
     });
-  }
+    setMessage(null);
+    return true;
+  }, [cart]);
+
+  const addProductFromEntry = useCallback((rawValue: string) => {
+    const resolved = resolveProductEntry(products, rawValue);
+    if (!resolved) {
+      const resultCount = filterPosProducts(products, rawValue, "Semua").length;
+      setMessage({
+        type: "error",
+        text:
+          resultCount > 1
+            ? `Ditemukan ${resultCount} produk. Ketik SKU lengkap atau perjelas pencarian.`
+            : `Produk dengan kode atau pencarian "${rawValue.trim()}" tidak ditemukan.`,
+      });
+      return;
+    }
+
+    if (addProduct(resolved.product)) {
+      setSearch("");
+      setCategoryFilter("Semua");
+      setMessage({
+        type: "success",
+        text: `${resolved.match === "code" ? "SKU dipindai" : "Produk ditambahkan"}: ${resolved.product.name} (+1)`,
+      });
+    }
+  }, [addProduct, products]);
 
   function updateQuantity(id: string, quantity: number) {
     setCart((current) =>
@@ -140,6 +140,18 @@ export function PosTerminal({
   async function completeSale() {
     if (!outletId || cart.length === 0) {
       setMessage({ type: "error", text: "Pilih gerai dan tambahkan produk ke keranjang." });
+      return;
+    }
+    if (checkoutDisabledReason) {
+      setMessage({ type: "error", text: checkoutDisabledReason });
+      return;
+    }
+    if (paymentMethod === "qris" && !allowQrisPayments) {
+      setPaymentMethod("cash");
+      setMessage({
+        type: "error",
+        text: "QRIS belum tersedia sampai integrasi pembayaran resmi selesai.",
+      });
       return;
     }
     if (paid < total) {
@@ -197,8 +209,6 @@ export function PosTerminal({
       setInvoiceId(result.saleId);
       setCart([]);
       setPaidAmount("");
-      setShowQrModal(false);
-
     } catch {
       setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
     } finally {
@@ -213,6 +223,8 @@ export function PosTerminal({
         activeEl?.tagName === "INPUT" ||
         activeEl?.tagName === "TEXTAREA" ||
         activeEl?.tagName === "SELECT";
+
+      if (showReceiptModal && e.key !== "Escape") return;
 
       // F2: Focus Search Bar
       if (e.key === "F2") {
@@ -233,7 +245,10 @@ export function PosTerminal({
       if (e.key === "F4") {
         e.preventDefault();
         setPaymentMethod((prev) => {
-          if (prev === "cash") return "qris";
+          if (prev === "cash") {
+            if (allowQrisPayments) return "qris";
+            return allowNonCashPayments ? "debit" : "cash";
+          }
           if (prev === "qris") return allowNonCashPayments ? "debit" : "cash";
           if (prev === "debit") return "credit";
           return "cash";
@@ -260,19 +275,13 @@ export function PosTerminal({
         return;
       }
 
-      // Escape: Close receipt modal, QR modal, clear search, or clear cart
+      // Escape: Close receipt modal, clear search, or clear cart
       if (e.key === "Escape") {
         if (showReceiptModal) {
           e.preventDefault();
           setShowReceiptModal(false);
           return;
         }
-        if (showQrModal) {
-          e.preventDefault();
-          setShowQrModal(false);
-          return;
-        }
-
         if (search.length > 0) {
           e.preventDefault();
           setSearch("");
@@ -289,40 +298,23 @@ export function PosTerminal({
       // Hardware Barcode Scanner logic (rapid key stream ending with Enter)
       const now = Date.now();
       if (e.key === "Enter") {
+        if (isInputActive) {
+          barcodeBufferRef.current = "";
+          return;
+        }
+
         const scannedCode = barcodeBufferRef.current.trim();
         barcodeBufferRef.current = "";
 
         if (scannedCode.length >= 2) {
-          const matched = products.find(
-            (p) =>
-              p.sku?.toLowerCase() === scannedCode.toLowerCase() ||
-              p.id.toLowerCase() === scannedCode.toLowerCase()
-          );
-
-          if (matched) {
-            e.preventDefault();
-            if (matched.trackStock && matched.stock < 1) {
-              setMessage({ type: "error", text: `Stok produk ${matched.name} sudah habis.` });
-            } else {
-              addProduct(matched);
-              setMessage({ type: "success", text: `Barcode discan: ${matched.name} (+1)` });
-            }
-            if (isInputActive && searchInputRef.current) {
-              setSearch("");
-            }
-            return;
-          } else if (scannedCode.length >= 3) {
-            setMessage({
-              type: "error",
-              text: `Barcode "${scannedCode}" tidak ditemukan di katalog produk.`,
-            });
-          }
+          e.preventDefault();
+          addProductFromEntry(scannedCode);
         }
         return;
       }
 
-      // Buffer single printable characters
-      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      // Buffer karakter scanner hanya ketika kasir tidak sedang mengisi input lain.
+      if (!isInputActive && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
         if (now - lastKeyTimeRef.current > 150) {
           barcodeBufferRef.current = "";
         }
@@ -333,7 +325,7 @@ export function PosTerminal({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [products, cart, total, allowNonCashPayments, paymentMethod, showQrModal, search]);
+  }, [products, cart, total, allowNonCashPayments, allowQrisPayments, paymentMethod, showReceiptModal, search, addProductFromEntry]);
 
   return (
     <div className="space-y-4">
@@ -364,7 +356,7 @@ export function PosTerminal({
             <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
           </span>
           <ScanBarcode className="size-3.5 text-emerald-700" />
-          <span>Scanner USB Siap</span>
+          <span>Mode Scanner Aktif</span>
         </div>
       </div>
 
@@ -391,7 +383,14 @@ export function PosTerminal({
                 ref={searchInputRef}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Ketik nama / scan barcode SKU... [F2]"
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  addProductFromEntry(event.currentTarget.value);
+                }}
+                placeholder="Ketik nama atau scan SKU, lalu Enter... [F2]"
+                aria-label="Cari produk berdasarkan nama atau SKU"
                 className="h-11 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 text-sm font-normal normal-case tracking-normal text-[#15211d] focus:border-[#198760] focus:outline-hidden focus:ring-1 focus:ring-[#198760]"
               />
             </label>
@@ -513,6 +512,12 @@ export function PosTerminal({
             </span>
           </div>
 
+          {checkoutDisabledReason && (
+            <p className="m-0 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm font-semibold text-amber-800">
+              {checkoutDisabledReason}
+            </p>
+          )}
+
           {/* Payment Method Selector Pills */}
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#eef4f1] p-1 border border-[#dfe8e3]">
             <button
@@ -532,18 +537,27 @@ export function PosTerminal({
             </button>
             <button
               type="button"
+              disabled={!allowQrisPayments}
               onClick={() => {
+                if (!allowQrisPayments) return;
                 setPaymentMethod("qris");
                 setMessage(null);
               }}
+              title={
+                allowQrisPayments
+                  ? "Gunakan pembayaran QRIS"
+                  : "Menunggu integrasi penyedia pembayaran resmi"
+              }
               className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-extrabold transition ${
                 paymentMethod === "qris"
                   ? "bg-white text-[#198760] shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-[#cbe0d4]"
-                  : "text-[#627069] hover:text-[#15211d]"
+                  : allowQrisPayments
+                    ? "text-[#627069] hover:text-[#15211d]"
+                    : "cursor-not-allowed text-[#94a39c] opacity-70"
               }`}
             >
               <QrCode className="size-4" />
-              <span>QRIS Digital</span>
+              <span>{allowQrisPayments ? "QRIS Digital" : "QRIS Belum Tersedia"}</span>
             </button>
           </div>
 
@@ -645,81 +659,9 @@ export function PosTerminal({
                     {paid >= total ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}
                     <span>{paid >= total ? "Kembalian Kasir" : "Pembayaran Kurang"}</span>
                   </span>
-                  <span className="text-base">{money(paid >= total ? change : total - paid)}</span>
+                  <span className="text-base">{money(paid >= total ? change : shortfall)}</span>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* QRIS MODE */}
-          {paymentMethod === "qris" && (
-            <div className="space-y-3 rounded-2xl border border-[#cbe0d4] bg-gradient-to-b from-[#f4faf7] to-white p-4 shadow-sm text-center">
-              {/* QRIS Header */}
-              <div className="flex items-center justify-between border-b border-[#dfe8e3] pb-2.5 text-left">
-                <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#de232c] text-white font-extrabold text-[11px] tracking-tighter">
-                    QRIS
-                  </div>
-                  <div>
-                    <p className="m-0 text-xs font-extrabold text-[#15211d]">QRIS Standar Nasional</p>
-                    <p className="m-0 text-[10px] text-[#627069]">Bank Indonesia & ASPI</p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                  Nominal Pas
-                </span>
-              </div>
-
-              {/* QR Code Container */}
-              {total > 0 ? (
-                <div className="space-y-2">
-                  <div className="mx-auto flex w-fit flex-col items-center rounded-2xl border border-[#dfe8e3] bg-white p-3 shadow-inner">
-                    {qrCodeUrl ? (
-                      <img
-                        src={qrCodeUrl}
-                        alt="QRIS Code"
-                        className="size-44 rounded-lg object-contain"
-                      />
-                    ) : (
-                      <div className="grid size-44 place-items-center text-xs text-[#627069]">
-                        Menyiapkan QRIS...
-                      </div>
-                    )}
-                    <span className="mt-1 text-[11px] font-bold text-[#627069] tracking-wider">
-                      {businessName}
-                    </span>
-                  </div>
-
-                  {/* Nominal Callout */}
-                  <div className="rounded-xl bg-emerald-50/80 border border-emerald-200/60 p-2.5 text-center">
-                    <span className="block text-[11px] font-medium text-[#627069]">Total Bayar QRIS:</span>
-                    <strong className="text-lg font-extrabold text-[#198760]">{money(total)}</strong>
-                  </div>
-
-                  {/* Customer Screen Expansion Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowQrModal(true)}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#b2d8c5] bg-white py-2 text-xs font-bold text-[#198760] transition hover:bg-[#eaf7f0]"
-                  >
-                    <Maximize2 className="size-3.5" />
-                    <span>Perbesar Layar untuk Pelanggan</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="py-6 text-xs text-[#627069]">
-                  <QrCode className="mx-auto size-10 text-[#9bb0a5] mb-2" />
-                  Tambahkan produk ke keranjang untuk menampilkan QRIS.
-                </div>
-              )}
-
-              {/* Supported apps */}
-              <div className="border-t border-[#edf2ee] pt-2 text-[10px] text-[#627069]">
-                <p className="m-0 mb-1 font-semibold text-[#15211d]">Bisa di-scan menggunakan:</p>
-                <p className="m-0 text-[#627069] leading-4">
-                  BCA, Livin&apos; Mandiri, BRImo, BNI, GoPay, OVO, DANA, ShopeePay, LinkAja &amp; semua m-Banking.
-                </p>
-              </div>
             </div>
           )}
 
@@ -764,7 +706,7 @@ export function PosTerminal({
           {/* Submit Button */}
           <button
             type="button"
-            disabled={isSubmitting || cart.length === 0}
+            disabled={isSubmitting || cart.length === 0 || Boolean(checkoutDisabledReason)}
             onClick={completeSale}
             className="h-12 w-full rounded-xl bg-[#198760] text-sm font-bold text-white shadow-[0_4px_14px_rgba(25,135,96,.3)] transition hover:bg-[#14714f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
           >
@@ -778,77 +720,6 @@ export function PosTerminal({
           </button>
         </div>
       </aside>
-
-      {/* FULLSCREEN CUSTOMER QRIS MODAL */}
-      {showQrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl text-center border border-[#dfe8e3]">
-            <button
-              type="button"
-              onClick={() => setShowQrModal(false)}
-              className="absolute right-4 top-4 grid size-8 place-items-center rounded-full bg-[#f0f4f1] text-[#627069] transition hover:bg-[#dfe8e3] hover:text-[#15211d]"
-            >
-              <X className="size-4" />
-            </button>
-
-            {/* Official QRIS Header */}
-            <div className="inline-flex items-center gap-2 rounded-xl bg-[#fdf2f2] px-3.5 py-1.5 border border-[#fed7d7] text-xs font-extrabold text-[#c53030] mb-3">
-              <span className="rounded bg-[#c53030] px-1.5 py-0.5 text-[10px] font-black text-white">QRIS</span>
-              <span>PEMBAYARAN DIGITAL RESMI</span>
-            </div>
-
-            <h3 className="text-xl font-extrabold tracking-tight text-[#15211d]">
-              {businessName}
-            </h3>
-            <p className="mt-0.5 text-xs text-[#627069]">
-              {outlets.find((o) => o.id === outletId)?.name ?? "Kasir Toko"}
-            </p>
-
-            {/* Large QR Code Display */}
-            <div className="my-4 mx-auto flex w-fit flex-col items-center rounded-2xl border-2 border-dashed border-[#198760]/30 bg-[#fbfdfc] p-4 shadow-sm">
-              {qrCodeUrl && (
-                <img
-                  src={qrCodeUrl}
-                  alt="QRIS Pelanggan"
-                  className="size-64 rounded-xl object-contain shadow-sm"
-                />
-              )}
-              <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[#198760]">
-                <ShieldCheck className="size-4" />
-                <span>NMID Terverifikasi Nasional</span>
-              </div>
-            </div>
-
-            {/* Total Price Tag */}
-            <div className="rounded-2xl bg-gradient-to-r from-[#eaf7f0] to-[#f2faf5] p-3.5 border border-[#cae8d9] mb-4">
-              <p className="m-0 text-xs font-medium text-[#627069]">Total yang Harus Dibayar:</p>
-              <p className="m-0 text-2xl font-black text-[#198760] tracking-tight">{money(total)}</p>
-            </div>
-
-            <p className="text-[11px] text-[#627069] leading-relaxed mb-5">
-              Buka aplikasi <strong>BCA, Mandiri, BRI, GoPay, OVO, DANA, ShopeePay</strong>, atau m-Banking Anda, arahkan kamera ke QR Code di atas.
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setShowQrModal(false)}
-                className="h-11 rounded-xl border border-[#dfe8e3] text-xs font-bold text-[#627069] hover:bg-[#f0f4f1] transition"
-              >
-                Tutup Tampilan
-              </button>
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={completeSale}
-                className="h-11 rounded-xl bg-[#198760] text-xs font-bold text-white hover:bg-[#14714f] transition shadow-md"
-              >
-                {isSubmitting ? "Menyimpan..." : "Sudah Bayar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* SUCCESS RECEIPT MODAL WITH THERMAL PRINT & WHATSAPP */}
       <ReceiptModal

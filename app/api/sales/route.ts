@@ -38,6 +38,8 @@ export async function POST(request: Request) {
   }
 
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
+  const allowsQrisPayments = hasPlanFeature(currentSubscription?.plan, "qrisPayments");
+  const requiresShift = hasPlanFeature(currentSubscription?.plan, "shiftManagement");
 
   let payload: unknown;
   try {
@@ -52,6 +54,15 @@ export async function POST(request: Request) {
   }
   if ((parsed.data.paymentMethod === "debit" || parsed.data.paymentMethod === "credit") && !allowsAllPayments) {
     return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
+  }
+  if (parsed.data.paymentMethod === "qris" && !allowsQrisPayments) {
+    return NextResponse.json(
+      {
+        message: "Pembayaran QRIS belum tersedia sampai integrasi penyedia pembayaran resmi selesai.",
+        code: "PAYMENT_METHOD_UNAVAILABLE",
+      },
+      { status: 403 },
+    );
   }
 
   const quantities = new Map<string, number>();
@@ -83,11 +94,16 @@ export async function POST(request: Request) {
         ))
         .limit(1);
 
+      if (requiresShift && !currentShift) {
+        throw new Error("SHIFT_REQUIRED");
+      }
+
       const catalog = await tx
         .select({
           id: product.id,
           name: product.name,
           sellingPrice: product.sellingPrice,
+          costPrice: product.costPrice,
           trackStock: product.trackStock,
           stockId: inventoryStock.id,
           quantity: inventoryStock.quantity,
@@ -110,6 +126,7 @@ export async function POST(request: Request) {
           ...item,
           name: catalogItem.name,
           unitPrice: catalogItem.sellingPrice,
+          unitCost: catalogItem.costPrice,
           subtotal: catalogItem.sellingPrice * item.quantity,
           trackStock: catalogItem.trackStock,
           stockId: catalogItem.stockId,
@@ -171,6 +188,7 @@ export async function POST(request: Request) {
           productName: item.name,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          unitCost: item.unitCost,
           subtotal: item.subtotal,
         })),
       );
@@ -203,8 +221,11 @@ export async function POST(request: Request) {
     if (message === "PRODUCT_NOT_FOUND") {
       return NextResponse.json({ message: "Ada produk yang sudah tidak aktif." }, { status: 422 });
     }
-    if (message === "SHIFT_NOT_OPEN") {
-      return NextResponse.json({ message: "Buka shift kasir pada gerai ini sebelum menyimpan transaksi." }, { status: 409 });
+    if (message === "SHIFT_REQUIRED") {
+      return NextResponse.json(
+        { message: "Buka shift kasir untuk gerai ini sebelum menyimpan transaksi." },
+        { status: 409 },
+      );
     }
     if (message === "INSUFFICIENT_PAYMENT") {
       return NextResponse.json({ message: "Jumlah pembayaran kurang dari total transaksi." }, { status: 422 });

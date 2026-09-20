@@ -7,7 +7,7 @@ export type InsightTopProduct = {
   productName: string;
   quantitySold: number;
   revenue: number;
-  estimatedProfit: number;
+  estimatedProfit: number | null;
 };
 
 export type InsightHourPoint = {
@@ -146,7 +146,9 @@ export function DashboardInsights({
                           {formatMoney(product.revenue)}
                         </p>
                         <p className="text-[10px] font-semibold text-emerald-700/80">
-                          Est. profit {formatMoney(product.estimatedProfit)}
+                          {product.estimatedProfit === null
+                            ? "Modal historis belum tersedia"
+                            : `Profit ${formatMoney(product.estimatedProfit)}`}
                         </p>
                       </div>
                     </div>

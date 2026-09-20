@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHash, timingSafeEqual } from "node:crypto";
+import { verifyMidtransSignatureValue } from "@/lib/midtrans-signature";
 
 type SnapTransactionInput = {
   orderId: string;
@@ -64,8 +64,5 @@ export async function createSnapTransaction(input: SnapTransactionInput) {
 
 export function verifyMidtransSignature(input: { orderId: string; statusCode: string; grossAmount: string; signatureKey: string }) {
   const { serverKey } = getMidtransConfig();
-  const expected = createHash("sha512").update(`${input.orderId}${input.statusCode}${input.grossAmount}${serverKey}`).digest("hex");
-  const expectedBuffer = Buffer.from(expected, "utf8");
-  const actualBuffer = Buffer.from(input.signatureKey.toLowerCase(), "utf8");
-  return expectedBuffer.length === actualBuffer.length && timingSafeEqual(expectedBuffer, actualBuffer);
+  return verifyMidtransSignatureValue({ ...input, serverKey });
 }

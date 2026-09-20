@@ -14,7 +14,8 @@ export type PlanFeature =
   | "exportReports"
   | "unlimitedStaff"
   | "unlimitedProducts"
-  | "multiOutlet";
+  | "multiOutlet"
+  | "shiftManagement";
 
 export type PlanConfig = {
   name: string;
@@ -35,17 +36,18 @@ export const plans: Record<PlanId, PlanConfig> = {
       maxProducts: 100,
     },
     features: {
-      qrisPayments: true,
+      qrisPayments: false,
       allPaymentMethods: false,
       exportReports: false,
       unlimitedStaff: false,
       unlimitedProducts: false,
       multiOutlet: false,
+      shiftManagement: false,
     },
   },
   bisnis: {
     name: "Bisnis",
-    description: "Kapasitas tanpa batas & seluruh metode pembayaran untuk usaha berkembang.",
+    description: "Kapasitas lebih besar dan metode pembayaran tambahan untuk usaha berkembang.",
     annualPrice: 950_000,
     limits: {
       maxOutlets: 5,
@@ -53,12 +55,13 @@ export const plans: Record<PlanId, PlanConfig> = {
       maxProducts: 9999,
     },
     features: {
-      qrisPayments: true,
+      qrisPayments: false,
       allPaymentMethods: true,
       exportReports: true,
       unlimitedStaff: true,
       unlimitedProducts: true,
       multiOutlet: true,
+      shiftManagement: true,
     },
   },
 };
@@ -87,7 +90,6 @@ export function hasPlanFeature(plan: unknown, feature: PlanFeature | string): bo
   // Backwards compatibility for legacy feature flags
   if (feature === "nonCashPayments") return config.features.allPaymentMethods;
   if (feature === "staffManagement") return true;
-  if (feature === "shiftManagement") return false;
   return false;
 }
 
@@ -192,4 +194,3 @@ export function getSubscriptionStatusDetails(subscription: SubscriptionData): Su
       : "Langganan telah dibatalkan.",
   };
 }
-

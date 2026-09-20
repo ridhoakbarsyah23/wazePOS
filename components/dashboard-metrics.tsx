@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowUpRight,
+  ArrowRight,
   Boxes,
   CheckCircle2,
-  PackageCheck,
   Receipt,
   ShoppingBag,
   TrendingDown,
@@ -21,6 +21,7 @@ type DashboardMetricsProps = {
   currentAov: number;
   totalStockUnits: number;
   lowStockCount: number;
+  lowStockHref: string;
 };
 
 export function DashboardMetrics({
@@ -31,6 +32,7 @@ export function DashboardMetrics({
   currentAov,
   totalStockUnits,
   lowStockCount,
+  lowStockHref,
 }: DashboardMetricsProps) {
   const money = (val: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -140,7 +142,11 @@ export function DashboardMetrics({
       </div>
 
       {/* 4. STATUS STOK INVENTARIS */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)]">
+      <Link
+        href={lowStockHref}
+        aria-label={lowStockCount > 0 ? `Lihat ${lowStockCount} produk dengan stok menipis` : "Buka halaman inventory"}
+        className="group relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/40"
+      >
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#627069]">
@@ -160,7 +166,7 @@ export function DashboardMetrics({
 
         <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f0f4f2]">
           {lowStockCount > 0 ? (
-            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800 border border-amber-200">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800">
               <AlertTriangle className="size-3" />
               <span>{lowStockCount} produk stok menipis</span>
             </span>
@@ -170,8 +176,9 @@ export function DashboardMetrics({
               <span>Semua stok aman</span>
             </span>
           )}
+          <ArrowRight className="ml-auto size-4 text-[#8a9b92] transition-transform group-hover:translate-x-0.5 group-hover:text-[#a35f12]" />
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

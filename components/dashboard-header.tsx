@@ -4,16 +4,12 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Building2,
   Calendar,
   CheckCircle2,
   ChevronDown,
-  Clock,
   Crown,
-  RefreshCw,
   RotateCw,
   ShoppingCart,
-  Sparkles,
   Store,
 } from "lucide-react";
 

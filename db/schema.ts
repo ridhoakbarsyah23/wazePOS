@@ -320,6 +320,7 @@ export const saleItem = pgTable(
     productName: text("product_name").notNull(),
     quantity: integer("quantity").notNull(),
     unitPrice: integer("unit_price").notNull(),
+    unitCost: integer("unit_cost"),
     subtotal: integer("subtotal").notNull(),
     ...timestamps,
   },

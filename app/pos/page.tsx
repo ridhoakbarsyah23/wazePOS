@@ -1,9 +1,10 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { category, inventoryStock, outlet, product, sale } from "@/db/schema";
+import { cashShift, category, inventoryStock, outlet, product, sale } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { PosTerminal } from "@/components/pos-terminal";
+import { ShiftPanel } from "@/components/shift-panel";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/plans";
@@ -39,6 +40,8 @@ export default async function PosPage({ searchParams }: {
 
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const allowNonCashPayments = hasPlanFeature(selectedPlan, "allPaymentMethods");
+  const allowQrisPayments = hasPlanFeature(selectedPlan, "qrisPayments");
+  const shiftManagementEnabled = hasPlanFeature(selectedPlan, "shiftManagement");
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name })
@@ -49,6 +52,25 @@ export default async function PosPage({ searchParams }: {
   const requestedOutletId = (await searchParams).outlet;
   const activeOutlet = outlets.find((item) => item.id === requestedOutletId) ?? outlets[0];
   if (!activeOutlet) redirect("/dashboard");
+
+  const [currentShift] = shiftManagementEnabled
+    ? await db
+        .select({
+          id: cashShift.id,
+          outletId: cashShift.outletId,
+          openingCash: cashShift.openingCash,
+          openedAt: cashShift.openedAt,
+        })
+        .from(cashShift)
+        .where(
+          and(
+            eq(cashShift.businessId, membership.businessId),
+            eq(cashShift.cashierId, session.user.id),
+            eq(cashShift.status, "open"),
+          ),
+        )
+        .limit(1)
+    : [];
 
   const products = await db
     .select({
@@ -95,6 +117,23 @@ export default async function PosPage({ searchParams }: {
         <p className="m-0 text-sm leading-7 text-[#627069]">Pilih produk, masukkan pembayaran, lalu stok akan berkurang otomatis setelah transaksi berhasil.</p>
 
         <div className="mt-7">
+          {shiftManagementEnabled && (
+            <div className="mb-5">
+              <ShiftPanel
+                key={currentShift?.id ?? `new:${activeOutlet.id}`}
+                outlets={currentShift ? outlets : [activeOutlet]}
+                currentShift={
+                  currentShift
+                    ? {
+                        ...currentShift,
+                        openingCash: Number(currentShift.openingCash),
+                        openedAt: new Date(currentShift.openedAt).toISOString(),
+                      }
+                    : null
+                }
+              />
+            </div>
+          )}
           <PosTerminal
             key={activeOutlet.id}
             businessName={membership.businessName}
@@ -102,6 +141,16 @@ export default async function PosPage({ searchParams }: {
             outlets={[activeOutlet]}
             initialOutletId={activeOutlet.id}
             allowNonCashPayments={allowNonCashPayments}
+            allowQrisPayments={allowQrisPayments}
+            checkoutDisabledReason={
+              shiftManagementEnabled
+                ? !currentShift
+                  ? "Buka shift kasir terlebih dahulu sebelum menyimpan transaksi."
+                  : currentShift.outletId !== activeOutlet.id
+                    ? `Shift Anda sedang aktif di ${outlets.find((item) => item.id === currentShift.outletId)?.name ?? "gerai lain"}. Pilih gerai tersebut atau tutup shift sebelum bertransaksi di sini.`
+                    : null
+                : null
+            }
           />
         </div>
         <section className="mt-8 rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-[0_8px_24px_rgba(16,65,48,.06)]">
