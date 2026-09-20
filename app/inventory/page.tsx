@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
+import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
 export default async function InventoryPage({
@@ -34,11 +34,9 @@ export default async function InventoryPage({
 }) {
   const filters = await searchParams;
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
   if (!canManageBusiness(membership.role)) redirect("/pos");
-
-  const currentSubscription = await getBusinessSubscription(membership.businessId);
   const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
   if (!subDetails.isValid) {

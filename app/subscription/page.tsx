@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { db } from "@/db";
 import { subscriptionPayment } from "@/db/schema";
-import { getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
+import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { isMidtransConfigured } from "@/lib/midtrans";
 import { getSubscriptionStatusDetails, normalizePlan, plans } from "@/lib/plans";
 
@@ -51,11 +51,10 @@ export default async function SubscriptionPage({
 }) {
   const query = await searchParams;
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
   if (membership.role !== "owner") redirect("/dashboard");
 
-  const currentSubscription = await getBusinessSubscription(membership.businessId);
   const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
   const payments = await db

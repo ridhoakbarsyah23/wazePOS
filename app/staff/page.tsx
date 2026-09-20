@@ -7,17 +7,16 @@ import { AppHeader } from "@/components/app-header";
 import { StaffManager } from "@/components/staff-manager";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
-import { canManageStaff, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
+import { canManageStaff, getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getPlanLimits, getSubscriptionStatusDetails, normalizePlan, plans } from "@/lib/plans";
 
 export default async function StaffPage() {
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
   if (!canManageStaff(membership.role)) redirect("/pos");
 
-  const [staffRows, subscription] = await Promise.all([
-    db
+  const staffRows = await db
       .select({
         id: businessMember.id,
         userId: user.id,
@@ -29,11 +28,9 @@ export default async function StaffPage() {
       .from(businessMember)
       .innerJoin(user, eq(user.id, businessMember.userId))
       .where(eq(businessMember.businessId, membership.businessId))
-      .orderBy(desc(businessMember.createdAt)),
-    getBusinessSubscription(membership.businessId),
-  ]);
+      .orderBy(desc(businessMember.createdAt));
 
-  const subDetails = getSubscriptionStatusDetails(subscription);
+  const subDetails = getSubscriptionStatusDetails(currentSubscription);
   if (!subDetails.isValid) {
     if (membership.role === "owner") {
       redirect("/subscription?expired=1");
@@ -53,7 +50,7 @@ export default async function StaffPage() {
     );
   }
 
-  const selectedPlan = normalizePlan(subscription?.plan);
+  const selectedPlan = normalizePlan(currentSubscription?.plan);
   const planLimits = getPlanLimits(selectedPlan);
 
   const staffFormatted = staffRows.map((s) => ({

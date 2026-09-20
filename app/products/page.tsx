@@ -7,16 +7,14 @@ import { AppHeader } from "@/components/app-header";
 import { ProductManager } from "@/components/product-manager";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
-import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
+import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
 export default async function ProductsPage() {
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
   if (!canManageBusiness(membership.role)) redirect("/pos");
-
-  const currentSubscription = await getBusinessSubscription(membership.businessId);
   const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
   if (!subDetails.isValid) {
