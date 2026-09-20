@@ -78,6 +78,20 @@
       "when": 1789863523587,
       "tag": "0010_sale-item-cost-snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789868566724,
+      "tag": "0011_sale-void-audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789874268566,
+      "tag": "0012_silly_piledriver",
+      "breakpoints": true
     }
   ]
 }

@@ -19,6 +19,54 @@ export async function requireSession() {
   return session;
 }
 
+export const getWorkspaceContext = cache(async (userId: string) => {
+  const [row] = await db
+    .select({
+      membershipId: businessMember.id,
+      businessId: businessMember.businessId,
+      businessName: business.name,
+      role: businessMember.role,
+      onboardingCompleted: business.onboardingCompleted,
+      subscriptionId: subscription.id,
+      plan: subscription.plan,
+      subscriptionStatus: subscription.status,
+      trialEndsAt: subscription.trialEndsAt,
+      currentPeriodStart: subscription.currentPeriodStart,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      subscriptionCreatedAt: subscription.createdAt,
+    })
+    .from(businessMember)
+    .innerJoin(business, eq(business.id, businessMember.businessId))
+    .leftJoin(subscription, eq(subscription.businessId, business.id))
+    .where(eq(businessMember.userId, userId))
+    .limit(1);
+
+  if (!row) return { membership: null, currentSubscription: null };
+
+  return {
+    membership: {
+      id: row.membershipId,
+      businessId: row.businessId,
+      businessName: row.businessName,
+      role: row.role,
+      onboardingCompleted: row.onboardingCompleted,
+    },
+    currentSubscription: row.subscriptionId
+      ? {
+          id: row.subscriptionId,
+          plan: row.plan!,
+          status: row.subscriptionStatus!,
+          trialEndsAt: row.trialEndsAt!,
+          currentPeriodStart: row.currentPeriodStart,
+          currentPeriodEnd: row.currentPeriodEnd,
+          cancelAtPeriodEnd: row.cancelAtPeriodEnd!,
+          createdAt: row.subscriptionCreatedAt!,
+        }
+      : null,
+  };
+});
+
 export const getMembership = cache(async (userId: string) => {
   const [membership] = await db
     .select({
@@ -72,4 +120,3 @@ export const requireValidSubscription = cache(async (businessId: string) => {
   const details = getSubscriptionStatusDetails(sub);
   return { sub, details };
 });
-

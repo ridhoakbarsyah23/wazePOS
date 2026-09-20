@@ -107,7 +107,10 @@ export const outlet = pgTable(
     address: text("address"),
     ...timestamps,
   },
-  (table) => [index("outlet_business_id_idx").on(table.businessId)],
+  (table) => [
+    index("outlet_business_id_idx").on(table.businessId),
+    index("outlet_business_name_idx").on(table.businessId, table.name),
+  ],
 );
 
 export const subscription = pgTable(
@@ -191,6 +194,7 @@ export const product = pgTable(
   },
   (table) => [
     index("product_business_id_idx").on(table.businessId),
+    index("product_business_active_name_idx").on(table.businessId, table.isActive, table.name),
     index("product_category_id_idx").on(table.categoryId),
     uniqueIndex("product_business_sku_idx").on(table.businessId, table.sku),
   ],
@@ -246,6 +250,7 @@ export const stockMovement = pgTable(
     index("stock_movement_outlet_id_idx").on(table.outletId),
     index("stock_movement_product_id_idx").on(table.productId),
     index("stock_movement_created_at_idx").on(table.createdAt),
+    index("stock_movement_business_created_at_idx").on(table.businessId, table.createdAt),
   ],
 );
 
@@ -296,6 +301,9 @@ export const sale = pgTable(
     changeAmount: integer("change_amount").notNull(),
     paymentMethod: text("payment_method").$type<"cash" | "qris" | "debit" | "credit">().notNull(),
     status: text("status").$type<"completed" | "voided">().default("completed").notNull(),
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    voidedById: text("voided_by_id").references(() => user.id, { onDelete: "restrict" }),
+    voidReason: text("void_reason"),
     ...timestamps,
   },
   (table) => [
@@ -303,6 +311,8 @@ export const sale = pgTable(
     index("sale_outlet_id_idx").on(table.outletId),
     index("sale_cash_shift_id_idx").on(table.cashShiftId),
     index("sale_created_at_idx").on(table.createdAt),
+    index("sale_business_status_created_at_idx").on(table.businessId, table.status, table.createdAt),
+    index("sale_business_outlet_created_at_idx").on(table.businessId, table.outletId, table.createdAt),
     uniqueIndex("sale_business_invoice_idx").on(table.businessId, table.invoiceNumber),
   ],
 );

@@ -9,12 +9,21 @@ const globalDatabase = globalThis as unknown as {
   wazeposSql?: ReturnType<typeof postgres>;
 };
 
+const configuredPoolSize = Number(process.env.DB_POOL_MAX);
+const poolSize = Number.isInteger(configuredPoolSize) && configuredPoolSize > 0
+  ? configuredPoolSize
+  : process.env.NODE_ENV === "production"
+    ? 10
+    : 5;
+
 const sql =
   globalDatabase.wazeposSql ??
   postgres(connectionString, {
-    max: process.env.NODE_ENV === "production" ? 10 : 3,
+    max: poolSize,
     prepare: false,
-    connect_timeout: 10,
+    connect_timeout: 8,
+    idle_timeout: 20,
+    max_lifetime: 60 * 30,
     ssl: connectionString.includes("supabase.com") ? "require" : undefined,
   });
 
