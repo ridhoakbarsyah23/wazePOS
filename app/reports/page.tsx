@@ -1,15 +1,16 @@
-import { and, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lt, sql } from "drizzle-orm";
 import {
   Ban,
   Banknote,
   BarChart3,
   CalendarDays,
   CreditCard,
-  Download,
   ExternalLink,
+  FileSpreadsheet,
   QrCode,
   Receipt,
-  ShoppingBag,
+  RotateCcw,
+  Search,
   Store,
   TrendingUp,
   Wallet,
@@ -31,21 +32,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth-session";
+import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
-import { formatReportDay, getReportDayRange } from "@/lib/reporting";
+import { formatReportRange, getReportDateRange } from "@/lib/reporting";
+
+const paymentMethods = ["cash", "qris", "debit", "credit"] as const;
+const reportStatuses = ["completed", "voided"] as const;
 
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ outlet?: string; date?: string }>;
+  searchParams: Promise<{
+    outlet?: string;
+    date?: string;
+    from?: string;
+    to?: string;
+    payment?: string;
+    status?: string;
+    q?: string;
+  }>;
 }) {
   const session = await requireSession();
-  const membership = await getMembership(session.user.id);
+  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
   if (!membership) redirect("/onboarding");
   if (!canManageBusiness(membership.role)) redirect("/pos");
-
-  const currentSubscription = await getBusinessSubscription(membership.businessId);
   const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
   if (!subDetails.isValid) {
@@ -68,7 +78,13 @@ export default async function ReportsPage({
   }
 
   const params = await searchParams;
-  const { dateKey, start, end } = getReportDayRange(params.date);
+  const { fromKey, toKey, start, end } = getReportDateRange(
+    params.from ?? params.date,
+    params.to ?? params.date,
+  );
+  const paymentMethod = paymentMethods.find((method) => method === params.payment) ?? null;
+  const reportStatus = reportStatuses.find((status) => status === params.status) ?? null;
+  const invoiceQuery = (params.q ?? "").trim().slice(0, 80);
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name })
@@ -83,9 +99,12 @@ export default async function ReportsPage({
     gte(sale.createdAt, start),
     lt(sale.createdAt, end),
     ...(activeOutlet ? [eq(sale.outletId, activeOutlet.id)] : []),
+    ...(paymentMethod ? [eq(sale.paymentMethod, paymentMethod)] : []),
+    ...(reportStatus ? [eq(sale.status, reportStatus)] : []),
+    ...(invoiceQuery ? [ilike(sale.invoiceNumber, `%${invoiceQuery}%`)] : []),
   ];
 
-  const [sales, topProducts, voidedSales] = await Promise.all([
+  const [sales, completedSummary, topProducts, itemTotals, paymentRows, voidedSales] = await Promise.all([
     db
       .select({
         id: sale.id,
@@ -98,7 +117,17 @@ export default async function ReportsPage({
       .from(sale)
       .innerJoin(outlet, eq(outlet.id, sale.outletId))
       .where(and(...reportFilters, eq(sale.status, "completed")))
-      .orderBy(desc(sale.createdAt)),
+      .orderBy(desc(sale.createdAt))
+      .limit(200),
+
+    db
+      .select({
+        revenue: sql<number>`coalesce(sum(${sale.total}), 0)::int`,
+        discount: sql<number>`coalesce(sum(${sale.discount}), 0)::int`,
+        transactions: sql<number>`count(*)::int`,
+      })
+      .from(sale)
+      .where(and(...reportFilters, eq(sale.status, "completed"))),
 
     db
       .select({
@@ -114,6 +143,21 @@ export default async function ReportsPage({
       .limit(8),
 
     db
+      .select({ quantity: sql<number>`coalesce(sum(${saleItem.quantity}), 0)::int` })
+      .from(saleItem)
+      .innerJoin(sale, eq(sale.id, saleItem.saleId))
+      .where(and(...reportFilters, eq(sale.status, "completed"))),
+
+    db
+      .select({
+        paymentMethod: sale.paymentMethod,
+        total: sql<number>`coalesce(sum(${sale.total}), 0)::int`,
+      })
+      .from(sale)
+      .where(and(...reportFilters, eq(sale.status, "completed")))
+      .groupBy(sale.paymentMethod),
+
+    db
       .select({
         id: sale.id,
         invoiceNumber: sale.invoiceNumber,
@@ -125,19 +169,25 @@ export default async function ReportsPage({
       .from(sale)
       .innerJoin(outlet, eq(outlet.id, sale.outletId))
       .where(and(...reportFilters, eq(sale.status, "voided")))
-      .orderBy(desc(sale.createdAt)),
+      .orderBy(desc(sale.createdAt))
+      .limit(100),
   ]);
 
-  const total = sales.reduce((sum, item) => sum + Number(item.total), 0);
-  const totalItemsSold = topProducts.reduce((sum, item) => sum + Number(item.quantity), 0);
-  const paymentTotals = sales.reduce<Record<string, number>>((result, item) => {
-    result[item.paymentMethod] = (result[item.paymentMethod] ?? 0) + Number(item.total);
-    return result;
-  }, {});
+  const total = Number(completedSummary[0]?.revenue ?? 0);
+  const totalDiscount = Number(completedSummary[0]?.discount ?? 0);
+  const totalTransactions = Number(completedSummary[0]?.transactions ?? 0);
+  const totalItemsSold = Number(itemTotals[0]?.quantity ?? 0);
+  const averageTransaction = totalTransactions > 0 ? Math.round(total / totalTransactions) : 0;
+  const paymentTotals = Object.fromEntries(
+    paymentRows.map((item) => [item.paymentMethod, Number(item.total)]),
+  );
   const canExportReports = hasPlanFeature(currentSubscription?.plan, "exportReports");
-  const exportParams = new URLSearchParams({ date: dateKey });
+  const exportParams = new URLSearchParams({ from: fromKey, to: toKey });
   if (activeOutlet) exportParams.set("outlet", activeOutlet.id);
-  const selectedDayLabel = formatReportDay(dateKey);
+  if (paymentMethod) exportParams.set("payment", paymentMethod);
+  if (reportStatus) exportParams.set("status", reportStatus);
+  if (invoiceQuery) exportParams.set("q", invoiceQuery);
+  const selectedPeriodLabel = formatReportRange(fromKey, toKey);
 
   function getPaymentIcon(method: string) {
     switch (method.toLowerCase()) {
@@ -169,48 +219,101 @@ export default async function ReportsPage({
             Laporan Penjualan
           </h1>
           <p className="m-0 text-sm leading-relaxed text-[#627069]">
-            {selectedDayLabel}
+            Periode {selectedPeriodLabel}
           </p>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#dfe8e3] bg-white p-4 shadow-sm sm:flex-row sm:items-end sm:justify-between">
-          <form action="/reports" method="get" className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            {activeOutlet && <input type="hidden" name="outlet" value={activeOutlet.id} />}
-            <label className="grid gap-1 text-xs font-bold text-[#52645c]">
-              <span className="flex items-center gap-1.5">
-                <CalendarDays className="size-3.5 text-[#198760]" /> Tanggal laporan
-              </span>
+        <div className="mt-5 border border-[#dfe8e3] bg-white">
+          <div className="flex items-center justify-between gap-3 border-b border-[#e5ebe8] px-4 py-3">
+            <div>
+              <h2 className="text-sm font-bold text-[#17211d]">Filter laporan</h2>
+              <p className="mt-0.5 text-xs text-[#78857f]">Pilih periode dan rincian transaksi yang ingin ditampilkan.</p>
+            </div>
+            <Link href="/reports" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#68766f] hover:text-[#187c59]">
+              <RotateCcw className="size-3.5" /> Reset
+            </Link>
+          </div>
+
+          <form action="/reports" method="get" className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-6 lg:items-end">
+            <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
+              <span className="flex items-center gap-1.5"><CalendarDays className="size-3.5 text-[#198760]" /> Dari tanggal</span>
               <input
                 type="date"
-                name="date"
-                defaultValue={dateKey}
-                className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10"
+                name="from"
+                defaultValue={fromKey}
+                className="h-10 border border-[#dbe5df] bg-white px-3 text-sm text-[#15211d] outline-none focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10"
               />
             </label>
-            <Button type="submit" variant="outline" size="sm">
-              Tampilkan
+            <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
+              Sampai tanggal
+              <input
+                type="date"
+                name="to"
+                defaultValue={toKey}
+                className="h-10 border border-[#dbe5df] bg-white px-3 text-sm text-[#15211d] outline-none focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10"
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
+              Gerai
+              <select name="outlet" defaultValue={activeOutlet?.id ?? "all"} className="h-10 border border-[#dbe5df] bg-white px-3 text-sm text-[#15211d] outline-none focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10">
+                <option value="all">Semua gerai</option>
+                {outlets.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
+              Pembayaran
+              <select name="payment" defaultValue={paymentMethod ?? "all"} className="h-10 border border-[#dbe5df] bg-white px-3 text-sm text-[#15211d] outline-none focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10">
+                <option value="all">Semua metode</option>
+                <option value="cash">Tunai</option>
+                <option value="qris">QRIS</option>
+                <option value="debit">Kartu debit</option>
+                <option value="credit">Kartu kredit</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
+              Status
+              <select name="status" defaultValue={reportStatus ?? "all"} className="h-10 border border-[#dbe5df] bg-white px-3 text-sm text-[#15211d] outline-none focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10">
+                <option value="all">Semua status</option>
+                <option value="completed">Selesai</option>
+                <option value="voided">Dibatalkan</option>
+              </select>
+            </label>
+            <Button type="submit" size="sm" className="h-10">
+              Terapkan filter
             </Button>
+            <label className="relative grid gap-1.5 text-xs font-semibold text-[#52645c] sm:col-span-2 lg:col-span-5">
+              Cari nomor invoice
+              <Search className="pointer-events-none absolute bottom-3 left-3 size-4 text-[#87928d]" />
+              <input
+                name="q"
+                defaultValue={invoiceQuery}
+                maxLength={80}
+                placeholder="Contoh: INV-2026"
+                className="h-10 border border-[#dbe5df] bg-white pl-9 pr-3 text-sm text-[#15211d] outline-none placeholder:text-[#9aa59f] focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10"
+              />
+            </label>
           </form>
 
-          {canExportReports ? (
-            <Button asChild size="sm">
-              <a href={`/api/reports/export?${exportParams.toString()}`} download>
-                <Download className="size-4" /> Ekspor CSV
-              </a>
-            </Button>
-          ) : membership.role === "owner" ? (
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/subscription">Ekspor CSV tersedia di Paket Bisnis</Link>
-            </Button>
-          ) : (
-            <span className="rounded-xl bg-[#f2f7f4] px-3 py-2 text-xs font-semibold text-[#627069]">
-              Ekspor CSV tersedia di Paket Bisnis.
-            </span>
-          )}
+          <div className="flex flex-col gap-2 border-t border-[#e5ebe8] bg-[#fafbfa] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#6c7a73]">Ekspor mengikuti seluruh filter yang sedang aktif.</p>
+            {canExportReports ? (
+              <Button asChild size="sm">
+                <a href={`/api/reports/export?${exportParams.toString()}`} download>
+                  <FileSpreadsheet className="size-4" /> Ekspor Excel
+                </a>
+              </Button>
+            ) : membership.role === "owner" ? (
+              <Button asChild variant="secondary" size="sm">
+                <Link href="/subscription">Ekspor Excel tersedia di Paket Bisnis</Link>
+              </Button>
+            ) : (
+              <span className="text-xs font-semibold text-[#627069]">Ekspor Excel tersedia di Paket Bisnis.</span>
+            )}
+          </div>
         </div>
 
-        {/* 3 Fintech Summary Cards */}
-        <div className="mt-7 grid gap-4 sm:grid-cols-3">
+        {/* Financial summary */}
+        <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card className="relative overflow-hidden border-[#cae8d9] bg-white">
             <div className="absolute right-3 top-3 grid size-10 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
               <Wallet className="size-5" />
@@ -235,24 +338,37 @@ export default async function ReportsPage({
                 Transaksi Berhasil
               </span>
               <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#15211d]">
-                {sales.length}
+                {totalTransactions}
               </h2>
               <p className="mt-1 text-xs text-[#758a80]">Struk penjualan selesai tercatat</p>
             </CardContent>
           </Card>
 
           <Card className="relative overflow-hidden border-[#dfe8e3] bg-white">
-            <div className="absolute right-3 top-3 grid size-10 place-items-center rounded-xl bg-amber-50 text-amber-600">
-              <ShoppingBag className="size-5" />
+            <div className="absolute right-3 top-3 grid size-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+              <TrendingUp className="size-5" />
             </div>
             <CardContent className="p-5">
               <span className="text-xs font-bold uppercase tracking-wider text-[#627069]">
-                Produk Terjual
+                Rata-rata Transaksi
               </span>
               <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#15211d]">
-                {totalItemsSold}
+                Rp {averageTransaction.toLocaleString("id-ID")}
               </h2>
-              <p className="mt-1 text-xs text-[#758a80]">Total kuantiti item menu keluar</p>
+              <p className="mt-1 text-xs text-[#758a80]">Nilai rata-rata setiap transaksi</p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-[#dfe8e3] bg-white">
+            <div className="absolute right-3 top-3 grid size-10 place-items-center rounded-xl bg-amber-50 text-amber-600">
+              <Receipt className="size-5" />
+            </div>
+            <CardContent className="p-5">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#627069]">Total Diskon</span>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#15211d]">
+                Rp {totalDiscount.toLocaleString("id-ID")}
+              </h2>
+              <p className="mt-1 text-xs text-[#758a80]">Potongan pada transaksi berhasil</p>
             </CardContent>
           </Card>
         </div>
@@ -269,7 +385,7 @@ export default async function ReportsPage({
                 <div>
                   <CardTitle className="text-base">Produk Terlaris</CardTitle>
                   <CardDescription className="text-xs">
-                    Peringkat menu dengan volume penjualan tertinggi.
+                    Peringkat dari {totalItemsSold.toLocaleString("id-ID")} item yang terjual.
                   </CardDescription>
                 </div>
               </div>
@@ -306,7 +422,7 @@ export default async function ReportsPage({
                   {topProducts.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className="py-6 text-center text-[#627069]">
-                        Belum ada penjualan produk pada tanggal ini.
+                        Belum ada penjualan produk untuk filter ini.
                       </TableCell>
                     </TableRow>
                   )}
@@ -356,7 +472,7 @@ export default async function ReportsPage({
                 })}
                 {Object.keys(paymentTotals).length === 0 && (
                   <p className="py-6 text-center text-sm text-[#627069]">
-                    Belum ada pembayaran yang diterima hari ini.
+                    Belum ada pembayaran yang sesuai dengan filter.
                   </p>
                 )}
               </div>
@@ -379,7 +495,9 @@ export default async function ReportsPage({
                   </CardDescription>
                 </div>
               </div>
-              <Badge variant="outline">{sales.length} Transaksi</Badge>
+              <Badge variant="outline">
+                {sales.length < totalTransactions ? `${sales.length} dari ${totalTransactions}` : totalTransactions} Transaksi
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0 sm:p-6 sm:pt-0">
@@ -389,7 +507,7 @@ export default async function ReportsPage({
                   <TableRow>
                     <TableHead className="font-bold">No. Invoice</TableHead>
                     <TableHead className="font-bold">Gerai</TableHead>
-                    <TableHead className="font-bold">Waktu Transaksi</TableHead>
+                    <TableHead className="font-bold">Tanggal &amp; Waktu</TableHead>
                     <TableHead className="font-bold">Metode</TableHead>
                     <TableHead className="text-right font-bold">Total Pembayaran</TableHead>
                   </TableRow>
@@ -413,10 +531,12 @@ export default async function ReportsPage({
                         </div>
                       </TableCell>
                       <TableCell className="text-xs text-[#627069]">
-                        {new Date(item.createdAt).toLocaleTimeString("id-ID", {
+                        {new Date(item.createdAt).toLocaleString("id-ID", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
-                          second: "2-digit",
                         })}
                       </TableCell>
                       <TableCell>
@@ -432,7 +552,7 @@ export default async function ReportsPage({
                   {sales.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-8 text-center text-[#627069]">
-                        Belum ada transaksi berhasil pada tanggal ini.
+                        Belum ada transaksi berhasil yang sesuai dengan filter.
                       </TableCell>
                     </TableRow>
                   )}
