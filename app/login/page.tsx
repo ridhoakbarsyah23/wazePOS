@@ -10,12 +10,12 @@ export default async function LoginPage() {
     <AuthPageShell
       eyebrow="Selamat datang kembali"
       title="Masuk ke wazePOS"
-      description="Gunakan email dan kata sandi akun Anda."
+      description="Gunakan Google atau email dan kata sandi akun Anda."
       footerText="Belum punya akun?"
       footerLinkLabel="Daftar sekarang"
       footerHref="/register"
     >
-      <LoginForm />
+      <LoginForm googleSsoEnabled={Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)} />
     </AuthPageShell>
   );
 }

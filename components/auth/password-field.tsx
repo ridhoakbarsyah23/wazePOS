@@ -15,7 +15,7 @@ type PasswordFieldProps = {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export const authInputClass = "h-12 w-full rounded-xl border border-[#d9e4de] bg-[#fbfdfc] px-4 text-sm text-[#15211d] outline-none transition placeholder:text-[#9aa69f] hover:border-[#bdd3c7] focus:border-[#198760] focus:bg-white focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:opacity-60";
+export const authInputClass = "h-12 w-full rounded-xl border border-[#d8e3dd] bg-white px-3.5 text-base font-medium text-[#15211d] outline-none transition placeholder:font-normal placeholder:text-[#9aa69f] hover:border-[#b5cec1] focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f5f8f6] disabled:opacity-60 sm:h-11 sm:text-sm";
 
 function VisibilityIcon({ visible }: { visible: boolean }) {
   return visible ? (

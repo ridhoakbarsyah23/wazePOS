@@ -4,13 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { GoogleSsoButton } from "@/components/auth/google-sso-button";
 import { authInputClass, PasswordField } from "@/components/auth/password-field";
 import { authClient } from "@/lib/auth-client";
 import { loginSchema } from "@/lib/validation/auth";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
-export function LoginForm() {
+export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -62,7 +63,9 @@ export function LoginForm() {
   }
 
   return (
-    <form className="mt-7 grid gap-4" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+    <form className="mt-6 grid gap-3.5" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+      {googleSsoEnabled && <GoogleSsoButton flow="login" disabled={isPending} />}
+
       <div className="grid gap-2 text-xs font-bold text-[#34443d]">
         <label htmlFor="login-email">Email</label>
         <input
@@ -95,7 +98,7 @@ export function LoginForm() {
         onInput={() => clearError("password")}
       />
 
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex flex-col items-start gap-2 text-xs min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
         <label className="flex cursor-pointer items-center gap-2 font-semibold text-[#5e6d65]">
           <input
             name="rememberMe"
@@ -123,7 +126,7 @@ export function LoginForm() {
 
       {errorMessage && <p className="m-0 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-700" role="alert" aria-live="polite">{errorMessage}</p>}
 
-      <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#198760] px-5 text-sm font-extrabold text-white transition hover:bg-[#116b4c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65" type="submit" disabled={isPending}>
+      <button className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#198760] px-5 text-[15px] font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.2)] transition hover:bg-[#116b4c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65 sm:h-11 sm:text-sm" type="submit" disabled={isPending}>
         {isPending && <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
         {isPending ? "Memeriksa akun..." : "Masuk"}
       </button>

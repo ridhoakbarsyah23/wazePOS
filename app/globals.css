@@ -354,6 +354,30 @@ h1, h2, h3, p { margin-top: 0; }
   html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0ms!important}.motion-ready [data-reveal]{opacity:1!important;transform:none!important}
 }
 
+/* Keep authentication forms fully reachable on short desktop and landscape screens. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .auth-responsive-page {
+    display: block;
+  }
+
+  .auth-responsive-shell {
+    max-width: 620px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .auth-responsive-aside {
+    display: none !important;
+  }
+
+  .auth-responsive-mobile-brand {
+    display: inline-flex !important;
+  }
+
+  .auth-responsive-content {
+    padding-block: 2rem;
+  }
+}
+
 /* Smooth Page & Menu Transitions */
 @keyframes pageEnter {
   0% {
@@ -430,4 +454,3 @@ h1, h2, h3, p { margin-top: 0; }
     width: 100%;
   }
 }
-

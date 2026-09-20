@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 
 const configuredOrigin = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 export const auth = betterAuth({
   appName: "wazePOS",
@@ -30,12 +32,25 @@ export const auth = betterAuth({
     schema,
     transaction: true,
   }),
+  account: {
+    encryptOAuthTokens: true,
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
     requireEmailVerification: false,
   },
+  socialProviders:
+    googleClientId && googleClientSecret
+      ? {
+          google: {
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            prompt: "select_account",
+          },
+        }
+      : {},
   rateLimit: {
     enabled: true,
     window: 60,
@@ -43,6 +58,7 @@ export const auth = betterAuth({
     customRules: {
       "/sign-in/email": { window: 60, max: 10 },
       "/sign-up/email": { window: 60, max: 5 },
+      "/sign-in/social": { window: 60, max: 10 },
     },
   },
   plugins: [nextCookies()],

@@ -1,8 +1,14 @@
 node_modules/
 .next/
 out/
-.env*
+
+# Local environment files and secrets. Keep only the sanitized template in Git.
+.env
+.env.local
+.env.*
 !.env.example
+.vercel/
+
 data/*.ndjson
 !.gitkeep
 .tmp/
