@@ -35,15 +35,34 @@ connection string **Transaction pooler** (port `6543`) atau **Session pooler**
 (port `5432`), lalu salin URL PostgreSQL-nya. Pastikan URL tersebut menyertakan
 `sslmode=require`.
 
-Tambahkan environment variables berikut di Vercel pada environment **Production**
-dan **Preview**:
+File `.env` dan `.env.local` hanya digunakan di komputer lokal dan sengaja tidak
+masuk Git. Salin nilai yang diperlukan melalui **Vercel > Project Settings >
+Environment Variables**. Tambahkan konfigurasi berikut pada environment
+**Production** menggunakan domain produksi final tanpa garis miring di akhir:
 
 ```env
 DATABASE_URL=postgresql://postgres....?sslmode=require
 BETTER_AUTH_SECRET=secret-acak-minimal-32-karakter
 BETTER_AUTH_URL=https://waze-pos.vercel.app
 NEXT_PUBLIC_SITE_URL=https://waze-pos.vercel.app
+GOOGLE_CLIENT_ID=client-id-dari-google
+GOOGLE_CLIENT_SECRET=client-secret-dari-google
 ```
+
+Di Google Cloud Console, OAuth Client harus bertipe **Web application** dengan
+konfigurasi berikut:
+
+```text
+Authorized JavaScript origin: https://waze-pos.vercel.app
+Authorized redirect URI:      https://waze-pos.vercel.app/api/auth/callback/google
+```
+
+Ganti `waze-pos.vercel.app` jika domain produksi aktual berbeda. Google
+mewajibkan redirect URI yang sama persis. Untuk Preview Deployment, gunakan URL
+preview/branch yang stabil, daftarkan callback-nya secara terpisah di Google,
+dan pasang environment variables khusus **Preview**. Google tidak menerima
+wildcard redirect URI. Setelah mengubah `NEXT_PUBLIC_SITE_URL` atau environment
+variable lain, lakukan deployment baru agar nilainya ikut masuk ke build.
 
 Migration database tidak dijalankan dari `vercel-build`, karena proses build
 Vercel dapat berjalan paralel dan connection pooler mode transaksi tidak cocok
@@ -93,8 +112,9 @@ Salin hasil perintah kedua ke `BETTER_AUTH_SECRET` di `.env.local`. Database Doc
 - Halaman `/products` digunakan untuk memperbarui produk tanpa menghapus histori transaksi.
 - Halaman `/inventory` menyimpan stok per gerai dan riwayat perubahan dalam bentuk selisih stok.
 - Paket Tumbuh mendukung transaksi tunai tanpa shift. Paket Bisnis menambahkan pembayaran non-tunai dan mewajibkan shift kasir pada gerai aktif.
-- Setiap transaksi menyimpan snapshot nama dan harga produk, mengurangi stok secara atomik, serta terhubung ke shift kasir ketika fitur shift tersedia.
-- Penutupan shift menghitung kas yang diharapkan dari modal awal dan transaksi tunai saja; QRIS, debit, dan kredit tidak menambah kas fisik.
+- Setiap transaksi baru menyimpan snapshot nama, harga jual, dan harga modal produk, mengurangi stok secara atomik, serta terhubung ke shift kasir ketika fitur shift tersedia.
+- Penutupan shift menghitung kas yang diharapkan dari modal awal dan transaksi tunai saja; pembayaran debit dan kredit tidak menambah kas fisik.
+- Pembayaran QRIS POS dinonaktifkan sampai integrasi penyedia pembayaran resmi, verifikasi status, dan webhook tersedia. QRIS tidak boleh dikonfirmasi lunas secara manual.
 - Halaman `/reports` menampilkan ringkasan penjualan harian, produk terlaris, dan distribusi metode pembayaran.
 - Pengelolaan produk, stok, dan laporan dibatasi untuk role `owner` atau `admin`; role `cashier` diarahkan ke kasir.
 - Entitlement paket didefinisikan terpusat di `lib/plans.ts` dan diverifikasi kembali oleh API untuk fitur khusus Paket Bisnis.
