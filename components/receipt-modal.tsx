@@ -3,9 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, CheckCircle2, ChevronDown, MessageSquareShare, PlusCircle, Printer, ReceiptText, Send, X } from "lucide-react";
+import { getReceiptPrintPage, type ReceiptPaperSize } from "@/lib/receipt-print";
 import { buildReceiptWhatsAppMessage, type ReceiptShareData } from "./whatsapp-share-button";
 
-export type PaperSize = "58mm" | "80mm";
+export type PaperSize = ReceiptPaperSize;
 
 export function ReceiptModal({
   isOpen,
@@ -18,10 +19,10 @@ export function ReceiptModal({
 }) {
   const [paperSize, setPaperSize] = useState<PaperSize>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("wazepos_receipt_paper_size");
-      if (saved === "58mm" || saved === "80mm") return saved as PaperSize;
+      const saved = localStorage.getItem("wazepos_receipt_layout_v2");
+      if (saved === "a4" || saved === "58mm" || saved === "80mm") return saved;
     }
-    return "58mm";
+    return "a4";
   });
 
   const [customerPhone, setCustomerPhone] = useState("");
@@ -43,7 +44,7 @@ export function ReceiptModal({
 
   function changePaperSize(size: PaperSize) {
     setPaperSize(size);
-    localStorage.setItem("wazepos_receipt_paper_size", size);
+    localStorage.setItem("wazepos_receipt_layout_v2", size);
   }
 
   function handlePrint() {
@@ -104,6 +105,10 @@ export function ReceiptModal({
   if (!isOpen || !receipt) return null;
 
   const money = (val: number) => `Rp ${Number(val).toLocaleString("id-ID")}`;
+  const printPage = getReceiptPrintPage(paperSize, receipt.items.length, {
+    hasDiscount: Boolean(receipt.discount),
+  });
+  const isA4Print = paperSize === "a4";
 
   // Portal ke document.body agar #pos-print-root menjadi anak langsung <body>.
   // CSS print menyembunyikan semua anak body selain #pos-print-root — jika modal
@@ -114,12 +119,19 @@ export function ReceiptModal({
       <style>{`
         @media print {
           @page {
-            size: auto;
-            margin: 0mm;
+            size: ${printPage.pageSizeCss};
+            margin: ${printPage.pageMarginCss};
+          }
+          html,
+          body {
+            ${isA4Print
+              ? "width: auto !important; min-width: 0 !important;"
+              : `width: ${printPage.pageWidthMm}mm !important; min-width: ${printPage.pageWidthMm}mm !important;`}
+            min-height: 0 !important;
           }
           body {
-            background-color: #ffffff !important;
-            color: #000000 !important;
+            background-color: ${isA4Print ? "#f2f8f5" : "#ffffff"} !important;
+            color: #15211d !important;
             margin: 0 !important;
             padding: 0 !important;
             -webkit-print-color-adjust: exact !important;
@@ -133,7 +145,7 @@ export function ReceiptModal({
           #pos-print-root {
             position: static !important;
             display: block !important;
-            background: none !important;
+            background: ${isA4Print ? "#f2f8f5" : "none"} !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             padding: 0 !important;
@@ -158,23 +170,58 @@ export function ReceiptModal({
           }
           .thermal-receipt-printable {
             display: block !important;
-            width: 100% !important;
-            margin: 0 auto !important;
-            padding: 4px 6px !important;
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
+            box-sizing: border-box !important;
+            width: ${printPage.receiptWidthMm}mm !important;
+            max-width: none !important;
+            margin: ${isA4Print ? "0 auto" : "0"} !important;
+            padding: ${printPage.receiptPaddingCss} !important;
+            box-shadow: ${isA4Print ? "0 3mm 12mm rgba(20, 93, 67, 0.12)" : "none"} !important;
+            border: ${isA4Print ? "1px solid #cfe1d8" : "none"} !important;
+            border-radius: ${isA4Print ? "5mm" : "0"} !important;
+            background: #ffffff !important;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
           }
+          html[data-receipt-paper="a4"] .thermal-receipt-printable {
+            font-size: 12px !important;
+            line-height: 1.45 !important;
+          }
           html[data-receipt-paper="58mm"] .thermal-receipt-printable {
-            max-width: 58mm !important;
-            font-size: 11px !important;
-            line-height: 1.25 !important;
+            font-size: 10px !important;
+            line-height: 1.3 !important;
           }
           html[data-receipt-paper="80mm"] .thermal-receipt-printable {
-            max-width: 80mm !important;
-            font-size: 13px !important;
-            line-height: 1.35 !important;
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+          }
+          .thermal-receipt-printable > div,
+          .thermal-receipt-printable .flex {
+            break-inside: avoid !important;
+          }
+          .receipt-brand-block {
+            background: #eaf7f0 !important;
+            border: 1px solid #bcdcca !important;
+            border-radius: 3mm !important;
+            padding: 4mm 3mm !important;
+          }
+          .receipt-brand-accent,
+          .receipt-grand-total span:last-child,
+          .receipt-change-row {
+            color: #137a55 !important;
+          }
+          .receipt-meta-block {
+            border-color: #cfe1d8 !important;
+          }
+          .receipt-grand-total {
+            margin-top: 2mm !important;
+            border-radius: 2mm !important;
+            background: #eaf7f0 !important;
+            padding: 2.5mm !important;
+          }
+          .receipt-footer-block {
+            border-color: #cfe1d8 !important;
+            border-radius: 2mm !important;
+            background: #f7faf8 !important;
+            padding: 3mm !important;
           }
           .print-hidden-element {
             display: none !important;
@@ -252,12 +299,22 @@ export function ReceiptModal({
                 {previewOpen ? "Tutup rincian" : "Lihat rincian struk"}
                 <ChevronDown className={`size-3.5 transition-transform ${previewOpen ? "rotate-180" : ""}`} />
               </button>
-              <div className="flex border border-[#d9e2dd] bg-[#f7f9f8] p-0.5 text-[11px] font-semibold">
+              <div className="flex rounded-lg border border-[#d9e2dd] bg-[#f7f9f8] p-0.5 text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => changePaperSize("a4")}
+                  aria-pressed={paperSize === "a4"}
+                  className={`rounded-md px-2.5 py-1 transition ${
+                    paperSize === "a4" ? "bg-[#187c59] text-white" : "text-[#68766f]"
+                  }`}
+                >
+                  PDF
+                </button>
                 <button
                   type="button"
                   onClick={() => changePaperSize("58mm")}
                   aria-pressed={paperSize === "58mm"}
-                  className={`px-2.5 py-1 transition ${
+                  className={`rounded-md px-2.5 py-1 transition ${
                     paperSize === "58mm" ? "bg-[#187c59] text-white" : "text-[#68766f]"
                   }`}
                 >
@@ -267,7 +324,7 @@ export function ReceiptModal({
                   type="button"
                   onClick={() => changePaperSize("80mm")}
                   aria-pressed={paperSize === "80mm"}
-                  className={`px-2.5 py-1 transition ${
+                  className={`rounded-md px-2.5 py-1 transition ${
                     paperSize === "80mm" ? "bg-[#187c59] text-white" : "text-[#68766f]"
                   }`}
                 >
@@ -282,15 +339,15 @@ export function ReceiptModal({
                 paperSize === "58mm" ? "max-w-[280px] text-xs" : "max-w-[360px] text-sm"
               }`}
             >
-              <div className="border-b border-dashed border-[#cddbd3] pb-3 text-center">
+              <div className="receipt-brand-block rounded-xl border border-[#d5e9df] bg-[#edf8f2] px-3 py-3 text-center">
                 <h4 className="text-base font-black tracking-tight">
-                  waze<span className="text-[#198760]">POS</span>
+                  waze<span className="receipt-brand-accent text-[#198760]">POS</span>
                 </h4>
                 <p className="font-bold text-xs mt-0.5">{receipt.businessName}</p>
                 <p className="text-[11px] text-[#627069]">{receipt.outletName}</p>
               </div>
 
-              <div className="flex justify-between border-b border-dashed border-[#cddbd3] py-2 text-[11px] text-[#627069]">
+              <div className="receipt-meta-block flex justify-between border-b border-dashed border-[#cddbd3] py-2 text-[11px] text-[#627069]">
                 <div>
                   <p className="m-0 font-bold text-[#15211d]">{receipt.invoiceNumber}</p>
                   <p className="m-0 text-[10px]">
@@ -307,7 +364,7 @@ export function ReceiptModal({
               </div>
 
               {/* Items List */}
-              <div className="space-y-1.5 py-2.5">
+              <div className="receipt-items-block space-y-1.5 py-2.5">
                 {receipt.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between gap-2 text-xs">
                     <div>
@@ -322,7 +379,7 @@ export function ReceiptModal({
               </div>
 
               {/* Totals */}
-              <div className="space-y-1 border-t border-dashed border-[#cddbd3] pt-2 text-xs">
+              <div className="receipt-totals-block space-y-1 border-t border-dashed border-[#cddbd3] pt-2 text-xs">
                 <div className="flex justify-between text-[#627069]">
                   <span>Subtotal</span>
                   <strong>{money(receipt.subtotal)}</strong>
@@ -333,7 +390,7 @@ export function ReceiptModal({
                     <strong>-{money(receipt.discount)}</strong>
                   </div>
                 ) : null}
-                <div className="flex justify-between text-sm font-extrabold text-[#15211d] pt-1">
+                <div className="receipt-grand-total flex justify-between bg-[#edf8f2] px-2.5 py-2 text-sm font-extrabold text-[#15211d]">
                   <span>TOTAL</span>
                   <span className="text-[#198760]">{money(receipt.total)}</span>
                 </div>
@@ -342,14 +399,14 @@ export function ReceiptModal({
                   <span>Bayar {money(receipt.paidAmount)}</span>
                 </div>
                 {receipt.paymentMethod === "cash" && (
-                  <div className="flex justify-between text-xs font-bold text-[#198760]">
+                  <div className="receipt-change-row flex justify-between text-xs font-bold text-[#198760]">
                     <span>Kembalian</span>
                     <span>{money(receipt.changeAmount)}</span>
                   </div>
                 )}
               </div>
 
-              <div className="border-t border-dashed border-[#cddbd3] mt-3 pt-2 text-center text-[10px] text-[#627069]">
+              <div className="receipt-footer-block mt-3 rounded-lg border-t border-dashed border-[#cddbd3] bg-[#f7faf8] px-2 py-2.5 text-center text-[10px] text-[#627069]">
                 <p className="m-0">Terima kasih atas kunjungan Anda!</p>
                 <p className="m-0 text-[9px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran sah.</p>
               </div>

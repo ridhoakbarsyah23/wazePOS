@@ -83,10 +83,6 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
     <main className="min-h-dvh bg-[#f4faf7] px-4 py-8 text-[#15211d] print:bg-white print:p-0 print:m-0">
       <style>{`
         @media print {
-          @page {
-            size: auto;
-            margin: 0mm;
-          }
           body {
             background-color: #ffffff !important;
             color: #000000 !important;
@@ -141,7 +137,11 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               canVoid={userCanVoid}
             />
             <WhatsAppShareButton receipt={shareData} />
-            <PrintButton />
+            <PrintButton
+              itemCount={items.length}
+              hasDiscount={receipt.discount > 0}
+              isVoided={isVoided}
+            />
           </div>
 
         </div>
