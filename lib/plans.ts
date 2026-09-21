@@ -9,6 +9,14 @@ export type PlanLimits = {
 };
 
 export type PlanFeature =
+  | "cashSales"
+  | "productCatalog"
+  | "inventoryStock"
+  | "salesHistory"
+  | "receiptPrinting"
+  | "onscreenReports"
+  | "staffManagement"
+  | "roleBasedAccess"
   | "qrisPayments"
   | "allPaymentMethods"
   | "exportReports"
@@ -35,6 +43,14 @@ export const plans: Record<PlanId, PlanConfig> = {
       maxProducts: 100,
     },
     features: {
+      cashSales: true,
+      productCatalog: true,
+      inventoryStock: true,
+      salesHistory: true,
+      receiptPrinting: true,
+      onscreenReports: true,
+      staffManagement: true,
+      roleBasedAccess: true,
       qrisPayments: false,
       allPaymentMethods: false,
       exportReports: false,
@@ -53,6 +69,14 @@ export const plans: Record<PlanId, PlanConfig> = {
       maxProducts: 9999,
     },
     features: {
+      cashSales: true,
+      productCatalog: true,
+      inventoryStock: true,
+      salesHistory: true,
+      receiptPrinting: true,
+      onscreenReports: true,
+      staffManagement: true,
+      roleBasedAccess: true,
       qrisPayments: false,
       allPaymentMethods: true,
       exportReports: true,
@@ -86,8 +110,133 @@ export function hasPlanFeature(plan: unknown, feature: PlanFeature | string): bo
   }
   // Backwards compatibility for legacy feature flags
   if (feature === "nonCashPayments") return config.features.allPaymentMethods;
-  if (feature === "staffManagement") return true;
   return false;
+}
+
+export function formatPlanAnnualPrice(plan: unknown): string {
+  const amount = getPlanConfig(plan).annualPrice;
+  return `Rp${new Intl.NumberFormat("id-ID").format(amount)}`;
+}
+
+export type MarketingPlanCard = {
+  id: PlanId;
+  name: string;
+  description: string;
+  price: string;
+  priceNote: string;
+  features: string[];
+  cta: string;
+  popular: boolean;
+};
+
+export type PlanFeatureComparisonGroup = {
+  category: string;
+  items: Array<{
+    name: string;
+    detail: string;
+    availability: Record<PlanId, boolean>;
+  }>;
+};
+
+function formatOutletLimit(plan: PlanId): string {
+  const config = plans[plan];
+  if (config.features.multiOutlet) return `Hingga ${config.limits.maxOutlets} gerai / multi-cabang`;
+  return `Maksimal ${config.limits.maxOutlets} gerai aktif`;
+}
+
+function formatStaffLimit(plan: PlanId): string {
+  const config = plans[plan];
+  if (config.features.unlimitedStaff) return "Akun staf kasir & admin tanpa batas";
+  return `Maksimal ${config.limits.maxStaff} akun staf (Owner + Kasir)`;
+}
+
+function formatProductLimit(plan: PlanId): string {
+  const config = plans[plan];
+  if (config.features.unlimitedProducts) return "Katalog produk tanpa batas";
+  return `Hingga ${config.limits.maxProducts} produk aktif`;
+}
+
+export function getMarketingPlanFeatures(plan: PlanId): string[] {
+  const config = plans[plan];
+
+  if (plan === "bisnis") {
+    return [
+      `Seluruh fitur Paket ${plans.tumbuh.name}`,
+      ...(config.features.allPaymentMethods ? ["Pembayaran tunai, kartu debit & kredit EDC"] : []),
+      ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
+      formatOutletLimit(plan),
+      formatStaffLimit(plan),
+      formatProductLimit(plan),
+    ];
+  }
+
+  return [
+    formatOutletLimit(plan),
+    formatStaffLimit(plan),
+    formatProductLimit(plan),
+    ...(config.features.cashSales ? ["Pembayaran kasir tunai"] : []),
+    ...(config.features.inventoryStock ? ["Stok otomatis & peringatan stok menipis"] : []),
+    ...(config.features.onscreenReports ? ["Laporan penjualan harian di layar"] : []),
+    ...(config.features.receiptPrinting ? ["Cetak struk kasir 58 mm / 80 mm"] : []),
+  ];
+}
+
+export function getMarketingPlanCards(): MarketingPlanCard[] {
+  return planIds.map((id) => {
+    const config = plans[id];
+    return {
+      id,
+      name: config.name,
+      description: config.description,
+      price: formatPlanAnnualPrice(id),
+      priceNote: "Ditagihkan satu kali setiap tahun",
+      features: getMarketingPlanFeatures(id),
+      cta: `Pilih Paket ${config.name}`,
+      popular: id === "tumbuh",
+    };
+  });
+}
+
+export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
+  const availability = (feature: PlanFeature): Record<PlanId, boolean> => ({
+    tumbuh: hasPlanFeature("tumbuh", feature),
+    bisnis: hasPlanFeature("bisnis", feature),
+  });
+
+  return [
+    {
+      category: "Operasional inti",
+      items: [
+        { name: "Kasir transaksi tunai", detail: "Melayani transaksi kasir harian dan menghitung kembalian.", availability: availability("cashSales") },
+        { name: "Katalog produk, SKU, & varian", detail: `Hingga ${plans.tumbuh.limits.maxProducts} produk di Paket Tumbuh, tanpa batas di Paket Bisnis.`, availability: availability("productCatalog") },
+        { name: "Stok otomatis & peringatan stok", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", availability: availability("inventoryStock") },
+        {
+          name: "Riwayat transaksi & cetak struk",
+          detail: "Mencetak struk thermal 58mm / 80mm untuk pelanggan.",
+          availability: {
+            tumbuh: hasPlanFeature("tumbuh", "salesHistory") && hasPlanFeature("tumbuh", "receiptPrinting"),
+            bisnis: hasPlanFeature("bisnis", "salesHistory") && hasPlanFeature("bisnis", "receiptPrinting"),
+          },
+        },
+      ],
+    },
+    {
+      category: "Metode pembayaran & laporan",
+      items: [
+        { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: availability("allPaymentMethods") },
+        { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: availability("exportReports") },
+        { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: availability("onscreenReports") },
+      ],
+    },
+    {
+      category: "Tim & kapasitas usaha",
+      items: [
+        { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada Paket Tumbuh, hingga ${plans.bisnis.limits.maxOutlets} gerai pada Paket Bisnis.`, availability: availability("multiOutlet") },
+        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} staf pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
+        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", availability: availability("roleBasedAccess") },
+      ],
+    },
+  ];
 }
 
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "cancelled";

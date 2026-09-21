@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/site";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-plus-jakarta-sans",
+  variable: "--font-manrope",
   fallback: ["Segoe UI", "Arial", "sans-serif"],
 });
 
@@ -44,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id" className={plusJakartaSans.variable}>
+    <html lang="id" className={manrope.variable}>
       <body className="antialiased">{children}</body>
     </html>
   );

@@ -1,7 +1,10 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Link from "next/link";
 import { trackEvent } from "@/lib/analytics";
+import { marketingFaqs } from "@/lib/marketing-content";
+import { formatPlanAnnualPrice, getMarketingPlanCards, getPlanFeatureComparison } from "@/lib/plans";
 
 type MarketingPageProps = {
   trialUrl: string;
@@ -90,82 +93,10 @@ const businessTypes = [
   { icon: "tag" as const, title: "Usaha Ritel", text: "Dukung operasional harian ketika jumlah produk dan transaksi terus bertambah." },
 ];
 
-const faqs = [
-  { question: "Apa itu wazePOS?", answer: "wazePOS adalah aplikasi kasir berbasis web yang membantu Anda mengelola transaksi, produk, stok, pelanggan, dan laporan penjualan dalam satu sistem." },
-  { question: "Apakah wazePOS sesuai untuk usaha kecil?", answer: "Ya. wazePOS dirancang untuk mendukung toko, warung, kedai kopi, restoran, usaha laundry, minimarket, dan usaha ritel yang sedang berkembang." },
-  { question: "Apakah wazePOS dapat dicoba secara gratis?", answer: "Ketersediaan dan periode uji coba mengikuti program wazePOS yang sedang berlaku. Silakan isi formulir atau hubungi tim kami untuk memperoleh informasi terbaru." },
-  { question: "Apakah wazePOS memerlukan instalasi?", answer: "wazePOS merupakan aplikasi berbasis web. Tim kami akan menjelaskan kebutuhan perangkat dan proses penggunaan sesuai layanan yang tersedia." },
-  { question: "Bagaimana wazePOS mengelola data bisnis?", answer: "Data operasional dikelola dalam satu sistem terpusat. Tim kami dapat menjelaskan kebijakan pengelolaan dan pencadangan data sebelum Anda menggunakan layanan." },
-  { question: "Bagaimana cara memperoleh bantuan?", answer: "Anda dapat mengisi formulir konsultasi atau menggunakan tombol WhatsApp pada halaman ini untuk menghubungi tim wazePOS." },
-];
-
 const showcaseTabs = ["Dasbor", "Kasir", "Produk", "Stok", "Laporan", "Pelanggan"];
 
-const pricingPlans = [
-  {
-    id: "tumbuh",
-    name: "Tumbuh",
-    description: "Kapasitas operasional inti untuk usaha mandiri dan UMKM.",
-    price: "Rp450.000",
-    priceNote: "Ditagihkan satu kali setiap tahun",
-    features: [
-      "Maksimal 1 gerai aktif",
-      "Maksimal 2 akun staf (Owner + Kasir)",
-      "Hingga 100 produk aktif",
-      "Pembayaran kasir tunai",
-      "Stok otomatis & peringatan stok menipis",
-      "Laporan penjualan harian di layar",
-      "Cetak struk kasir 58 mm / 80 mm",
-    ],
-    cta: "Pilih Paket Tumbuh",
-    popular: true,
-  },
-  {
-    id: "bisnis",
-    name: "Bisnis",
-    description: "Kapasitas lebih besar dan metode pembayaran tambahan untuk usaha berkembang.",
-    price: "Rp950.000",
-    priceNote: "Ditagihkan satu kali setiap tahun",
-    features: [
-      "Seluruh fitur Paket Tumbuh",
-      "Pembayaran tunai, kartu debit & kredit EDC",
-      "Ekspor laporan penjualan Excel",
-      "Hingga 5 gerai / multi-cabang",
-      "Akun staf kasir & admin tanpa batas",
-      "Katalog produk tanpa batas",
-    ],
-    cta: "Pilih Paket Bisnis",
-    popular: false,
-  },
-] as const;
-
-const featureComparison = [
-  {
-    category: "Operasional inti",
-    items: [
-      { name: "Kasir transaksi tunai", detail: "Melayani transaksi kasir harian dan menghitung kembalian.", tumbuh: true, bisnis: true },
-      { name: "Katalog produk, SKU, & varian", detail: "Hingga 100 produk di Paket Tumbuh, tanpa batas di Paket Bisnis.", tumbuh: true, bisnis: true },
-      { name: "Stok otomatis & peringatan stok", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", tumbuh: true, bisnis: true },
-      { name: "Riwayat transaksi & cetak struk", detail: "Mencetak struk thermal 58mm / 80mm untuk pelanggan.", tumbuh: true, bisnis: true },
-    ],
-  },
-  {
-    category: "Metode pembayaran & laporan",
-    items: [
-      { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", tumbuh: false, bisnis: true },
-      { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", tumbuh: false, bisnis: true },
-      { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", tumbuh: true, bisnis: true },
-    ],
-  },
-  {
-    category: "Tim & kapasitas usaha",
-    items: [
-      { name: "Multi-gerai / cabang usaha", detail: "1 gerai pada Paket Tumbuh, hingga 5 gerai pada Paket Bisnis.", tumbuh: false, bisnis: true },
-      { name: "Manajemen staf & tim kasir", detail: "Maksimal 2 staf pada Tumbuh, staf tanpa batas pada Bisnis.", tumbuh: true, bisnis: true },
-      { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", tumbuh: true, bisnis: true },
-    ],
-  },
-] as const;
+const pricingPlans = getMarketingPlanCards();
+const featureComparison = getPlanFeatureComparison();
 
 function TrackedLink({ href, event, className, children, external = false }: { href: string; event: Parameters<typeof trackEvent>[0]; className: string; children: React.ReactNode; external?: boolean }) {
   return <a href={href} className={className} onClick={() => trackEvent(event, { destination: href })} {...(external && href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}>{children}</a>;
@@ -215,6 +146,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
   const [activeFeature, setActiveFeature] = useState(featureGroups[0]);
   const [activeShowcase, setActiveShowcase] = useState(showcaseTabs[0]);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showMobileComparison, setShowMobileComparison] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -261,11 +193,11 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
         <div className="container nav-wrap">
           <Brand />
           <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Navigasi utama">
-            <a href="#beranda" onClick={closeMenu}>Beranda</a><a href="#fitur" onClick={closeMenu}>Fitur</a><a href="#cara-kerja" onClick={closeMenu}>Cara Kerja</a><a href="#harga" onClick={() => { closeMenu(); trackEvent("click_pricing"); }}>Harga</a><a href="#faq" onClick={closeMenu}>Tanya Jawab</a>
-            <div className="nav-mobile-actions"><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="button button-ghost" external><Icon name="whatsapp" size={18}/> Hubungi Kami</TrackedLink><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary">Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink></div>
+            <a href="#beranda" onClick={closeMenu}>Beranda</a><a href="#fitur" onClick={closeMenu}>Fitur</a><a href="#cara-kerja" onClick={closeMenu}>Cara Kerja</a><a href="#harga" onClick={() => { closeMenu(); trackEvent("click_pricing"); }}>Harga</a><a href="#faq" onClick={closeMenu}>FAQ</a>
+            <div className="nav-mobile-actions"><Link href="/login" className="button button-ghost" onClick={closeMenu}>Masuk</Link><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary">Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink></div>
           </nav>
           <button className={menuOpen ? "menu-backdrop open" : "menu-backdrop"} type="button" aria-label="Tutup menu navigasi" tabIndex={menuOpen ? 0 : -1} onClick={closeMenu}/>
-          <div className="nav-actions"><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="nav-whatsapp" external><Icon name="whatsapp" size={18}/> Hubungi Kami</TrackedLink><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-small">Uji Coba Gratis</TrackedLink></div>
+          <div className="nav-actions"><Link href="/login" className="nav-login">Masuk</Link><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-small">Uji Coba Gratis</TrackedLink></div>
           <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Tutup menu" : "Buka menu"} aria-expanded={menuOpen}><Icon name={menuOpen ? "x" : "menu"}/></button>
         </div>
       </header>
@@ -278,7 +210,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
               <span className="eyebrow"><Icon name="spark" size={16}/> Aplikasi kasir untuk bisnis yang terus tumbuh</span>
               <h1>Kelola kasir lebih mudah, <span>bisnis lebih teratur.</span></h1>
               <p>wazePOS membantu Anda mengelola transaksi, stok, produk, pelanggan, dan laporan penjualan melalui satu aplikasi yang mudah digunakan.</p>
-              <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><TrackedLink href={whatsappTrialUrl} event="click_whatsapp" className="button button-white button-large" external><Icon name="whatsapp" size={20}/> Hubungi via WhatsApp</TrackedLink></div>
+              <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
               <div className="supporting-values"><span><Icon name="check" size={16}/> Mudah digunakan</span><span><Icon name="check" size={16}/> Sesuai untuk beragam usaha</span><span><Icon name="check" size={16}/> Program uji coba tersedia</span></div>
             </div>
             <div className="hero-visual reveal delay-1"><div className="visual-backdrop"/><DashboardMockup/><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
@@ -296,7 +228,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
         <section className="section benefits-section">
           <div className="container section-heading centered" data-reveal><span className="section-kicker">Lebih sederhana, lebih terkendali</span><h2>Fitur penting untuk bisnis Anda, <span>tersedia di wazePOS.</span></h2><p>Kelola aktivitas kasir dan operasional bisnis secara lebih praktis dalam satu sistem.</p></div>
-          <div className="container benefits-grid">{benefits.map((item) => <article className="benefit-card" key={item.title} data-reveal><span className="icon-box"><Icon name={item.icon}/></span><h3>{item.title}</h3><p>{item.text}</p><span className="card-link">Pelajari manfaat <Icon name="arrow" size={16}/></span></article>)}</div>
+            <div className="container benefits-grid">{benefits.map((item) => <article className="benefit-card" key={item.title} data-reveal><span className="icon-box"><Icon name={item.icon}/></span><h3>{item.title}</h3><p>{item.text}</p><a href="#fitur" className="card-link" onClick={() => trackEvent("click_feature", { source: "benefit", benefit: item.title })}>Lihat fitur <Icon name="arrow" size={16}/></a></article>)}</div>
         </section>
 
         <section className="section feature-section" id="fitur">
@@ -304,13 +236,13 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container feature-tabs" role="tablist" aria-label="Kategori fitur" data-reveal>{featureGroups.map((feature) => <button key={feature.id} role="tab" aria-selected={activeFeature.id === feature.id} className={activeFeature.id === feature.id ? "active" : ""} onClick={() => { setActiveFeature(feature); trackEvent("click_feature", { feature: feature.id }); }}><Icon name={feature.icon} size={19}/>{feature.label}</button>)}</div>
           <div className="container feature-panel" role="tabpanel" data-reveal>
             <div className="feature-copy panel-swap" key={`copy-${activeFeature.id}`}><span className="icon-box icon-box-large"><Icon name={activeFeature.icon} size={27}/></span><h3>{activeFeature.title}</h3><p>{activeFeature.text}</p><ul>{activeFeature.bullets.map((bullet) => <li key={bullet}><span><Icon name="check" size={15}/></span>{bullet}</li>)}</ul><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Konsultasikan kebutuhan Anda <Icon name="arrow" size={17}/></TrackedLink></div>
-            <div className="feature-illustration panel-swap panel-swap-delay" key={`visual-${activeFeature.id}`}><div className="terminal-card"><div className="terminal-head"><div><span/><span/><span/></div><small>{activeFeature.label}</small></div><div className="terminal-body"><div className="product-row"><span className="product-thumb"><Icon name={activeFeature.icon}/></span><div><b>{activeFeature.bullets[0]}</b><small>Siap digunakan</small></div><span className="status-pill">Aktif</span></div><div className="product-row"><span className="product-thumb alt"><Icon name="check"/></span><div><b>{activeFeature.bullets[1]}</b><small>Tersinkron</small></div><span className="status-pill">Rapi</span></div><div className="action-bar"><span>Total aktivitas</span><strong>Dalam satu alur</strong><button type="button">Lihat ringkasan <Icon name="arrow" size={15}/></button></div></div></div></div>
+            <div className="feature-illustration panel-swap panel-swap-delay" key={`visual-${activeFeature.id}`}><div className="terminal-card"><div className="terminal-head"><div><span/><span/><span/></div><small>{activeFeature.label}</small></div><div className="terminal-body"><div className="product-row"><span className="product-thumb"><Icon name={activeFeature.icon}/></span><div><b>{activeFeature.bullets[0]}</b><small>Siap digunakan</small></div><span className="status-pill">Aktif</span></div><div className="product-row"><span className="product-thumb alt"><Icon name="check"/></span><div><b>{activeFeature.bullets[1]}</b><small>Tersinkron</small></div><span className="status-pill">Rapi</span></div><div className="action-bar"><span>Total aktivitas</span><strong>Dalam satu alur</strong><span className="action-bar-label">Ringkasan fitur <Icon name="check" size={15}/></span></div></div></div></div>
           </div>
         </section>
 
         <section className="section business-section">
           <div className="container section-heading" data-reveal><span className="section-kicker">Untuk beragam usaha</span><h2>Sesuai untuk berbagai <span>kebutuhan bisnis.</span></h2><p>Mulai dari usaha yang baru dirintis hingga bisnis dengan aktivitas operasional yang semakin berkembang.</p></div>
-          <div className="container business-grid">{businessTypes.map((item) => <article className="business-card" key={item.title} data-reveal><span className="business-icon"><Icon name={item.icon}/></span><div><h3>{item.title}</h3><p>{item.text}</p></div><Icon name="arrow" size={18}/></article>)}</div>
+          <div className="container business-grid">{businessTypes.map((item) => <article className="business-card" key={item.title} data-reveal><span className="business-icon"><Icon name={item.icon}/></span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
         </section>
 
         <section className="section steps-section" id="cara-kerja">
@@ -319,8 +251,8 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
         <section className="section showcase-section" id="demo">
           <div className="container section-heading centered" data-reveal><span className="section-kicker">Lihat lebih dekat</span><h2>Tampilan ringkas untuk <span>mendukung keputusan bisnis.</span></h2><p>Berikut pratinjau antarmuka wazePOS. Tampilan dapat menyesuaikan versi aplikasi yang tersedia.</p></div>
-          <div className="container showcase-tabs" role="tablist" aria-label="Pratinjau halaman produk" data-reveal>{showcaseTabs.map((tab) => <button key={tab} role="tab" aria-selected={activeShowcase === tab} className={activeShowcase === tab ? "active" : ""} onClick={() => { setActiveShowcase(tab); trackEvent("click_demo", { screen: tab }); }}>{tab}</button>)}</div>
-          <div className="container showcase-frame" data-reveal><DashboardMockup key={activeShowcase} mode="showcase" active={activeShowcase}/></div>
+          <div className="container showcase-tabs" role="tablist" aria-label="Pratinjau halaman produk" data-reveal>{showcaseTabs.map((tab, index) => <button id={`showcase-tab-${index}`} key={tab} type="button" role="tab" aria-selected={activeShowcase === tab} aria-controls="showcase-panel" tabIndex={activeShowcase === tab ? 0 : -1} className={activeShowcase === tab ? "active" : ""} onClick={() => { setActiveShowcase(tab); trackEvent("click_demo", { screen: tab }); }}>{tab}</button>)}</div>
+          <div id="showcase-panel" className="container showcase-frame" role="tabpanel" aria-labelledby={`showcase-tab-${showcaseTabs.indexOf(activeShowcase)}`} data-reveal><DashboardMockup key={activeShowcase} mode="showcase" active={activeShowcase}/></div>
         </section>
 
         <section className="section pricing-section" id="harga">
@@ -348,9 +280,24 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
               <div><span className="section-kicker light">Bandingkan paket</span><h3 className="mt-2.5 mb-0 text-[25px] tracking-[-0.8px] text-white max-[820px]:text-[21px]">Pilih paket yang paling sesuai.</h3></div>
               <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Semua fitur inti tersedia di Paket Tumbuh. Paket Bisnis menambahkan fitur untuk tim dan operasional yang lebih kompleks.</p>
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-[#dce9e2] bg-white">
-              <table className="w-full min-w-[620px] border-collapse text-[11px] text-[var(--ink)] max-[820px]:min-w-[580px]">
-                <thead><tr><th className="border-b border-[#e8efeb] bg-[#f4faf7] px-[18px] py-3.5 text-left align-middle text-[10px] font-[850] tracking-[0.4px] text-[#6b7b73] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col">Fitur</th><th className="w-[170px] border-b border-[#e8efeb] bg-[#eefaf4] px-[18px] py-3.5 text-center align-middle text-[10px] font-[850] tracking-[0.4px] text-[var(--green-700)] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col"><span className="block text-[13px] tracking-[-0.2px]">Tumbuh</span><small className="mt-[3px] block text-[9px] font-[650] tracking-normal text-[#84928b] normal-case">Rp450.000/tahun</small></th><th className="w-[170px] border-b border-[#e8efeb] bg-[#e2f7ec] px-[18px] py-3.5 text-center align-middle text-[10px] font-[850] tracking-[0.4px] text-[var(--green-700)] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col"><span className="block text-[13px] tracking-[-0.2px]">Bisnis</span><small className="mt-[3px] block text-[9px] font-[650] tracking-normal text-[#84928b] normal-case">Rp950.000/tahun</small></th></tr></thead>
+            <button
+              type="button"
+              className={showMobileComparison ? "pricing-comparison-toggle open" : "pricing-comparison-toggle"}
+              aria-expanded={showMobileComparison}
+              aria-controls="pricing-comparison-body"
+              onClick={() => {
+                const nextValue = !showMobileComparison;
+                setShowMobileComparison(nextValue);
+                trackEvent("click_pricing", { action: "toggle_comparison", expanded: nextValue });
+              }}
+            >
+              <span>{showMobileComparison ? "Tutup Perbandingan" : "Lihat Perbandingan Lengkap"}</span>
+              <Icon name="chevron" size={18}/>
+            </button>
+            <div id="pricing-comparison-body" className={showMobileComparison ? "pricing-comparison-body open" : "pricing-comparison-body"}>
+              <div className="overflow-x-auto rounded-2xl border border-[#dce9e2] bg-white">
+                <table className="w-full min-w-[620px] border-collapse text-[11px] text-[var(--ink)] max-[820px]:min-w-[580px]">
+                <thead><tr><th className="border-b border-[#e8efeb] bg-[#f4faf7] px-[18px] py-3.5 text-left align-middle text-[10px] font-[850] tracking-[0.4px] text-[#6b7b73] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col">Fitur</th><th className="w-[170px] border-b border-[#e8efeb] bg-[#eefaf4] px-[18px] py-3.5 text-center align-middle text-[10px] font-[850] tracking-[0.4px] text-[var(--green-700)] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col"><span className="block text-[13px] tracking-[-0.2px]">Tumbuh</span><small className="mt-[3px] block text-[9px] font-[650] tracking-normal text-[#84928b] normal-case">{formatPlanAnnualPrice("tumbuh")}/tahun</small></th><th className="w-[170px] border-b border-[#e8efeb] bg-[#e2f7ec] px-[18px] py-3.5 text-center align-middle text-[10px] font-[850] tracking-[0.4px] text-[var(--green-700)] uppercase max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="col"><span className="block text-[13px] tracking-[-0.2px]">Bisnis</span><small className="mt-[3px] block text-[9px] font-[650] tracking-normal text-[#84928b] normal-case">{formatPlanAnnualPrice("bisnis")}/tahun</small></th></tr></thead>
                 <tbody>
                   {featureComparison.map((group) => (
                     <Fragment key={group.category}>
@@ -358,28 +305,29 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
                       {group.items.map((item) => (
                         <tr className="last:[&>th]:border-b-0 last:[&>td]:border-b-0" key={item.name}>
                           <th className="border-b border-[#e8efeb] px-[18px] py-3.5 text-left align-middle font-semibold max-[820px]:px-3.5 max-[820px]:py-[13px]" scope="row"><strong className="block text-[11px]">{item.name}</strong></th>
-                          <td className="border-b border-[#e8efeb] px-[18px] py-3.5 text-center align-middle max-[820px]:px-3.5 max-[820px]:py-[13px]" aria-label={item.tumbuh ? "Termasuk" : "Tidak tersedia"}>{item.tumbuh ? <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[var(--green-700)] [&>svg]:shrink-0"><Icon name="check" size={15}/> <span className="max-[820px]:hidden">Termasuk</span></span> : <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[#a7b0ab] [&>svg]:shrink-0"><Icon name="x" size={15}/><span className="max-[820px]:hidden">-</span></span>}</td>
-                          <td className="border-b border-[#e8efeb] px-[18px] py-3.5 text-center align-middle max-[820px]:px-3.5 max-[820px]:py-[13px]" aria-label={item.bisnis ? "Termasuk" : "Tidak tersedia"}>{item.bisnis ? <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[var(--green-700)] [&>svg]:shrink-0"><Icon name="check" size={15}/> <span className="max-[820px]:hidden">Termasuk</span></span> : <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[#a7b0ab] [&>svg]:shrink-0"><Icon name="x" size={15}/><span className="max-[820px]:hidden">-</span></span>}</td>
+                          <td className="border-b border-[#e8efeb] px-[18px] py-3.5 text-center align-middle max-[820px]:px-3.5 max-[820px]:py-[13px]" aria-label={item.availability.tumbuh ? "Termasuk" : "Tidak tersedia"}>{item.availability.tumbuh ? <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[var(--green-700)] [&>svg]:shrink-0"><Icon name="check" size={15}/> <span className="max-[820px]:hidden">Termasuk</span></span> : <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[#a7b0ab] [&>svg]:shrink-0"><Icon name="x" size={15}/><span className="max-[820px]:hidden">-</span></span>}</td>
+                          <td className="border-b border-[#e8efeb] px-[18px] py-3.5 text-center align-middle max-[820px]:px-3.5 max-[820px]:py-[13px]" aria-label={item.availability.bisnis ? "Termasuk" : "Tidak tersedia"}>{item.availability.bisnis ? <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[var(--green-700)] [&>svg]:shrink-0"><Icon name="check" size={15}/> <span className="max-[820px]:hidden">Termasuk</span></span> : <span className="inline-flex items-center justify-center gap-[5px] whitespace-nowrap text-[10px] font-extrabold text-[#a7b0ab] [&>svg]:shrink-0"><Icon name="x" size={15}/><span className="max-[820px]:hidden">-</span></span>}</td>
                         </tr>
                       ))}
                     </Fragment>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
+              <div className="mt-[13px] flex justify-end gap-[18px] text-[10px] text-[#afd0c2] max-[820px]:justify-start max-[820px]:gap-3 max-[820px]:text-[9px] [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[5px] [&>span:first-child_svg]:text-[#87dfb4] [&>span:last-child_svg]:text-[#a7b0ab]"><span><Icon name="check" size={14}/> Termasuk dalam paket</span><span><Icon name="x" size={14}/> Tidak tersedia</span></div>
             </div>
-            <div className="mt-[13px] flex justify-end gap-[18px] text-[10px] text-[#afd0c2] max-[820px]:justify-start max-[820px]:gap-3 max-[820px]:text-[9px] [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[5px] [&>span:first-child_svg]:text-[#87dfb4] [&>span:last-child_svg]:text-[#a7b0ab]"><span><Icon name="check" size={14}/> Termasuk dalam paket</span><span><Icon name="x" size={14}/> Tidak tersedia</span></div>
           </div>
           <div className="container pricing-footnote" data-reveal><Icon name="shield" size={17}/><span>Harga berlaku untuk satu tahun. Silakan konfirmasikan ketentuan pajak dan ketersediaan fitur sebelum berlangganan.</span></div>
         </section>
 
         <section className="section faq-section" id="faq">
-          <div className="container faq-layout"><div className="faq-intro" data-reveal><span className="section-kicker">Pertanyaan yang sering diajukan</span><h2>Temukan informasi yang <span>Anda perlukan.</span></h2><p>Belum menemukan jawaban yang sesuai?</p><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Hubungi tim kami <Icon name="arrow" size={17}/></TrackedLink></div><div className="faq-list">{faqs.map((faq, index) => { const isOpen = openFaq === index; return <article className={isOpen ? "faq-item open" : "faq-item"} key={faq.question}><h3><button id={`faq-question-${index}`} type="button" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}>{faq.question}<span><Icon name="chevron"/></span></button></h3><div id={`faq-answer-${index}`} className="faq-answer" role="region" aria-labelledby={`faq-question-${index}`} aria-hidden={!isOpen}><p>{faq.answer}</p></div></article>; })}</div></div>
+          <div className="container faq-layout"><div className="faq-intro" data-reveal><span className="section-kicker">Pertanyaan yang sering diajukan</span><h2>Temukan informasi yang <span>Anda perlukan.</span></h2><p>Belum menemukan jawaban yang sesuai?</p><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Hubungi tim kami <Icon name="arrow" size={17}/></TrackedLink></div><div className="faq-list">{marketingFaqs.map((faq, index) => { const isOpen = openFaq === index; return <article className={isOpen ? "faq-item open" : "faq-item"} key={faq.question}><h3><button id={`faq-question-${index}`} type="button" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}>{faq.question}<span><Icon name="chevron"/></span></button></h3><div id={`faq-answer-${index}`} className="faq-answer" role="region" aria-labelledby={`faq-question-${index}`} aria-hidden={!isOpen}><p>{faq.answer}</p></div></article>; })}</div></div>
         </section>
 
         <section className="final-cta"><div className="container final-cta-inner" data-reveal><div><span className="section-kicker light">Mulai hari ini</span><h2>Siap mengelola bisnis dengan lebih mudah?</h2><p>Tinggalkan pencatatan manual dan kelola transaksi, stok, serta laporan bisnis secara lebih praktis bersama wazePOS.</p></div><div><TrackedLink href={trialUrl} event="click_try_free" className="button button-light button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink><TrackedLink href={whatsappTrialUrl} event="click_whatsapp" className="button button-outline-light button-large" external><Icon name="whatsapp" size={20}/> Konsultasi via WhatsApp</TrackedLink></div></div></section>
       </main>
 
-      <footer className="site-footer"><div className="container footer-main"><div className="footer-brand"><Brand/><p>Aplikasi kasir praktis untuk membantu bisnis melayani transaksi, memantau operasional, dan terus berkembang.</p><span>Jual. Pantau. Tumbuh.</span></div><div><h3>Navigasi</h3><a href="#fitur">Fitur</a><a href="#cara-kerja">Cara Kerja</a><a href="#harga">Harga</a><a href="#faq">Tanya Jawab</a></div><div><h3>Jenis Usaha</h3><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Toko dan Warung</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Kedai Kopi</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Restoran</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Usaha Ritel</TrackedLink></div><div><h3>Hubungi Kami</h3><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="footer-contact" external><Icon name="whatsapp" size={18}/> WhatsApp</TrackedLink></div></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} wazePOS. Hak cipta dilindungi.</span><span>Mendukung pertumbuhan bisnis di Indonesia.</span></div></footer>
+      <footer className="site-footer"><div className="container footer-main"><div className="footer-brand"><Brand/><p>Aplikasi kasir praktis untuk membantu bisnis melayani transaksi, memantau operasional, dan terus berkembang.</p><span>Jual. Pantau. Tumbuh.</span></div><div><h3>Navigasi</h3><a href="#fitur">Fitur</a><a href="#cara-kerja">Cara Kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><Link href="/login">Masuk</Link></div><div><h3>Jenis Usaha</h3><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Toko dan Warung</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Kedai Kopi</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Restoran</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Usaha Ritel</TrackedLink></div><div><h3>Hubungi Kami</h3><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="footer-contact" external><Icon name="whatsapp" size={18}/> WhatsApp</TrackedLink></div></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} wazePOS. Hak cipta dilindungi.</span><span>Mendukung pertumbuhan bisnis di Indonesia.</span></div></footer>
 
       <TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="floating-whatsapp" external><Icon name="whatsapp" size={25}/><span>Hubungi kami</span></TrackedLink>
     </>
