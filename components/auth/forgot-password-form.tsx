@@ -2,23 +2,21 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Info, LoaderCircle, Mail } from "lucide-react";
+import { CheckCircle2, Info, LoaderCircle, Mail } from "lucide-react";
 import { authInputClass } from "@/components/auth/password-field";
+import { authClient } from "@/lib/auth-client";
 import { forgotPasswordSchema } from "@/lib/validation/auth";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [successInfo, setSuccessInfo] = useState<{
-    message: string;
-    token?: string;
-  } | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
   const [isPending, setIsPending] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
-    setSuccessInfo(null);
+    setSuccessMessage("");
 
     const result = forgotPasswordSchema.safeParse({ email });
     if (!result.success) {
@@ -28,22 +26,19 @@ export function ForgotPasswordForm() {
 
     setIsPending(true);
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: result.data.email }),
+      const { error } = await authClient.requestPasswordReset({
+        email: result.data.email,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        setErrorMessage(data.message ?? "Permintaan gagal. Silakan coba lagi.");
+      if (error) {
+        setErrorMessage("Permintaan gagal. Silakan tunggu sebentar lalu coba lagi.");
         return;
       }
 
-      setSuccessInfo({
-        message: data.message,
-        token: data.token,
-      });
+      setSuccessMessage(
+        "Jika email terdaftar, tautan atur ulang kata sandi akan dikirim ke email tersebut.",
+      );
     } catch {
       setErrorMessage("Tidak dapat terhubung ke server. Silakan periksa koneksi Anda.");
     } finally {
@@ -53,33 +48,17 @@ export function ForgotPasswordForm() {
 
   return (
     <div className="mt-7">
-      {successInfo ? (
+      {successMessage ? (
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="flex items-start gap-3 rounded-2xl border border-[#cae8d9] bg-[#eaf7f0] p-4 text-sm text-[#106348]">
             <CheckCircle2 className="size-5 shrink-0 text-[#198760] mt-0.5" />
             <div>
               <p className="font-extrabold text-[#106348]">Permintaan Berhasil</p>
               <p className="mt-1 text-xs text-[#198760] leading-relaxed">
-                {successInfo.message}
+                {successMessage}
               </p>
             </div>
           </div>
-
-          {/* Direct Link to reset password */}
-          {successInfo.token && (
-            <div className="rounded-2xl border border-[#dfe8e3] bg-white p-5 shadow-sm space-y-3">
-              <p className="text-xs font-bold text-[#15211d]">
-                Atur Ulang Kata Sandi Langsung:
-              </p>
-              <Link
-                href={`/reset-password?token=${successInfo.token}`}
-                className="flex items-center justify-between rounded-xl bg-[#198760] px-4 py-3 text-xs font-bold text-white shadow-sm hover:bg-[#116b4c] transition"
-              >
-                <span>Lanjut ke Formulir Reset Sandi</span>
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-          )}
 
           <div className="flex items-start gap-2.5 rounded-xl border border-[#e4ebe7] bg-[#fafcfb] p-3.5 text-xs text-[#627069]">
             <Info className="size-4 shrink-0 text-[#198760] mt-0.5" />

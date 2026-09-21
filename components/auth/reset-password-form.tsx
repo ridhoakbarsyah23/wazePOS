@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 import { PasswordField } from "@/components/auth/password-field";
+import { authClient } from "@/lib/auth-client";
 import { resetPasswordSchema } from "@/lib/validation/auth";
 
 export function ResetPasswordForm({ token }: { token: string }) {
@@ -33,15 +34,15 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
     setIsPending(true);
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password, confirmPassword }),
+      const { error } = await authClient.resetPassword({
+        newPassword: result.data.password,
+        token: result.data.token,
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        setErrorMessage(data.message ?? "Gagal mereset kata sandi.");
+      if (error) {
+        setErrorMessage(
+          "Tautan reset kata sandi tidak valid, sudah digunakan, atau telah kedaluwarsa.",
+        );
         return;
       }
 

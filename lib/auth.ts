@@ -1,8 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { after } from "next/server";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import { sendPasswordResetEmail } from "@/lib/email/password-reset-email";
 
 const configuredOrigin = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -40,6 +42,24 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     maxPasswordLength: 128,
     requireEmailVerification: false,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      after(async () => {
+        try {
+          await sendPasswordResetEmail({
+            recipient: user.email,
+            recipientName: user.name,
+            resetUrl: url,
+          });
+        } catch (error) {
+          console.error(
+            "[PASSWORD_RESET_EMAIL_ERROR]",
+            error instanceof Error ? error.message : "Unknown email delivery error",
+          );
+        }
+      });
+    },
   },
   socialProviders:
     googleClientId && googleClientSecret
@@ -59,6 +79,8 @@ export const auth = betterAuth({
       "/sign-in/email": { window: 60, max: 10 },
       "/sign-up/email": { window: 60, max: 5 },
       "/sign-in/social": { window: 60, max: 10 },
+      "/request-password-reset": { window: 60, max: 3 },
+      "/reset-password": { window: 60, max: 5 },
     },
   },
   plugins: [nextCookies()],

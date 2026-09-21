@@ -5,14 +5,22 @@ import { db } from "@/db";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const passwordResetEmail = Boolean(
+    process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
+  );
   const environment = {
     databaseUrl: Boolean(process.env.DATABASE_URL),
     authSecret: Boolean(process.env.BETTER_AUTH_SECRET),
     authUrl: process.env.BETTER_AUTH_URL ?? null,
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+    passwordResetEmail,
   };
+  const requiredEnvironmentReady =
+    environment.databaseUrl &&
+    environment.authSecret &&
+    (process.env.NODE_ENV !== "production" || passwordResetEmail);
 
-  if (!environment.databaseUrl || !environment.authSecret) {
+  if (!requiredEnvironmentReady) {
     return NextResponse.json(
       { ok: false, environment, database: { connected: false, authTables: false } },
       { status: 503 },
