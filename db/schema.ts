@@ -293,6 +293,7 @@ export const sale = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
     cashShiftId: text("cash_shift_id").references(() => cashShift.id, { onDelete: "restrict" }),
+    clientRequestId: text("client_request_id"),
     invoiceNumber: text("invoice_number").notNull(),
     subtotal: integer("subtotal").notNull(),
     discount: integer("discount").default(0).notNull(),
@@ -314,6 +315,7 @@ export const sale = pgTable(
     index("sale_business_status_created_at_idx").on(table.businessId, table.status, table.createdAt),
     index("sale_business_outlet_created_at_idx").on(table.businessId, table.outletId, table.createdAt),
     uniqueIndex("sale_business_invoice_idx").on(table.businessId, table.invoiceNumber),
+    uniqueIndex("sale_business_client_request_idx").on(table.businessId, table.clientRequestId),
   ],
 );
 

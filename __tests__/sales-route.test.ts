@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   getMembership: vi.fn(),
   getBusinessSubscription: vi.fn(),
   transaction: vi.fn(),
+  select: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/lib/auth-session", () => ({
 }));
 
 vi.mock("@/db", () => ({
-  db: { transaction: mocks.transaction },
+  db: { transaction: mocks.transaction, select: mocks.select },
 }));
 
 import { POST } from "@/app/api/sales/route";
@@ -30,6 +31,7 @@ const userId = "11111111-1111-4111-8111-111111111111";
 const businessId = "22222222-2222-4222-8222-222222222222";
 const outletId = "33333333-3333-4333-8333-333333333333";
 const productId = "44444444-4444-4444-8444-444444444444";
+const clientRequestId = "55555555-5555-4555-8555-555555555555";
 
 function activeSubscription(plan: "tumbuh" | "bisnis") {
   return {
@@ -49,6 +51,7 @@ function saleRequest(overrides: Record<string, unknown> = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      clientRequestId,
       outletId,
       paymentMethod: "cash",
       paidAmount: 25_000,
@@ -86,9 +89,18 @@ beforeEach(() => {
     onboardingCompleted: true,
   });
   mocks.getBusinessSubscription.mockResolvedValue(activeSubscription("tumbuh"));
+  mocks.select.mockReturnValue(selectBuilder([]));
 });
 
 describe("POST /api/sales", () => {
+  it("menolak transaksi tanpa identitas request", async () => {
+    const response = await POST(saleRequest({ clientRequestId: undefined }));
+
+    expect(response.status).toBe(422);
+    expect(mocks.select).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
   it("menolak permintaan tanpa sesi", async () => {
     mocks.getSession.mockResolvedValue(null);
 
@@ -181,5 +193,47 @@ describe("POST /api/sales", () => {
         subtotal: 20_000,
       }),
     ]);
+    expect(insertedValues[0]).toEqual(
+      expect.objectContaining({ clientRequestId }),
+    );
+  });
+
+  it("mengembalikan transaksi lama tanpa mengurangi stok lagi ketika request diulang", async () => {
+    const existingSale = {
+      saleId: "sale-existing",
+      invoiceNumber: "INV-EXISTING",
+      total: 20_000,
+      changeAmount: 5_000,
+    };
+    mocks.select.mockReturnValue(selectBuilder([existingSale]));
+
+    const response = await POST(saleRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ ...existingSale, replayed: true });
+    expect(mocks.transaction).not.toHaveBeenCalled();
+    expect(mocks.getBusinessSubscription).not.toHaveBeenCalled();
+  });
+
+  it("memulihkan hasil transaksi saat request bersamaan terkena unique constraint", async () => {
+    const existingSale = {
+      saleId: "sale-concurrent",
+      invoiceNumber: "INV-CONCURRENT",
+      total: 20_000,
+      changeAmount: 5_000,
+    };
+    mocks.transaction.mockRejectedValue({
+      code: "23505",
+      constraint: "sale_business_client_request_idx",
+    });
+    mocks.select
+      .mockReturnValueOnce(selectBuilder([]))
+      .mockReturnValueOnce(selectBuilder([existingSale]));
+
+    const response = await POST(saleRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ...existingSale, replayed: true });
   });
 });

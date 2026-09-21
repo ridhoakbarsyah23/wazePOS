@@ -92,6 +92,13 @@
       "when": 1789874268566,
       "tag": "0012_silly_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789908848093,
+      "tag": "0013_daily_karnak",
+      "breakpoints": true
     }
   ]
 }

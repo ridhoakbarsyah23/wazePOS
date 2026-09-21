@@ -14,6 +14,53 @@ function makeInvoiceNumber() {
   return `INV-${stamp}-${randomUUID().slice(0, 6).toUpperCase()}`;
 }
 
+function isClientRequestConflict(error: unknown) {
+  let current = error;
+
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (typeof current !== "object" || current === null) return false;
+
+    const candidate = current as {
+      code?: unknown;
+      constraint?: unknown;
+      message?: unknown;
+      cause?: unknown;
+    };
+    const isUniqueViolation = candidate.code === "23505";
+    const isClientRequestConstraint =
+      candidate.constraint === "sale_business_client_request_idx" ||
+      (typeof candidate.message === "string" &&
+        candidate.message.includes("sale_business_client_request_idx"));
+
+    if (isUniqueViolation && isClientRequestConstraint) return true;
+    current = candidate.cause;
+  }
+
+  return false;
+}
+
+async function findExistingSale(businessId: string, clientRequestId: string) {
+  const [existingSale] = await db
+    .select({
+      saleId: sale.id,
+      invoiceNumber: sale.invoiceNumber,
+      total: sale.total,
+      changeAmount: sale.changeAmount,
+    })
+    .from(sale)
+    .where(
+      and(
+        eq(sale.businessId, businessId),
+        eq(sale.clientRequestId, clientRequestId),
+      ),
+    )
+    .limit(1);
+
+  return existingSale
+    ? { ...existingSale, replayed: true }
+    : null;
+}
+
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
@@ -23,6 +70,34 @@ export async function POST(request: Request) {
   const membership = await getMembership(session.user.id);
   if (!membership) {
     return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
+  }
+
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ message: "Format transaksi tidak valid." }, { status: 400 });
+  }
+
+  const parsed = saleSchema.safeParse(payload);
+  if (!parsed.success) {
+    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Periksa transaksi." }, { status: 422 });
+  }
+
+  try {
+    const existingSale = await findExistingSale(
+      membership.businessId,
+      parsed.data.clientRequestId,
+    );
+    if (existingSale) {
+      return NextResponse.json(existingSale, { status: 200 });
+    }
+  } catch (error) {
+    console.error("Failed to check existing sale request", error);
+    return NextResponse.json(
+      { message: "Transaksi gagal diperiksa. Silakan coba lagi." },
+      { status: 500 },
+    );
   }
 
   const currentSubscription = await getBusinessSubscription(membership.businessId);
@@ -40,17 +115,6 @@ export async function POST(request: Request) {
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
   const allowsQrisPayments = hasPlanFeature(currentSubscription?.plan, "qrisPayments");
 
-  let payload: unknown;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ message: "Format transaksi tidak valid." }, { status: 400 });
-  }
-
-  const parsed = saleSchema.safeParse(payload);
-  if (!parsed.success) {
-    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Periksa transaksi." }, { status: 422 });
-  }
   if ((parsed.data.paymentMethod === "debit" || parsed.data.paymentMethod === "credit") && !allowsAllPayments) {
     return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
   }
@@ -127,6 +191,23 @@ export async function POST(request: Request) {
         throw new Error("INSUFFICIENT_PAYMENT");
       }
 
+      const saleId = randomUUID();
+      await tx.insert(sale).values({
+        id: saleId,
+        businessId: membership.businessId,
+        outletId: parsed.data.outletId,
+        cashierId: session.user.id,
+        clientRequestId: parsed.data.clientRequestId,
+        invoiceNumber,
+        subtotal,
+        discount: 0,
+        total,
+        paidAmount: parsed.data.paidAmount,
+        changeAmount: parsed.data.paidAmount - total,
+        paymentMethod: parsed.data.paymentMethod,
+        status: "completed",
+      });
+
       for (const item of lineItems) {
         if (!item.trackStock || !item.stockId) continue;
         const updated = await tx
@@ -146,22 +227,6 @@ export async function POST(request: Request) {
           throw new Error(`INSUFFICIENT_STOCK:${item.name}`);
         }
       }
-
-      const saleId = randomUUID();
-      await tx.insert(sale).values({
-        id: saleId,
-        businessId: membership.businessId,
-        outletId: parsed.data.outletId,
-        cashierId: session.user.id,
-        invoiceNumber,
-        subtotal,
-        discount: 0,
-        total,
-        paidAmount: parsed.data.paidAmount,
-        changeAmount: parsed.data.paidAmount - total,
-        paymentMethod: parsed.data.paymentMethod,
-        status: "completed",
-      });
 
       await tx.insert(saleItem).values(
         lineItems.map((item) => ({
@@ -192,11 +257,31 @@ export async function POST(request: Request) {
         await tx.insert(stockMovement).values(stockMovements);
       }
 
-      return { saleId, invoiceNumber, total, changeAmount: parsed.data.paidAmount - total };
+      return {
+        saleId,
+        invoiceNumber,
+        total,
+        changeAmount: parsed.data.paidAmount - total,
+        replayed: false,
+      };
     });
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(result, { status: result.replayed ? 200 : 201 });
   } catch (error) {
+    if (isClientRequestConflict(error)) {
+      try {
+        const existingSale = await findExistingSale(
+          membership.businessId,
+          parsed.data.clientRequestId,
+        );
+        if (existingSale) {
+          return NextResponse.json(existingSale, { status: 200 });
+        }
+      } catch (recoveryError) {
+        console.error("Failed to recover concurrent sale request", recoveryError);
+      }
+    }
+
     const message = error instanceof Error ? error.message : "";
     if (message === "OUTLET_NOT_FOUND") {
       return NextResponse.json({ message: "Gerai tidak ditemukan." }, { status: 422 });

@@ -5,6 +5,11 @@ import dynamic from "next/dynamic";
 import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/lib/pos-calculations";
 import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/lib/pos-product-search";
 import {
+  clearSaleRequestId,
+  createSaleRequestFingerprint,
+  getOrCreateSaleRequestId,
+} from "@/lib/sale-idempotency";
+import {
   AlertCircle,
   ArrowRight,
   Banknote,
@@ -228,15 +233,21 @@ export function PosTerminal({
     }
     setIsSubmitting(true);
     setMessage(null);
+    const salePayload = {
+      outletId,
+      paymentMethod,
+      paidAmount: paid,
+      items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
+    };
+    const fingerprint = createSaleRequestFingerprint(salePayload);
+    const clientRequestId = getOrCreateSaleRequestId(sessionStorage, fingerprint);
     try {
       const response = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          outletId,
-          paymentMethod,
-          paidAmount: paid,
-          items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
+          ...salePayload,
+          clientRequestId,
         }),
       });
       const result = await response.json();
@@ -265,6 +276,7 @@ export function PosTerminal({
         paymentMethod,
         saleId: result.saleId,
       });
+      clearSaleRequestId(sessionStorage, clientRequestId);
       setShowReceiptModal(true);
 
       setMessage({
