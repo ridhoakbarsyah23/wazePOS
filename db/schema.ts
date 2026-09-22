@@ -104,12 +104,14 @@ export const outlet = pgTable(
       .notNull()
       .references(() => business.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    slug: text("slug").notNull(),
     address: text("address"),
     ...timestamps,
   },
   (table) => [
     index("outlet_business_id_idx").on(table.businessId),
     index("outlet_business_name_idx").on(table.businessId, table.name),
+    uniqueIndex("outlet_business_slug_idx").on(table.businessId, table.slug),
   ],
 );
 
