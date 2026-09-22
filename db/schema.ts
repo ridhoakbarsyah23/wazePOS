@@ -115,6 +115,28 @@ export const outlet = pgTable(
   ],
 );
 
+export const customer = pgTable(
+  "customer",
+  {
+    id: text("id").primaryKey(),
+    businessId: text("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    phone: text("phone"),
+    email: text("email"),
+    note: text("note"),
+    ...timestamps,
+  },
+  (table) => [
+    index("customer_business_id_idx").on(table.businessId),
+    index("customer_business_name_idx").on(table.businessId, table.name),
+    uniqueIndex("customer_business_phone_idx")
+      .on(table.businessId, table.phone)
+      .where(sql`${table.phone} is not null`),
+  ],
+);
+
 export const subscription = pgTable(
   "subscription",
   {
@@ -295,6 +317,7 @@ export const sale = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
     cashShiftId: text("cash_shift_id").references(() => cashShift.id, { onDelete: "restrict" }),
+    customerId: text("customer_id").references(() => customer.id, { onDelete: "set null" }),
     clientRequestId: text("client_request_id"),
     invoiceNumber: text("invoice_number").notNull(),
     subtotal: integer("subtotal").notNull(),
@@ -313,6 +336,7 @@ export const sale = pgTable(
     index("sale_business_id_idx").on(table.businessId),
     index("sale_outlet_id_idx").on(table.outletId),
     index("sale_cash_shift_id_idx").on(table.cashShiftId),
+    index("sale_business_customer_idx").on(table.businessId, table.customerId),
     index("sale_created_at_idx").on(table.createdAt),
     index("sale_business_status_created_at_idx").on(table.businessId, table.status, table.createdAt),
     index("sale_business_outlet_created_at_idx").on(table.businessId, table.outletId, table.createdAt),
@@ -352,6 +376,7 @@ export const schema = {
   business,
   businessMember,
   outlet,
+  customer,
   subscription,
   subscriptionPayment,
   category,

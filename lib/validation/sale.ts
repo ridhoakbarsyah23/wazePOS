@@ -3,6 +3,10 @@ import { z } from "zod";
 export const saleSchema = z.object({
   clientRequestId: z.string().uuid("Identitas transaksi tidak valid."),
   outletId: z.string().uuid("Gerai tidak valid."),
+  customerId: z.preprocess(
+    (value) => (value == null || value === "" ? null : value),
+    z.string().uuid("Pelanggan tidak valid.").nullable(),
+  ),
   paymentMethod: z.enum(["cash", "qris", "debit", "credit"]),
   paidAmount: z.coerce.number().int().min(0).max(2_000_000_000),
   items: z.array(

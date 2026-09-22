@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
+import { customer, inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
@@ -146,6 +146,17 @@ export async function POST(request: Request) {
         throw new Error("OUTLET_NOT_FOUND");
       }
 
+      if (parsed.data.customerId) {
+        const [selectedCustomer] = await tx
+          .select({ id: customer.id })
+          .from(customer)
+          .where(and(eq(customer.id, parsed.data.customerId), eq(customer.businessId, membership.businessId)))
+          .limit(1);
+        if (!selectedCustomer) {
+          throw new Error("CUSTOMER_NOT_FOUND");
+        }
+      }
+
       const catalog = await tx
         .select({
           id: product.id,
@@ -197,6 +208,7 @@ export async function POST(request: Request) {
         businessId: membership.businessId,
         outletId: parsed.data.outletId,
         cashierId: session.user.id,
+        customerId: parsed.data.customerId ?? null,
         clientRequestId: parsed.data.clientRequestId,
         invoiceNumber,
         subtotal,
@@ -285,6 +297,9 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "";
     if (message === "OUTLET_NOT_FOUND") {
       return NextResponse.json({ message: "Gerai tidak ditemukan." }, { status: 422 });
+    }
+    if (message === "CUSTOMER_NOT_FOUND") {
+      return NextResponse.json({ message: "Pelanggan tidak ditemukan." }, { status: 422 });
     }
     if (message === "PRODUCT_NOT_FOUND") {
       return NextResponse.json({ message: "Ada produk yang sudah tidak aktif." }, { status: 422 });

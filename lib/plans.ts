@@ -6,6 +6,7 @@ export type PlanLimits = {
   maxOutlets: number;
   maxStaff: number;
   maxProducts: number;
+  maxCustomers: number;
 };
 
 export type PlanFeature =
@@ -41,6 +42,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       maxOutlets: 1,
       maxStaff: 2,
       maxProducts: 100,
+      maxCustomers: 200,
     },
     features: {
       cashSales: true,
@@ -67,6 +69,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       maxOutlets: 5,
       maxStaff: 9999,
       maxProducts: 9999,
+      maxCustomers: 9999,
     },
     features: {
       cashSales: true,
@@ -101,6 +104,10 @@ export function getPlanConfig(plan: unknown): PlanConfig {
 
 export function getPlanLimits(plan: unknown): PlanLimits {
   return getPlanConfig(plan).limits;
+}
+
+export function getMaxCustomers(plan: unknown): number {
+  return getPlanLimits(plan).maxCustomers;
 }
 
 export function hasPlanFeature(plan: unknown, feature: PlanFeature | string): boolean {
