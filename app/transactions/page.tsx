@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { outlet, sale, user } from "@/db/schema";
 import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
+import { PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 import { formatReportRange, getReportDateRange, paymentLabel } from "@/lib/reporting";
 
@@ -53,6 +54,7 @@ export default async function TransactionsPage({
     payment?: string;
     status?: string;
     q?: string;
+    page?: string;
   }>;
 }) {
   const session = await requireSession();
@@ -84,6 +86,8 @@ export default async function TransactionsPage({
   const paymentMethod = paymentMethods.find((method) => method === params.payment) ?? null;
   const transactionStatus = transactionStatuses.find((status) => status === params.status) ?? null;
   const invoiceQuery = (params.q ?? "").trim().slice(0, 80);
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const currentPage = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
@@ -120,7 +124,7 @@ export default async function TransactionsPage({
       .innerJoin(user, eq(user.id, sale.cashierId))
       .where(and(...filters))
       .orderBy(desc(sale.createdAt))
-      .limit(100),
+      .limit(PAGE_SIZE + 1),
     db
       .select({
         count: sql<number>`count(*)::int`,
@@ -134,6 +138,31 @@ export default async function TransactionsPage({
   const resultCount = Number(summary[0]?.count ?? 0);
   const completedTotal = Number(summary[0]?.completedTotal ?? 0);
   const voidedCount = Number(summary[0]?.voidedCount ?? 0);
+
+  const totalPages = Math.max(Math.ceil(resultCount / PAGE_SIZE), 1);
+  const page = Math.min(currentPage, totalPages);
+  const hasNext = page < totalPages;
+  const pageRows = transactions.slice(0, PAGE_SIZE);
+  const rangeStart = resultCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = rangeStart + pageRows.length - 1;
+
+  const currentQuery: Record<string, string> = {
+    from: fromKey,
+    to: toKey,
+    ...(activeOutlet ? { outlet: activeOutlet.id } : {}),
+    ...(paymentMethod ? { payment: paymentMethod } : {}),
+    ...(transactionStatus ? { status: transactionStatus } : {}),
+    ...(invoiceQuery ? { q: invoiceQuery } : {}),
+  };
+
+  function pageHref(targetPage: number) {
+    const search = new URLSearchParams(currentQuery);
+    if (targetPage > 1) search.set("page", String(targetPage));
+    const queryString = search.toString();
+    return queryString ? `/transactions?${queryString}` : "/transactions";
+  }
+
+  const pageNumbers = getPageNumbers(page, totalPages);
   const headerOutlets = [{ id: "all", name: "Semua Gerai" }, ...outlets];
 
   return (
@@ -242,7 +271,9 @@ export default async function TransactionsPage({
               <ReceiptText className="size-4 text-[#187c59]" />
               <h2 className="text-sm font-bold text-[#17211d]">Daftar transaksi</h2>
             </div>
-            <span className="text-xs text-[#78857f]">Maksimal 100 terbaru</span>
+            <span className="text-xs text-[#78857f]">
+              {resultCount > 0 ? `Halaman ${page} dari ${totalPages}` : "Belum ada transaksi"}
+            </span>
           </div>
 
           <div className="hidden overflow-x-auto md:block">
@@ -259,7 +290,7 @@ export default async function TransactionsPage({
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((item) => (
+                {pageRows.map((item) => (
                   <tr key={item.id} className="border-t border-[#edf1ef] hover:bg-[#f8fbf9]">
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-[#17211d]">{item.invoiceNumber}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-xs text-[#68766f]">{new Date(item.createdAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}</td>
@@ -286,7 +317,7 @@ export default async function TransactionsPage({
           </div>
 
           <div className="divide-y divide-[#edf1ef] md:hidden">
-            {transactions.map((item) => (
+            {pageRows.map((item) => (
               <Link key={item.id} href={`/sales/${item.id}`} className="block p-4 active:bg-[#f3f8f5]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -302,6 +333,58 @@ export default async function TransactionsPage({
               </Link>
             ))}
           </div>
+
+          {pageRows.length > 0 && (
+            <div className="flex flex-col gap-3 border-t border-[#e5ebe8] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="m-0 text-xs text-[#78857f]">
+                Menampilkan <span className="font-semibold text-[#44534c]">{rangeStart}&ndash;{rangeEnd}</span> dari{" "}
+                <span className="font-semibold text-[#44534c]">{resultCount}</span> transaksi
+              </p>
+              <nav className="flex items-center gap-1" aria-label="Navigasi halaman">
+                {page > 1 ? (
+                  <Link href={pageHref(page - 1)} className={pageLinkClass}>
+                    Sebelumnya
+                  </Link>
+                ) : (
+                  <span aria-disabled className={pageDisabledClass}>
+                    Sebelumnya
+                  </span>
+                )}
+                {pageNumbers.map((item, index) =>
+                  item === "ellipsis" ? (
+                    <span key={`ellipsis-${index}`} className="px-1 text-xs text-[#9aa69f]">
+                      &hellip;
+                    </span>
+                  ) : item === page ? (
+                    <span
+                      key={item}
+                      aria-current="page"
+                      className="grid size-8 place-items-center rounded-lg bg-[#eaf7f0] text-xs font-bold text-[#187c59]"
+                    >
+                      {item}
+                    </span>
+                  ) : (
+                    <Link
+                      key={item}
+                      href={pageHref(item)}
+                      className="grid size-8 place-items-center rounded-lg text-xs font-semibold text-[#68766f] transition hover:bg-[#f3f8f5] hover:text-[#187c59]"
+                    >
+                      {item}
+                    </Link>
+                  ),
+                )}
+                {hasNext ? (
+                  <Link href={pageHref(page + 1)} className={pageLinkClass}>
+                    Berikutnya
+                  </Link>
+                ) : (
+                  <span aria-disabled className={pageDisabledClass}>
+                    Berikutnya
+                  </span>
+                )}
+              </nav>
+            </div>
+          )}
 
           {transactions.length === 0 && (
             <div className="px-4 py-12 text-center">

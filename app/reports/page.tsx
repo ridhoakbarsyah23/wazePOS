@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
+import { PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
 import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
 import { formatReportRange, getReportDateRange } from "@/lib/reporting";
 
@@ -50,6 +51,7 @@ export default async function ReportsPage({
     payment?: string;
     status?: string;
     q?: string;
+    page?: string;
   }>;
 }) {
   const session = await requireSession();
@@ -85,6 +87,8 @@ export default async function ReportsPage({
   const paymentMethod = paymentMethods.find((method) => method === params.payment) ?? null;
   const reportStatus = reportStatuses.find((status) => status === params.status) ?? null;
   const invoiceQuery = (params.q ?? "").trim().slice(0, 80);
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const currentPage = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
@@ -118,7 +122,7 @@ export default async function ReportsPage({
       .innerJoin(outlet, eq(outlet.id, sale.outletId))
       .where(and(...reportFilters, eq(sale.status, "completed")))
       .orderBy(desc(sale.createdAt))
-      .limit(200),
+      .limit(PAGE_SIZE + 1),
 
     db
       .select({
@@ -178,6 +182,31 @@ export default async function ReportsPage({
   const totalTransactions = Number(completedSummary[0]?.transactions ?? 0);
   const totalItemsSold = Number(itemTotals[0]?.quantity ?? 0);
   const averageTransaction = totalTransactions > 0 ? Math.round(total / totalTransactions) : 0;
+
+  const totalPages = Math.max(Math.ceil(totalTransactions / PAGE_SIZE), 1);
+  const page = Math.min(currentPage, totalPages);
+  const hasNext = page < totalPages;
+  const pageRows = sales.slice(0, PAGE_SIZE);
+  const rangeStart = totalTransactions === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = rangeStart + pageRows.length - 1;
+
+  const currentQuery: Record<string, string> = {
+    from: fromKey,
+    to: toKey,
+    ...(activeOutlet ? { outlet: activeOutlet.id } : {}),
+    ...(paymentMethod ? { payment: paymentMethod } : {}),
+    ...(reportStatus ? { status: reportStatus } : {}),
+    ...(invoiceQuery ? { q: invoiceQuery } : {}),
+  };
+
+  function pageHref(targetPage: number) {
+    const search = new URLSearchParams(currentQuery);
+    if (targetPage > 1) search.set("page", String(targetPage));
+    const queryString = search.toString();
+    return queryString ? `/reports?${queryString}` : "/reports";
+  }
+
+  const pageNumbers = getPageNumbers(page, totalPages);
   const paymentTotals = Object.fromEntries(
     paymentRows.map((item) => [item.paymentMethod, Number(item.total)]),
   );
@@ -496,7 +525,7 @@ export default async function ReportsPage({
                 </div>
               </div>
               <Badge variant="outline">
-                {sales.length < totalTransactions ? `${sales.length} dari ${totalTransactions}` : totalTransactions} Transaksi
+                {totalTransactions > 0 ? `Halaman ${page} dari ${totalPages}` : "Belum ada transaksi"}
               </Badge>
             </div>
           </CardHeader>
@@ -513,7 +542,7 @@ export default async function ReportsPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sales.map((item) => (
+                  {pageRows.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
                         <Link
@@ -549,7 +578,7 @@ export default async function ReportsPage({
                       </TableCell>
                     </TableRow>
                   ))}
-                  {sales.length === 0 && (
+                  {pageRows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-8 text-center text-[#627069]">
                         Belum ada transaksi berhasil yang sesuai dengan filter.
@@ -559,6 +588,58 @@ export default async function ReportsPage({
                 </TableBody>
               </Table>
             </div>
+
+            {pageRows.length > 0 && (
+              <div className="flex flex-col gap-3 border-t border-[#e5ebe8] px-1 py-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="m-0 text-xs text-[#78857f]">
+                  Menampilkan <span className="font-semibold text-[#44534c]">{rangeStart}&ndash;{rangeEnd}</span> dari{" "}
+                  <span className="font-semibold text-[#44534c]">{totalTransactions}</span> transaksi berhasil
+                </p>
+                <nav className="flex flex-wrap items-center gap-1" aria-label="Navigasi halaman">
+                  {page > 1 ? (
+                    <Link href={pageHref(page - 1)} className={pageLinkClass}>
+                      Sebelumnya
+                    </Link>
+                  ) : (
+                    <span aria-disabled className={pageDisabledClass}>
+                      Sebelumnya
+                    </span>
+                  )}
+                  {pageNumbers.map((item, index) =>
+                    item === "ellipsis" ? (
+                      <span key={`ellipsis-${index}`} className="px-1 text-xs text-[#9aa69f]">
+                        &hellip;
+                      </span>
+                    ) : item === page ? (
+                      <span
+                        key={item}
+                        aria-current="page"
+                        className="grid size-8 place-items-center rounded-lg bg-[#eaf7f0] text-xs font-bold text-[#187c59]"
+                      >
+                        {item}
+                      </span>
+                    ) : (
+                      <Link
+                        key={item}
+                        href={pageHref(item)}
+                        className="grid size-8 place-items-center rounded-lg text-xs font-semibold text-[#68766f] transition hover:bg-[#f3f8f5] hover:text-[#187c59]"
+                      >
+                        {item}
+                      </Link>
+                    ),
+                  )}
+                  {hasNext ? (
+                    <Link href={pageHref(page + 1)} className={pageLinkClass}>
+                      Berikutnya
+                    </Link>
+                  ) : (
+                    <span aria-disabled className={pageDisabledClass}>
+                      Berikutnya
+                    </span>
+                  )}
+                </nav>
+              </div>
+            )}
           </CardContent>
         </Card>
 
