@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Ban } from "lucide-react";
 import { db } from "@/db";
@@ -117,16 +118,16 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
         {/* Header Action Bar */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <div className="flex flex-wrap items-center gap-3">
-            <a
+            <Link
               href="/transactions"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#198760] transition hover:text-[#14714f]"
             >
               <ArrowLeft className="size-3.5" />
               <span>Kembali ke riwayat</span>
-            </a>
-            <a href="/pos" className="text-xs font-semibold text-[#627069] transition hover:text-[#15211d]">
+            </Link>
+            <Link href="/pos" className="text-xs font-semibold text-[#627069] transition hover:text-[#15211d]">
               Buka kasir
-            </a>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2">

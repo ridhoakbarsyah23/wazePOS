@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 export type AppHeaderProps = {
   businessName: string;
   outletName?: string;
-  outlets?: { id: string; name: string }[];
+  outlets?: { id: string; name: string; slug?: string }[];
   activeOutletId?: string;
   role?: "owner" | "admin" | "cashier";
   trialDaysRemaining?: number | null;
@@ -112,6 +112,7 @@ function SidebarNavLinks({
   pathname,
   navigatingTo,
   activeOutletId,
+  activeOutletSlug,
   onNavigate,
   onWarm,
   onItemClick,
@@ -120,6 +121,7 @@ function SidebarNavLinks({
   pathname: string;
   navigatingTo: string | null;
   activeOutletId?: string;
+  activeOutletSlug?: string;
   onNavigate: (href: string) => void;
   onWarm: (href: string) => void;
   onItemClick?: () => void;
@@ -133,9 +135,11 @@ function SidebarNavLinks({
         const isPendingNav = navigatingTo === item.href;
         const Icon = item.icon;
         const itemHref =
-          activeOutletId && activeOutletId !== "all"
-            ? `${item.href}?outlet=${encodeURIComponent(activeOutletId)}`
-            : item.href;
+          item.href === "/pos" && activeOutletSlug
+            ? `/pos/${encodeURIComponent(activeOutletSlug)}`
+            : activeOutletId && activeOutletId !== "all"
+              ? `${item.href}?outlet=${encodeURIComponent(activeOutletId)}`
+              : item.href;
 
         return (
           <Link
@@ -219,6 +223,12 @@ export function AppHeader({
   }
 
   const visibleNav = navItems.filter((item) => item.roles.includes(role));
+  const activeOutletSlug = outlets.find((item) => item.id === activeOutletId)?.slug;
+  const cashierHref = activeOutletSlug
+    ? `/pos/${encodeURIComponent(activeOutletSlug)}`
+    : activeOutletId && activeOutletId !== "all"
+      ? `/pos?outlet=${encodeURIComponent(activeOutletId)}`
+      : "/pos";
 
   function handleNavigate(href: string) {
     setNavigatingTo(href);
@@ -236,6 +246,12 @@ export function AppHeader({
   }
 
   function changeOutlet(nextOutletId: string) {
+    if (pathname === "/pos" || pathname.startsWith("/pos/")) {
+      const nextOutlet = outlets.find((item) => item.id === nextOutletId);
+      router.push(nextOutlet?.slug ? `/pos/${encodeURIComponent(nextOutlet.slug)}` : "/pos");
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
     if (nextOutletId && nextOutletId !== "all") {
       params.set("outlet", nextOutletId);
@@ -326,6 +342,7 @@ export function AppHeader({
             pathname={pathname}
             navigatingTo={navigatingTo}
             activeOutletId={activeOutletId}
+            activeOutletSlug={activeOutletSlug}
             onNavigate={handleNavigate}
             onWarm={warmRoute}
           />
@@ -409,7 +426,7 @@ export function AppHeader({
         <div className="flex items-center gap-2">
           {/* Quick Kasir POS button on mobile */}
           <Button asChild size="sm" className="h-8 gap-1 text-xs">
-            <Link href="/pos">
+            <Link href={cashierHref}>
               <ShoppingCart className="size-3.5" />
               <span>Kasir</span>
             </Link>
@@ -504,6 +521,7 @@ export function AppHeader({
                 pathname={pathname}
                 navigatingTo={navigatingTo}
                 activeOutletId={activeOutletId}
+                activeOutletSlug={activeOutletSlug}
                 onNavigate={handleNavigate}
                 onWarm={warmRoute}
                 onItemClick={() => setMobileOpen(false)}
