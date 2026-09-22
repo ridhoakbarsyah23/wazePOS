@@ -17,6 +17,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: wazepos
+          POSTGRES_USER: wazepos
+          POSTGRES_PASSWORD: wazepos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wazepos -d wazepos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -47,8 +62,15 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Migrate database
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://wazepos:wazepos@127.0.0.1:5432/wazepos
+
       - name: Test
         run: npm test
+        env:
+          TEST_DATABASE_URL: postgresql://wazepos:wazepos@127.0.0.1:5432/wazepos
 
       - name: Build
         run: npm run build
