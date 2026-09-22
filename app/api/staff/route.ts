@@ -105,6 +105,8 @@ export async function POST(request: Request) {
   }
 
   const newUserId = randomUUID();
+  const newMemberId = randomUUID();
+  const createdAt = new Date();
   const hashedPassword = await hashPassword(password);
 
   try {
@@ -118,24 +120,33 @@ export async function POST(request: Request) {
 
       await tx.insert(account).values({
         id: randomUUID(),
-        accountId: email,
+        accountId: newUserId,
         providerId: "credential",
         userId: newUserId,
         password: hashedPassword,
       });
 
       await tx.insert(businessMember).values({
-        id: randomUUID(),
+        id: newMemberId,
         businessId: membership.businessId,
         userId: newUserId,
         role,
+        createdAt,
+        updatedAt: createdAt,
       });
     });
 
     return NextResponse.json(
       {
         message: `Karyawan ${name} (${role === "admin" ? "Admin" : "Kasir"}) berhasil ditambahkan.`,
-        staff: { id: newUserId, name, email, role },
+        staff: {
+          id: newMemberId,
+          userId: newUserId,
+          name,
+          email,
+          role,
+          createdAt: createdAt.toISOString(),
+        },
       },
       { status: 201 }
     );
