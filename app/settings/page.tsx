@@ -1,11 +1,12 @@
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Settings } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { DashboardSetupManager } from "@/components/dashboard-setup-manager";
 import { SettingsManager } from "@/components/settings-manager";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
-import { business, outlet } from "@/db/schema";
+import { business, category, outlet, product } from "@/db/schema";
 import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
@@ -15,7 +16,7 @@ export default async function SettingsPage() {
   if (!membership) redirect("/onboarding");
   if (!canManageBusiness(membership.role)) redirect("/pos");
 
-  const [businessRows, outlets] = await Promise.all([
+  const [businessRows, outlets, categories] = await Promise.all([
     db
       .select({
         name: business.name,
@@ -31,6 +32,20 @@ export default async function SettingsPage() {
       .from(outlet)
       .where(eq(outlet.businessId, membership.businessId))
       .orderBy(outlet.name),
+    db
+      .select({
+        id: category.id,
+        name: category.name,
+        productCount: sql<number>`COUNT(${product.id})::int`,
+      })
+      .from(category)
+      .leftJoin(
+        product,
+        and(eq(product.categoryId, category.id), eq(product.businessId, membership.businessId))
+      )
+      .where(eq(category.businessId, membership.businessId))
+      .groupBy(category.id, category.name)
+      .orderBy(category.name),
   ]);
 
   const businessData = businessRows[0];
@@ -73,6 +88,17 @@ export default async function SettingsPage() {
 
         <div className="mt-6">
           <SettingsManager initialBusiness={businessData} initialOutlets={outlets} />
+        </div>
+
+        <div className="mt-6">
+          <DashboardSetupManager
+            initialCategories={categories.map((item) => ({
+              ...item,
+              productCount: Number(item.productCount),
+            }))}
+            initialOutlets={outlets}
+            showQuickProduct={false}
+          />
         </div>
       </section>
     </AppHeader>
