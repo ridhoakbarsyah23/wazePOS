@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -305,8 +306,8 @@ export function AppHeader({
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-95"
             aria-label="Dashboard wazePOS"
           >
-            <span className="grid size-9 place-items-center rounded-xl bg-[#198760] text-white shadow-sm shadow-[#198760]/30">
-              <LayoutDashboard className="size-4.5" />
+            <span className="relative size-9 shrink-0 overflow-hidden rounded-xl shadow-sm shadow-[#198760]/30">
+              <Image src="/logo.png" alt="Logo wazePOS" fill sizes="36px" className="object-cover" />
             </span>
             <div className="min-w-0">
               <span className="block text-lg font-extrabold leading-tight tracking-[-0.6px] text-[#15211d]">
@@ -474,8 +475,8 @@ export function AppHeader({
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-[#edf3f0] px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <span className="grid size-8 place-items-center rounded-xl bg-[#198760] text-white shadow-xs">
-                  <LayoutDashboard className="size-4" />
+                <span className="relative size-8 shrink-0 overflow-hidden rounded-xl shadow-xs">
+                  <Image src="/logo.png" alt="Logo wazePOS" fill sizes="32px" className="object-cover" />
                 </span>
                 <div>
                   <span className="block text-base font-extrabold tracking-tight text-[#15211d]">
