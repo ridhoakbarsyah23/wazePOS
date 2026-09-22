@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function DashboardError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
@@ -19,7 +18,7 @@ export default function DashboardError({
         </div>
         <h2 className="text-xl font-bold">Terjadi Kendala pada Dashboard</h2>
         <p className="mt-2 text-sm text-[#627069]">
-          {error.message || "Gagal memuat data dashboard. Silakan coba muat ulang."}
+          Data dashboard belum dapat dimuat. Silakan coba lagi atau muat ulang halaman.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button onClick={() => reset()} variant="default">

@@ -5,10 +5,10 @@ import { AppHeader } from "@/components/app-header";
 import { DashboardHeader, PeriodKey } from "@/components/dashboard-header";
 import { DashboardMetrics } from "@/components/dashboard-metrics";
 import { DashboardInsights } from "@/components/dashboard-insights";
-import { DashboardWorkspace } from "@/components/dashboard-workspace";
+import { DashboardOverview } from "@/components/dashboard-overview";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
-import { category, inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
+import { inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
 import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, normalizePlan } from "@/lib/plans";
 
@@ -66,61 +66,16 @@ export default async function DashboardPage({
   const selectedPeriod: PeriodKey =
     feedback.period === "today" || feedback.period === "30d" ? feedback.period : "7d";
 
-  const [categories, outlets, productRows] = await Promise.all([
-    db
-      .select({
-        id: category.id,
-        name: category.name,
-        productCount: sql<number>`COUNT(${product.id})::int`,
-      })
-      .from(category)
-      .leftJoin(
-        product,
-        and(eq(product.categoryId, category.id), eq(product.businessId, membership.businessId))
-      )
-      .where(eq(category.businessId, membership.businessId))
-      .groupBy(category.id, category.name)
-      .orderBy(category.name),
-    db
+  const outlets = await db
       .select({
         id: outlet.id,
         name: outlet.name,
+        slug: outlet.slug,
         address: outlet.address,
       })
       .from(outlet)
       .where(eq(outlet.businessId, membership.businessId))
-      .orderBy(outlet.name),
-    db
-      .select({
-        id: product.id,
-        name: product.name,
-        sku: product.sku,
-        sellingPrice: product.sellingPrice,
-        costPrice: product.costPrice,
-        categoryId: product.categoryId,
-        trackStock: product.trackStock,
-        isActive: product.isActive,
-        categoryName: category.name,
-        stockTotal: sql<number>`COALESCE(SUM(${inventoryStock.quantity}), 0)::int`,
-      })
-      .from(product)
-      .leftJoin(category, eq(category.id, product.categoryId))
-      .leftJoin(inventoryStock, eq(inventoryStock.productId, product.id))
-      .where(eq(product.businessId, membership.businessId))
-      .groupBy(
-        product.id,
-        product.name,
-        product.sku,
-        product.sellingPrice,
-        product.costPrice,
-        product.categoryId,
-        product.trackStock,
-        product.isActive,
-        category.name,
-        product.createdAt
-      )
-      .orderBy(product.createdAt),
-  ]);
+      .orderBy(outlet.name);
 
   const selectedOutletId =
     feedback.outlet && outlets.some((item) => item.id === feedback.outlet)
@@ -255,11 +210,23 @@ export default async function DashboardPage({
     currentTransactions > 0 ? Math.round(currentRevenue / currentTransactions) : 0;
 
   const totalStock = stockRows.reduce((sum, item) => sum + Number(item.quantity), 0);
-  const lowStockCount = new Set(
+  const outOfStockProductIds = new Set(
     stockRows
-      .filter((item) => Number(item.quantity) <= Number(item.threshold))
+      .filter((item) => Number(item.quantity) <= 0)
       .map((item) => item.productId)
-  ).size;
+  );
+  const lowStockProductIds = new Set(
+    stockRows
+      .filter(
+        (item) =>
+          Number(item.quantity) > 0 &&
+          Number(item.quantity) <= Number(item.threshold) &&
+          !outOfStockProductIds.has(item.productId)
+      )
+      .map((item) => item.productId)
+  );
+  const outOfStockCount = outOfStockProductIds.size;
+  const lowStockCount = lowStockProductIds.size;
   const lowStockHref =
     selectedOutletId === "all"
       ? "/inventory?status=low"
@@ -372,6 +339,7 @@ export default async function DashboardPage({
           activeOutletName={currentOutletName}
           outlets={outlets}
           selectedOutletId={selectedOutletId}
+          selectedOutletSlug={selectedOutlet?.slug}
           selectedPeriod={selectedPeriod}
           trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
           currentPlan={selectedPlan}
@@ -386,6 +354,7 @@ export default async function DashboardPage({
           currentAov={currentAverage}
           totalStockUnits={totalStock}
           lowStockCount={lowStockCount}
+          outOfStockCount={outOfStockCount}
           lowStockHref={lowStockHref}
         />
 
@@ -397,24 +366,12 @@ export default async function DashboardPage({
           outletPerformance={insightOutletPerformance}
         />
 
-        {/* Master Control Workspace: 4 Cohesive Tabs (Overview, Products, Categories, Outlets) */}
-        <DashboardWorkspace
+        <DashboardOverview
           chartPoints={chartPoints}
           periodLabel={periodLabels[selectedPeriod]}
           currentTransactions={currentTransactions}
-          initialProducts={productRows.map((p) => ({
-            ...p,
-            sellingPrice: Number(p.sellingPrice),
-            costPrice: Number(p.costPrice || 0),
-            stockTotal: Number(p.stockTotal),
-          }))}
-          initialCategories={categories.map((c) => ({
-            id: c.id,
-            name: c.name,
-            productCount: Number(c.productCount ?? 0),
-          }))}
-          initialOutlets={outlets}
           selectedOutletId={selectedOutletId}
+          selectedOutletSlug={selectedOutlet?.slug}
         />
       </div>
 

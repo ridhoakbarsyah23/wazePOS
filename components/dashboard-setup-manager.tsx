@@ -41,9 +41,11 @@ type OutletItem = {
 export function DashboardSetupManager({
   initialCategories,
   initialOutlets,
+  showQuickProduct = true,
 }: {
   initialCategories: CategoryItem[];
   initialOutlets: OutletItem[];
+  showQuickProduct?: boolean;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"category" | "outlet" | "product">("category");
@@ -308,17 +310,19 @@ export function DashboardSetupManager({
               </span>
             </div>
             <p className="mt-0.5 text-xs text-[#627069]">
-              Tambah, perbarui, dan hapus kategori, gerai cabang, serta produk Anda tanpa berpindah halaman.
+              {showQuickProduct
+                ? "Tambah, perbarui, dan hapus kategori, gerai cabang, serta produk dari satu tempat."
+                : "Tambah, perbarui, dan hapus kategori serta gerai cabang dari satu tempat."}
             </p>
           </div>
         </div>
 
         {/* Tab Pills */}
-        <div className="flex rounded-2xl border border-[#dbe5df] bg-[#f7faf8] p-1 shadow-2xs">
+        <div className="flex w-full max-w-full overflow-x-auto rounded-2xl border border-[#dbe5df] bg-[#f7faf8] p-1 shadow-2xs lg:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab("category")}
-            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
               activeTab === "category"
                 ? "bg-white text-[#198760] shadow-sm border border-[#cce4d7]"
                 : "text-[#627069] hover:text-[#15211d]"
@@ -331,7 +335,7 @@ export function DashboardSetupManager({
           <button
             type="button"
             onClick={() => setActiveTab("outlet")}
-            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
               activeTab === "outlet"
                 ? "bg-white text-[#198760] shadow-sm border border-[#cce4d7]"
                 : "text-[#627069] hover:text-[#15211d]"
@@ -341,18 +345,20 @@ export function DashboardSetupManager({
             <span>Gerai ({outlets.length})</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("product")}
-            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
-              activeTab === "product"
-                ? "bg-white text-[#198760] shadow-sm border border-[#cce4d7]"
-                : "text-[#627069] hover:text-[#15211d]"
-            }`}
-          >
-            <Package className="size-3.5" />
-            <span>Tambah Produk</span>
-          </button>
+          {showQuickProduct && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("product")}
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
+                activeTab === "product"
+                  ? "bg-white text-[#198760] shadow-sm border border-[#cce4d7]"
+                  : "text-[#627069] hover:text-[#15211d]"
+              }`}
+            >
+              <Package className="size-3.5" />
+              <span>Tambah Produk</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -688,7 +694,7 @@ export function DashboardSetupManager({
       )}
 
       {/* TAB CONTENT: TAMBAH PRODUK CEPAT */}
-      {activeTab === "product" && (
+      {showQuickProduct && activeTab === "product" && (
         <form onSubmit={handleAddProduct} className="mt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1">

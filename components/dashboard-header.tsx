@@ -21,6 +21,7 @@ export function DashboardHeader({
   activeOutletName,
   outlets,
   selectedOutletId,
+  selectedOutletSlug,
   selectedPeriod,
   trialDaysRemaining,
   currentPlan = "tumbuh",
@@ -28,8 +29,9 @@ export function DashboardHeader({
   userName: string;
   businessName: string;
   activeOutletName: string;
-  outlets: Array<{ id: string; name: string }>;
+  outlets: Array<{ id: string; name: string; slug?: string }>;
   selectedOutletId: string;
+  selectedOutletSlug?: string;
   selectedPeriod: PeriodKey;
   trialDaysRemaining?: number | null;
   currentPlan?: string;
@@ -65,14 +67,16 @@ export function DashboardHeader({
   }
 
   const cashierHref =
-    selectedOutletId !== "all"
-      ? `/pos?outlet=${encodeURIComponent(selectedOutletId)}`
+    selectedOutletSlug
+      ? `/pos/${encodeURIComponent(selectedOutletSlug)}`
+      : selectedOutletId !== "all"
+        ? `/pos?outlet=${encodeURIComponent(selectedOutletId)}`
       : "/pos";
 
   return (
     <div className="space-y-4 animate-page-enter">
       {/* Top Cockpit Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-gradient-to-br from-white via-[#fbfdfc] to-[#f2faf6] p-6 sm:p-7 shadow-[0_8px_30px_rgba(16,65,48,.05)]">
+      <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-gradient-to-br from-white via-[#fbfdfc] to-[#f2faf6] p-5 shadow-[0_8px_30px_rgba(16,65,48,.05)] sm:p-7">
         {/* Subtle decorative glow */}
         <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="pointer-events-none absolute -left-12 -bottom-12 size-48 rounded-full bg-teal-300/10 blur-2xl" />
@@ -120,12 +124,12 @@ export function DashboardHeader({
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center">
             <button
               type="button"
               disabled={isPending}
               onClick={handleRefresh}
-              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-[#dbe5df] bg-white px-4 text-xs font-bold text-[#627069] shadow-xs transition hover:bg-[#f7faf8] hover:text-[#15211d] hover:border-[#b8d6c7] active:scale-95 disabled:opacity-60"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[#dbe5df] bg-white px-3 text-xs font-bold text-[#627069] shadow-xs transition hover:border-[#b8d6c7] hover:bg-[#f7faf8] hover:text-[#15211d] active:scale-95 disabled:opacity-60 sm:px-4"
               title="Perbarui data terbaru"
             >
               <RotateCw className={`size-3.5 ${isPending ? "animate-spin text-[#198760]" : ""}`} />
@@ -134,7 +138,7 @@ export function DashboardHeader({
 
             <Link
               href={cashierHref}
-              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-[#198760] to-[#147554] px-5 text-xs font-extrabold text-white shadow-[0_4px_16px_rgba(25,135,96,.35)] transition-all hover:shadow-[0_6px_22px_rgba(25,135,96,.45)] hover:scale-[1.02] active:scale-95"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#198760] to-[#147554] px-3 text-xs font-extrabold text-white shadow-[0_4px_16px_rgba(25,135,96,.35)] transition-all hover:scale-[1.02] hover:shadow-[0_6px_22px_rgba(25,135,96,.45)] active:scale-95 sm:px-5"
             >
               <ShoppingCart className="size-4" />
               <span>Buka Kasir POS</span>
@@ -144,14 +148,14 @@ export function DashboardHeader({
       </div>
 
       {/* Reactive Filter Toolbar (No 'Terapkan' button needed!) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#dfe8e3] bg-white p-2.5 sm:px-4 shadow-xs">
+      <div className="flex flex-col gap-3 rounded-2xl border border-[#dfe8e3] bg-white p-2.5 shadow-xs sm:px-4 md:flex-row md:items-center md:justify-between">
         {/* Period Selector Tabs */}
-        <div className="flex items-center gap-1 rounded-xl border border-[#dbe5df] bg-[#f8faf9] p-1">
+        <div className="flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-[#dbe5df] bg-[#f8faf9] p-1 [scrollbar-width:none] md:w-auto">
           <button
             type="button"
             disabled={isPending}
             onClick={() => navigateFilter("today", selectedOutletId)}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+            className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               selectedPeriod === "today"
                 ? "bg-white text-[#198760] shadow-xs border border-[#cce4d7]"
                 : "text-[#627069] hover:text-[#15211d]"
@@ -163,7 +167,7 @@ export function DashboardHeader({
             type="button"
             disabled={isPending}
             onClick={() => navigateFilter("7d", selectedOutletId)}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+            className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               selectedPeriod === "7d"
                 ? "bg-white text-[#198760] shadow-xs border border-[#cce4d7]"
                 : "text-[#627069] hover:text-[#15211d]"
@@ -175,7 +179,7 @@ export function DashboardHeader({
             type="button"
             disabled={isPending}
             onClick={() => navigateFilter("30d", selectedOutletId)}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+            className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               selectedPeriod === "30d"
                 ? "bg-white text-[#198760] shadow-xs border border-[#cce4d7]"
                 : "text-[#627069] hover:text-[#15211d]"
@@ -186,16 +190,16 @@ export function DashboardHeader({
         </div>
 
         {/* Outlet Switcher (Immediate on-change) */}
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 md:w-auto">
           <span className="text-xs font-bold text-[#627069] hidden md:inline">
             Pilih Gerai:
           </span>
-          <div className="relative">
+          <div className="relative min-w-0 flex-1 md:flex-none">
             <select
               value={selectedOutletId}
               disabled={isPending}
               onChange={(e) => navigateFilter(selectedPeriod, e.target.value)}
-              className="h-10 appearance-none rounded-xl border border-[#dbe5df] bg-[#f8faf9] pl-9 pr-8 text-xs font-bold text-[#15211d] transition hover:border-[#198760] focus:border-[#198760] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198760]/20 cursor-pointer disabled:opacity-60"
+              className="h-10 w-full appearance-none rounded-xl border border-[#dbe5df] bg-[#f8faf9] pl-9 pr-8 text-xs font-bold text-[#15211d] transition hover:border-[#198760] focus:border-[#198760] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198760]/20 cursor-pointer disabled:opacity-60 md:w-auto"
             >
               <option value="all">Semua Gerai Usaha</option>
               {outlets.map((o) => (

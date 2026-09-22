@@ -18,8 +18,8 @@ function formatCurrency(value: number) {
 }
 
 export function DashboardSalesChart({ points }: { points: SalesPoint[] }) {
-  const [activeIndex, setActiveIndex] = useState(Math.max(points.length - 1, 0));
-  const activePoint = points[activeIndex] ?? points[0];
+  const [activeKey, setActiveKey] = useState(points.at(-1)?.key);
+  const activePoint = points.find((point) => point.key === activeKey) ?? points.at(-1);
   const maximum = Math.max(...points.map((point) => point.revenue), 1);
 
   // Grafik padat (mis. 24 jam): tampilkan label tiap beberapa batang agar tidak bertumpuk.
@@ -54,7 +54,7 @@ export function DashboardSalesChart({ points }: { points: SalesPoint[] }) {
         >
           {points.map((point, index) => {
             const height = point.revenue > 0 ? Math.max((point.revenue / maximum) * 100, 7) : 2;
-            const active = index === activeIndex;
+            const active = point.key === activePoint?.key;
             const showLabel = index % labelStep === 0 || index === points.length - 1;
 
             return (
@@ -64,9 +64,9 @@ export function DashboardSalesChart({ points }: { points: SalesPoint[] }) {
                 role="listitem"
                 aria-label={`${point.label}: ${formatCurrency(point.revenue)}, ${point.transactions} transaksi`}
                 className="group flex h-full min-w-[14px] flex-1 flex-col items-center justify-end gap-1.5 rounded-md outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 sm:min-w-[22px]"
-                onMouseEnter={() => setActiveIndex(index)}
-                onFocus={() => setActiveIndex(index)}
-                onClick={() => setActiveIndex(index)}
+                onMouseEnter={() => setActiveKey(point.key)}
+                onFocus={() => setActiveKey(point.key)}
+                onClick={() => setActiveKey(point.key)}
               >
                 {/* Area batang: flex-1 mengisi ruang di atas label, tinggi selalu sejajar antar kolom */}
                 <span className="flex w-full flex-1 items-end rounded-md bg-[#f0f6f3] p-[3px] sm:p-1">

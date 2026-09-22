@@ -21,6 +21,7 @@ type DashboardMetricsProps = {
   currentAov: number;
   totalStockUnits: number;
   lowStockCount: number;
+  outOfStockCount: number;
   lowStockHref: string;
 };
 
@@ -32,6 +33,7 @@ export function DashboardMetrics({
   currentAov,
   totalStockUnits,
   lowStockCount,
+  outOfStockCount,
   lowStockHref,
 }: DashboardMetricsProps) {
   const money = (val: number) =>
@@ -42,12 +44,10 @@ export function DashboardMetrics({
     }).format(val);
 
   // Sales change calculation
-  const salesChange =
-    previousSales === 0
-      ? currentSales > 0
-        ? 100
-        : 0
-      : Math.round(((currentSales - previousSales) / previousSales) * 100);
+  const hasComparableSales = previousSales > 0;
+  const salesChange = hasComparableSales
+    ? Math.round(((currentSales - previousSales) / previousSales) * 100)
+    : 0;
 
   const isSalesUp = salesChange >= 0;
 
@@ -88,9 +88,19 @@ export function DashboardMetrics({
             }`}
           >
             {isSalesUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-            <span>{isSalesUp ? `+${salesChange}%` : `${salesChange}%`}</span>
+            <span>
+              {hasComparableSales
+                ? isSalesUp
+                  ? `+${salesChange}%`
+                  : `${salesChange}%`
+                : currentSales > 0
+                  ? "Baru tercatat"
+                  : "Belum ada omzet"}
+            </span>
           </span>
-          <span className="text-[11px] text-[#627069]">vs periode sebelumnya</span>
+          {hasComparableSales && (
+            <span className="text-[11px] text-[#627069]">vs periode sebelumnya</span>
+          )}
         </div>
       </div>
 
@@ -144,7 +154,7 @@ export function DashboardMetrics({
       {/* 4. STATUS STOK INVENTARIS */}
       <Link
         href={lowStockHref}
-        aria-label={lowStockCount > 0 ? `Lihat ${lowStockCount} produk dengan stok menipis` : "Buka halaman inventory"}
+        aria-label={outOfStockCount > 0 ? `Lihat ${outOfStockCount} produk yang stoknya habis` : lowStockCount > 0 ? `Lihat ${lowStockCount} produk dengan stok menipis` : "Buka halaman inventori"}
         className="group relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/40"
       >
         <div className="flex items-start justify-between gap-3">
@@ -165,7 +175,12 @@ export function DashboardMetrics({
         </div>
 
         <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f0f4f2]">
-          {lowStockCount > 0 ? (
+          {outOfStockCount > 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700">
+              <AlertTriangle className="size-3" />
+              <span>{outOfStockCount} produk stok habis</span>
+            </span>
+          ) : lowStockCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800">
               <AlertTriangle className="size-3" />
               <span>{lowStockCount} produk stok menipis</span>
