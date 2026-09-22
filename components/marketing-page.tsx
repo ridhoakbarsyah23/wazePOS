@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { trackEvent } from "@/lib/analytics";
 import { marketingFaqs } from "@/lib/marketing-content";
@@ -103,7 +104,14 @@ function TrackedLink({ href, event, className, children, external = false }: { h
 }
 
 function Brand() {
-  return <a href="#beranda" className="brand" aria-label="wazePOS — kembali ke beranda"><span className="brand-mark"><span /><span /><span /></span><span>waze<span>POS</span></span></a>;
+  return (
+    <a href="#beranda" className="brand" aria-label="wazePOS — kembali ke beranda">
+      <span className="brand-mark">
+        <Image src="/logo.png" alt="" width={34} height={34} priority />
+      </span>
+      <span>waze<span>POS</span></span>
+    </a>
+  );
 }
 
 function DashboardMockup({ mode = "hero", active = "Dasbor" }: { mode?: "hero" | "showcase"; active?: string }) {
