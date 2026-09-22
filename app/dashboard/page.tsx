@@ -133,7 +133,7 @@ export default async function DashboardPage({
     db
       .select({
         bucket: sql<string>`case
-          when ${sale.createdAt} >= ${periodStart} then 'current'
+          when ${sale.createdAt} >= ${periodStart.toISOString()} then 'current'
           else 'previous' end`.as("period"),
         revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
         transactions: sql<number>`COUNT(*)::int`,
