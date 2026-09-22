@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -32,7 +33,9 @@ export function AuthPageShell({
           <div aria-hidden="true" className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:34px_34px]" />
 
           <Link href="/#beranda" className="relative inline-flex w-fit items-center gap-3 text-2xl font-extrabold tracking-[-1px] text-white">
-            <span className="grid size-10 place-items-center rounded-xl bg-white text-sm font-black text-[#106348] shadow-lg shadow-black/10">W</span>
+            <span className="relative size-10 shrink-0 overflow-hidden rounded-xl shadow-lg shadow-black/10">
+              <Image src="/logo.png" alt="" fill sizes="40px" className="object-cover" priority />
+            </span>
             <span>waze<span className="text-[#9ce4bf]">POS</span></span>
           </Link>
 
@@ -69,7 +72,10 @@ export function AuthPageShell({
             <Link href="/#beranda" aria-label="Kembali ke beranda" className="grid size-10 place-items-center rounded-xl border border-[#dce7e1] bg-white text-[#607068] transition hover:border-[#9fcbb5] hover:bg-[#f1f8f4] hover:text-[#147554] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             </Link>
-            <Link href="/#beranda" className="auth-responsive-mobile-brand inline-flex items-center text-xl font-extrabold tracking-[-.8px] text-[#15211d] lg:hidden">
+            <Link href="/#beranda" className="auth-responsive-mobile-brand inline-flex items-center gap-2 text-xl font-extrabold tracking-[-.8px] text-[#15211d] lg:hidden">
+              <span className="relative size-8 overflow-hidden rounded-lg">
+                <Image src="/logo.png" alt="" fill sizes="32px" className="object-cover" />
+              </span>
               waze<span className="text-[#198760]">POS</span>
             </Link>
           </div>
