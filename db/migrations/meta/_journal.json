@@ -99,6 +99,20 @@
       "when": 1789908848093,
       "tag": "0013_daily_karnak",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789970735006,
+      "tag": "0014_repair_staff_credential_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789972071834,
+      "tag": "0015_add_outlet_slug",
+      "breakpoints": true
     }
   ]
 }
