@@ -59,7 +59,7 @@ export default async function InventoryPage({
   }
 
   const [outlets, products, stocks, movements] = await Promise.all([
-    db.select({ id: outlet.id, name: outlet.name }).from(outlet).where(eq(outlet.businessId, membership.businessId)).orderBy(outlet.name),
+    db.select({ id: outlet.id, name: outlet.name, slug: outlet.slug }).from(outlet).where(eq(outlet.businessId, membership.businessId)).orderBy(outlet.name),
     db.select({ id: product.id, name: product.name }).from(product).where(and(eq(product.businessId, membership.businessId), eq(product.isActive, true))).orderBy(product.name),
     db.select({
       id: inventoryStock.id,

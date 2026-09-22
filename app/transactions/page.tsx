@@ -86,7 +86,7 @@ export default async function TransactionsPage({
   const invoiceQuery = (params.q ?? "").trim().slice(0, 80);
 
   const outlets = await db
-    .select({ id: outlet.id, name: outlet.name })
+    .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
     .from(outlet)
     .where(eq(outlet.businessId, membership.businessId))
     .orderBy(outlet.name);

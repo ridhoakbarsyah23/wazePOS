@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { outlet } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { canManageBusiness, getMembership } from "@/lib/auth-session";
+import { createUniqueOutletSlug } from "@/lib/outlet-slug";
 import { outletSchema } from "@/lib/validation/catalog";
 
 export async function GET() {
@@ -19,6 +20,7 @@ export async function GET() {
     .select({
       id: outlet.id,
       name: outlet.name,
+      slug: outlet.slug,
       address: outlet.address,
     })
     .from(outlet)
@@ -52,16 +54,25 @@ export async function POST(request: Request) {
 
   try {
     const id = randomUUID();
+    const existingOutlets = await db
+      .select({ slug: outlet.slug })
+      .from(outlet)
+      .where(eq(outlet.businessId, membership.businessId));
+    const slug = createUniqueOutletSlug(
+      parsed.data.name,
+      existingOutlets.map((item) => item.slug),
+    );
     await db.insert(outlet).values({
       id,
       businessId: membership.businessId,
       name: parsed.data.name,
+      slug,
       address: parsed.data.address || null,
     });
 
     return NextResponse.json({
       message: `Gerai "${parsed.data.name}" berhasil ditambahkan.`,
-      outlet: { id, name: parsed.data.name, address: parsed.data.address || null },
+      outlet: { id, name: parsed.data.name, slug, address: parsed.data.address || null },
     }, { status: 201 });
   } catch (error) {
     console.error("Failed to create outlet", error);

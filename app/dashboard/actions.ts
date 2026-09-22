@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { category, inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
+import { createUniqueOutletSlug } from "@/lib/outlet-slug";
 import { categorySchema, outletSchema, productSchema } from "@/lib/validation/catalog";
 
 async function getBusinessContext() {
@@ -68,10 +69,19 @@ export async function createOutlet(formData: FormData) {
     redirectToDashboard("error", result.error.issues[0]?.message ?? "Data gerai tidak valid.");
   }
 
+  const existingOutlets = await db
+    .select({ slug: outlet.slug })
+    .from(outlet)
+    .where(eq(outlet.businessId, membership.businessId));
+
   await db.insert(outlet).values({
     id: randomUUID(),
     businessId: membership.businessId,
     name: result.data.name,
+    slug: createUniqueOutletSlug(
+      result.data.name,
+      existingOutlets.map((item) => item.slug),
+    ),
     address: result.data.address || null,
   });
 

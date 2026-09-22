@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { business, businessMember, outlet, subscription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getMembership } from "@/lib/auth-session";
+import { slugifyOutletName } from "@/lib/outlet-slug";
 import { onboardingSchema } from "@/lib/validation/onboarding";
 
 export async function POST(request: Request) {
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
         id: randomUUID(),
         businessId,
         name: result.data.outletName,
+        slug: slugifyOutletName(result.data.outletName),
         address: result.data.address || null,
       });
       await tx.insert(subscription).values({
