@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, sql } from "drizzle-orm";
+import { and, eq, gte, lt, or, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
@@ -96,15 +96,22 @@ export default async function DashboardPage({
     gte(sale.createdAt, periodStart),
     lt(sale.createdAt, now),
   ];
-  const previousFilters = [
+  if (selectedOutletId !== "all") {
+    currentFilters.push(eq(sale.outletId, selectedOutletId));
+  }
+
+  const combinedTotalsFilters = [
     eq(sale.businessId, membership.businessId),
     eq(sale.status, "completed"),
     gte(sale.createdAt, previousStart),
-    lt(sale.createdAt, previousEnd),
+    lt(sale.createdAt, now),
+    // Kedua window (periode berjalan vs pembanding) tidak berdempetan saat
+    // "now" bukan tengah malam; celah di antaranya harus dikeluarkan agar
+    // hasilnya identik dengan menjalankan dua query terpisah.
+    or(gte(sale.createdAt, periodStart), lt(sale.createdAt, previousEnd)),
   ];
   if (selectedOutletId !== "all") {
-    currentFilters.push(eq(sale.outletId, selectedOutletId));
-    previousFilters.push(eq(sale.outletId, selectedOutletId));
+    combinedTotalsFilters.push(eq(sale.outletId, selectedOutletId));
   }
 
   const bucketExpression =
@@ -122,31 +129,19 @@ export default async function DashboardPage({
     stockFilters.push(eq(inventoryStock.outletId, selectedOutletId));
   }
 
-  const [currentTotals, previousTotals, trendRows, stockRows, topProductRows, hourlyRows, outletRows] = await Promise.all([
+  const [periodRows, stockRows, topProductRows, trendRows, outletRows] = await Promise.all([
     db
       .select({
+        bucket: sql<string>`case
+          when ${sale.createdAt} >= ${periodStart} then 'current'
+          else 'previous' end`.as("period"),
         revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
         transactions: sql<number>`COUNT(*)::int`,
       })
       .from(sale)
-      .where(and(...currentFilters)),
-    db
-      .select({
-        revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
-        transactions: sql<number>`COUNT(*)::int`,
-      })
-      .from(sale)
-      .where(and(...previousFilters)),
-    db
-      .select({
-        bucket: bucketExpression,
-        revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
-        transactions: sql<number>`COUNT(*)::int`,
-      })
-      .from(sale)
-      .where(and(...currentFilters))
-      .groupBy(bucketExpression)
-      .orderBy(bucketExpression),
+      .where(and(...combinedTotalsFilters))
+      .groupBy(sql`1`) 
+      .orderBy(sql`1`),
     db
       .select({
         productId: product.id,
@@ -173,13 +168,15 @@ export default async function DashboardPage({
       .limit(5),
     db
       .select({
-        bucket: hourExpression,
+        bucket: bucketExpression,
+        hour: hourExpression,
         revenue: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
         transactions: sql<number>`COUNT(*)::int`,
       })
       .from(sale)
       .where(and(...currentFilters))
-      .groupBy(hourExpression),
+      .groupBy(bucketExpression, hourExpression)
+      .orderBy(bucketExpression),
     db
       .select({
         id: outlet.id,
@@ -202,10 +199,12 @@ export default async function DashboardPage({
       .orderBy(outlet.name),
   ]);
 
-  const currentRevenue = Number(currentTotals[0]?.revenue ?? 0);
-  const currentTransactions = Number(currentTotals[0]?.transactions ?? 0);
-  const previousRevenue = Number(previousTotals[0]?.revenue ?? 0);
-  const previousTransactions = Number(previousTotals[0]?.transactions ?? 0);
+  const currentPeriodRow = periodRows.find((item) => item.bucket === "current");
+  const previousPeriodRow = periodRows.find((item) => item.bucket === "previous");
+  const currentRevenue = Number(currentPeriodRow?.revenue ?? 0);
+  const currentTransactions = Number(currentPeriodRow?.transactions ?? 0);
+  const previousRevenue = Number(previousPeriodRow?.revenue ?? 0);
+  const previousTransactions = Number(previousPeriodRow?.transactions ?? 0);
   const currentAverage =
     currentTransactions > 0 ? Math.round(currentRevenue / currentTransactions) : 0;
 
@@ -232,7 +231,30 @@ export default async function DashboardPage({
       ? "/inventory?status=low"
       : `/inventory?status=low&outlet=${encodeURIComponent(selectedOutletId)}`;
 
-  const trendMap = new Map(trendRows.map((item) => [item.bucket, item]));
+  // Satu query menghasilkan group (bucket, hour); kedua deret di bawah
+  // digabungkan dalam satu pass di aplikasi untuk menghemat round-trip DB.
+  const trendMap = new Map<string, { revenue: number; transactions: number }>();
+  const hourMap = new Map<string, { revenue: number; transactions: number }>();
+  for (const row of trendRows) {
+    const rowRevenue = Number(row.revenue);
+    const rowTransactions = Number(row.transactions);
+
+    const trendEntry = trendMap.get(row.bucket);
+    if (trendEntry) {
+      trendEntry.revenue += rowRevenue;
+      trendEntry.transactions += rowTransactions;
+    } else {
+      trendMap.set(row.bucket, { revenue: rowRevenue, transactions: rowTransactions });
+    }
+
+    const hourEntry = hourMap.get(row.hour);
+    if (hourEntry) {
+      hourEntry.revenue += rowRevenue;
+      hourEntry.transactions += rowTransactions;
+    } else {
+      hourMap.set(row.hour, { revenue: rowRevenue, transactions: rowTransactions });
+    }
+  }
   const currentJakartaHour = Number(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "Asia/Jakarta",
@@ -293,16 +315,13 @@ export default async function DashboardPage({
         : Number(row.revenue) - Number(row.costTotal),
   }));
 
-  const insightHourPoints = hourlyRows
-    .map((row) => {
-      const hour = Number(row.bucket);
-      return {
-        hour,
-        label: `${row.bucket}.00`,
-        revenue: Number(row.revenue),
-        transactions: Number(row.transactions),
-      };
-    })
+  const insightHourPoints = [...hourMap.entries()]
+    .map(([bucket, totals]) => ({
+      hour: Number(bucket),
+      label: `${bucket}.00`,
+      revenue: totals.revenue,
+      transactions: totals.transactions,
+    }))
     .sort((a, b) => a.hour - b.hour);
 
   const insightOutletPerformance =
