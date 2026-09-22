@@ -223,7 +223,18 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
             </div>
             <div className="hero-visual reveal delay-1"><div className="visual-backdrop"/><DashboardMockup/><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
           </div>
-          <div className="container business-strip"><span>Sesuai untuk</span>{["Toko", "Warung", "Kedai Kopi", "Restoran", "Usaha Laundry", "Ritel"].map((item) => <b key={item}>{item}</b>)}</div>
+          <div className="business-strip">
+            <div className="business-strip-track">
+              {[0, 1].map((group) => (
+                <div className="business-strip-group" key={group} aria-hidden={group === 1 || undefined}>
+                  <span>Sesuai untuk</span>
+                  {["Toko", "Warung", "Kedai Kopi", "Restoran", "Usaha Laundry", "Ritel"].map((item) => (
+                    <b key={`${group}-${item}`}>{item}</b>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="section problem-section">
