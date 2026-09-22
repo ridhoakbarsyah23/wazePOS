@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, CheckCircle2, ChevronDown, MessageSquareShare, PlusCircle, Printer, ReceiptText, Send, X } from "lucide-react";
 import { getReceiptPrintPage, type ReceiptPaperSize } from "@/lib/receipt-print";
+import { normalizeReceiptSettings, type ReceiptSettings } from "@/lib/validation/receipt-settings";
 import { buildReceiptWhatsAppMessage, type ReceiptShareData } from "./whatsapp-share-button";
 
 export type PaperSize = ReceiptPaperSize;
@@ -12,10 +13,12 @@ export function ReceiptModal({
   isOpen,
   onClose,
   receipt,
+  receiptSettings,
 }: {
   isOpen: boolean;
   onClose: () => void;
   receipt: (ReceiptShareData & { cashierName?: string }) | null;
+  receiptSettings?: ReceiptSettings | null;
 }) {
   const [paperSize, setPaperSize] = useState<PaperSize>(() => {
     if (typeof window !== "undefined") {
@@ -25,6 +28,7 @@ export function ReceiptModal({
     return "a4";
   });
 
+  const settings = normalizeReceiptSettings(receiptSettings);
   const [customerPhone, setCustomerPhone] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -340,27 +344,34 @@ export function ReceiptModal({
               }`}
             >
               <div className="receipt-brand-block rounded-xl border border-[#d5e9df] bg-[#edf8f2] px-3 py-3 text-center">
-                <h4 className="text-base font-black tracking-tight">
-                  waze<span className="receipt-brand-accent text-[#198760]">POS</span>
-                </h4>
+                {settings.showLogo && (
+                  <h4 className="text-base font-black tracking-tight">
+                    waze<span className="receipt-brand-accent text-[#198760]">POS</span>
+                  </h4>
+                )}
                 <p className="font-bold text-xs mt-0.5">{receipt.businessName}</p>
                 <p className="text-[11px] text-[#627069]">{receipt.outletName}</p>
+                {settings.headerNote && <p className="m-0 mt-1 text-[10px] text-[#627069]">{settings.headerNote}</p>}
               </div>
 
               <div className="receipt-meta-block flex justify-between border-b border-dashed border-[#cddbd3] py-2 text-[11px] text-[#627069]">
                 <div>
                   <p className="m-0 font-bold text-[#15211d]">{receipt.invoiceNumber}</p>
-                  <p className="m-0 text-[10px]">
-                    {new Date(receipt.createdAt).toLocaleString("id-ID", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </p>
+                  {settings.showDateTime && (
+                    <p className="m-0 text-[10px]">
+                      {new Date(receipt.createdAt).toLocaleString("id-ID", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  )}
                 </div>
-                <div className="text-right">
-                  <p className="m-0">Kasir</p>
-                  <p className="m-0 font-bold text-[#15211d]">{receipt.cashierName || "Kasir Toko"}</p>
-                </div>
+                {settings.showCashier && (
+                  <div className="text-right">
+                    <p className="m-0">Kasir</p>
+                    <p className="m-0 font-bold text-[#15211d]">{receipt.cashierName || "Kasir Toko"}</p>
+                  </div>
+                )}
               </div>
 
               {/* Items List */}
@@ -369,9 +380,11 @@ export function ReceiptModal({
                   <div key={idx} className="flex justify-between gap-2 text-xs">
                     <div>
                       <p className="m-0 font-semibold">{item.name}</p>
-                      <p className="m-0 text-[10px] text-[#627069]">
-                        {item.quantity} × {money(item.unitPrice)}
-                      </p>
+                      {settings.showUnitPrice && (
+                        <p className="m-0 text-[10px] text-[#627069]">
+                          {item.quantity} × {money(item.unitPrice)}
+                        </p>
+                      )}
                     </div>
                     <strong className="text-right">{money(item.subtotal)}</strong>
                   </div>
@@ -406,10 +419,17 @@ export function ReceiptModal({
                 )}
               </div>
 
-              <div className="receipt-footer-block mt-3 rounded-lg border-t border-dashed border-[#cddbd3] bg-[#f7faf8] px-2 py-2.5 text-center text-[10px] text-[#627069]">
-                <p className="m-0">Terima kasih atas kunjungan Anda!</p>
-                <p className="m-0 text-[9px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran sah.</p>
-              </div>
+              {(settings.footerMessage === "thankYou" || settings.footerNote) && (
+                <div className="receipt-footer-block mt-3 rounded-lg border-t border-dashed border-[#cddbd3] bg-[#f7faf8] px-2 py-2.5 text-center text-[10px] text-[#627069]">
+                  {settings.footerMessage === "thankYou" && (
+                    <>
+                      <p className="m-0">Terima kasih atas kunjungan Anda!</p>
+                      <p className="m-0 text-[9px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran sah.</p>
+                    </>
+                  )}
+                  {settings.footerNote && <p className="m-0 mt-0.5">{settings.footerNote}</p>}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 border-t border-[#e5ebe8] pt-4 print-hidden-element">

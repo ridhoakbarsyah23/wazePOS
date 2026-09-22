@@ -5,9 +5,10 @@ import { AppHeader } from "@/components/app-header";
 import { PosTerminal } from "@/components/pos-terminal";
 import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
-import { category, inventoryStock, outlet, product, sale } from "@/db/schema";
+import { business, category, inventoryStock, outlet, product, sale } from "@/db/schema";
 import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/plans";
+import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
 
 export async function PosPageContent({
   outletSlug,
@@ -50,7 +51,12 @@ export async function PosPageContent({
   if (outletSlug && !activeOutlet) notFound();
   if (!activeOutlet) redirect("/dashboard");
 
-  const [products, recentSales] = await Promise.all([
+  const [businessRow, products, recentSales] = await Promise.all([
+    db
+      .select({ receiptSettings: business.receiptSettings })
+      .from(business)
+      .where(eq(business.id, membership.businessId))
+      .limit(1),
     db
       .select({
         id: product.id,
@@ -82,7 +88,7 @@ export async function PosPageContent({
           <p className="m-0 text-xs text-[#87928d]">Stok diperbarui otomatis setelah transaksi tersimpan.</p>
         </header>
         <div className="mt-5">
-          <PosTerminal key={activeOutlet.id} businessName={membership.businessName} products={products.map((item) => ({ ...item, stock: Number(item.stock ?? 0) }))} outlets={[activeOutlet]} initialOutletId={activeOutlet.id} allowNonCashPayments={allowNonCashPayments} allowQrisPayments={allowQrisPayments} checkoutDisabledReason={null} />
+          <PosTerminal key={activeOutlet.id} businessName={membership.businessName} products={products.map((item) => ({ ...item, stock: Number(item.stock ?? 0) }))} outlets={[activeOutlet]} initialOutletId={activeOutlet.id} allowNonCashPayments={allowNonCashPayments} allowQrisPayments={allowQrisPayments} checkoutDisabledReason={null} receiptSettings={normalizeReceiptSettings(businessRow[0]?.receiptSettings)} />
         </div>
         <details className="group mt-4 border border-[#d9e2dd] bg-white">
           <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-[#33423b] [&::-webkit-details-marker]:hidden">

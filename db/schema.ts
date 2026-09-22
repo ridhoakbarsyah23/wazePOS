@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -74,6 +74,7 @@ export const business = pgTable("business", {
   timezone: text("timezone").default("Asia/Jakarta").notNull(),
   currency: text("currency").default("IDR").notNull(),
   onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
+  receiptSettings: jsonb("receipt_settings"),
   ...timestamps,
 });
 

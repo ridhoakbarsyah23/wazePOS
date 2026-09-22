@@ -5,6 +5,7 @@ import { ArrowLeft, Ban } from "lucide-react";
 import { db } from "@/db";
 import { business, outlet, sale, saleItem, user } from "@/db/schema";
 import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
+import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
 import { PrintButton } from "@/components/print-button";
 import { VoidSaleButton } from "@/components/void-sale-button";
 import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
@@ -40,6 +41,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
       businessName: business.name,
       outletName: outlet.name,
       cashierName: user.name,
+      receiptSettings: business.receiptSettings,
     })
     .from(sale)
     .innerJoin(business, eq(business.id, sale.businessId))
@@ -58,6 +60,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
   const money = (value: number) => `Rp ${Number(value).toLocaleString("id-ID")}`;
   const isVoided = receipt.status === "voided";
   const userCanVoid = canManageBusiness(membership.role);
+  const settings = normalizeReceiptSettings(receipt.receiptSettings);
 
   const shareData = {
     businessName: receipt.businessName,
@@ -178,11 +181,14 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
           )}
 
           <header className="border-b border-dashed border-[#cddbd3] pb-4 text-center">
-            <h1 className="text-xl font-extrabold tracking-tight">
-              waze<span className="text-[#198760]">POS</span>
-            </h1>
+            {settings.showLogo && (
+              <h1 className="text-xl font-extrabold tracking-tight">
+                waze<span className="text-[#198760]">POS</span>
+              </h1>
+            )}
             <p className="mt-1 text-sm font-bold">{receipt.businessName}</p>
             <p className="m-0 text-xs text-[#627069]">{receipt.outletName}</p>
+            {settings.headerNote && <p className="m-0 mt-1 text-[11px] text-[#627069]">{settings.headerNote}</p>}
           </header>
 
           <div className="flex justify-between gap-4 border-b border-dashed border-[#cddbd3] py-3 text-xs text-[#627069]">
@@ -190,12 +196,14 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               <p className={`m-0 font-bold ${isVoided ? "line-through text-rose-600" : "text-[#15211d]"}`}>
                 {receipt.invoiceNumber}
               </p>
-              <p className="m-0 mt-0.5">{new Date(receipt.createdAt).toLocaleString("id-ID")}</p>
+              {settings.showDateTime && <p className="m-0 mt-0.5">{new Date(receipt.createdAt).toLocaleString("id-ID")}</p>}
             </div>
-            <div className="text-right">
-              <p className="m-0">Kasir</p>
-              <p className="m-0 font-bold text-[#15211d]">{receipt.cashierName}</p>
-            </div>
+            {settings.showCashier && (
+              <div className="text-right">
+                <p className="m-0">Kasir</p>
+                <p className="m-0 font-bold text-[#15211d]">{receipt.cashierName}</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2.5 py-4">
@@ -203,9 +211,11 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               <div key={item.id} className="flex justify-between gap-4 text-xs sm:text-sm">
                 <div>
                   <p className="m-0 font-semibold">{item.productName}</p>
-                  <p className="m-0 text-xs text-[#627069]">
-                    {item.quantity} × {money(item.unitPrice)}
-                  </p>
+                  {settings.showUnitPrice && (
+                    <p className="m-0 text-xs text-[#627069]">
+                      {item.quantity} × {money(item.unitPrice)}
+                    </p>
+                  )}
                 </div>
                 <strong className={isVoided ? "text-[#8b9991]" : "text-[#15211d]"}>
                   {money(item.subtotal)}
@@ -261,10 +271,17 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
             )}
           </div>
 
-          <footer className="m-0 mt-5 border-t border-dashed border-[#cddbd3] pt-4 text-center text-xs text-[#627069]">
-            <p className="m-0">Terima kasih sudah berbelanja.</p>
-            <p className="m-0 mt-1 text-[10px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
-          </footer>
+          {(settings.footerMessage === "thankYou" || settings.footerNote) && (
+            <footer className="m-0 mt-5 border-t border-dashed border-[#cddbd3] pt-4 text-center text-xs text-[#627069]">
+              {settings.footerMessage === "thankYou" && (
+                <>
+                  <p className="m-0">Terima kasih sudah berbelanja.</p>
+                  <p className="m-0 mt-1 text-[10px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
+                </>
+              )}
+              {settings.footerNote && <p className="m-0 mt-1">{settings.footerNote}</p>}
+            </footer>
+          )}
         </article>
       </div>
     </main>

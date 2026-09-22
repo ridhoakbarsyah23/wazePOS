@@ -1,0 +1,1 @@
+ALTER TABLE "business" ADD COLUMN "receipt_settings" jsonb;

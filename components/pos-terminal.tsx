@@ -26,6 +26,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { RupiahInput } from "@/components/ui/rupiah-input";
+import type { ReceiptSettings } from "@/lib/validation/receipt-settings";
 import type { ReceiptShareData } from "./whatsapp-share-button";
 import styles from "./pos-terminal.module.css";
 
@@ -57,6 +58,7 @@ export function PosTerminal({
   allowQrisPayments,
   checkoutDisabledReason,
   businessName = "wazePOS Store",
+  receiptSettings,
 }: {
   products: PosProduct[];
   outlets: PosOutlet[];
@@ -65,6 +67,7 @@ export function PosTerminal({
   allowQrisPayments: boolean;
   checkoutDisabledReason: string | null;
   businessName?: string;
+  receiptSettings?: ReceiptSettings | null;
 }) {
   const outletId = initialOutletId;
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -809,6 +812,7 @@ export function PosTerminal({
             searchInputRef.current?.focus();
           }}
           receipt={completedReceipt}
+          receiptSettings={receiptSettings}
         />
       )}
     </div>

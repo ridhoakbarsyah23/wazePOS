@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { business, category, outlet, product } from "@/db/schema";
 import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
+import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
 
 export default async function SettingsPage() {
   const session = await requireSession();
@@ -23,6 +24,7 @@ export default async function SettingsPage() {
         type: business.type,
         timezone: business.timezone,
         currency: business.currency,
+        receiptSettings: business.receiptSettings,
       })
       .from(business)
       .where(eq(business.id, membership.businessId))
@@ -87,7 +89,11 @@ export default async function SettingsPage() {
         </header>
 
         <div className="mt-6">
-          <SettingsManager initialBusiness={businessData} initialOutlets={outlets} />
+          <SettingsManager
+            initialBusiness={businessData}
+            initialOutlets={outlets}
+            initialReceiptSettings={normalizeReceiptSettings(businessData.receiptSettings)}
+          />
         </div>
 
         <div className="mt-6">

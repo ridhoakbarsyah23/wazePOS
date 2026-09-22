@@ -120,6 +120,13 @@
       "when": 1790051261373,
       "tag": "0016_sleepy_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790064892259,
+      "tag": "0017_nostalgic_ricochet",
+      "breakpoints": true
     }
   ]
 }
