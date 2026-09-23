@@ -5,6 +5,10 @@ import { db } from "@/db";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Detail environment hanya untuk internal/debugging; produksi cukup status ok
+  // supaya endpoint publik ini tidak membocorkan konfigurasi ke pihak luar.
+  const includeDetails = process.env.NODE_ENV !== "production";
+
   const passwordResetEmail = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
   );
@@ -22,7 +26,7 @@ export async function GET() {
 
   if (!requiredEnvironmentReady) {
     return NextResponse.json(
-      { ok: false, environment, database: { connected: false, authTables: false } },
+      { ok: false, ...(includeDetails ? { environment } : {}), database: { connected: false, authTables: false } },
       { status: 503 },
     );
   }
@@ -37,7 +41,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: authTables,
-        environment,
+        ...(includeDetails ? { environment } : {}),
         database: { connected: true, authTables },
       },
       { status: authTables ? 200 : 503 },
@@ -51,8 +55,8 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        environment,
-        database: { connected: false, authTables: false, errorCode },
+        ...(includeDetails ? { environment, errorCode } : {}),
+        database: { connected: false, authTables: false },
       },
       { status: 503 },
     );
