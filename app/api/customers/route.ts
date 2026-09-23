@@ -119,8 +119,18 @@ export async function POST(request: Request) {
         createdAt: customer.createdAt,
       });
 
+    // Bentuk respons = CustomerListItem di UI: pelanggan baru memiliki nol
+    // transaksi sehingga kartu di dashboard pelanggan bisa langsung dirender.
     return NextResponse.json(
-      { message: `Pelanggan "${created.name}" berhasil ditambahkan.`, customer: created },
+      {
+        message: `Pelanggan "${created.name}" berhasil ditambahkan.`,
+        customer: {
+          ...created,
+          transactionCount: 0,
+          totalSpent: 0,
+          lastVisitAt: null,
+        },
+      },
       { status: 201 },
     );
   } catch (error) {

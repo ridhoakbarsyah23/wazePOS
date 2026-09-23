@@ -73,6 +73,10 @@ describe("POST /api/customers", () => {
     const data = await res.json();
     expect(data.customer.name).toBe("Bu Sari");
     expect(data.customer.phone).toBe("628123456789");
+    // Field statistik wajib ada agar UI tidak crash saat menambahkan kartu baru.
+    expect(data.customer.transactionCount).toBe(0);
+    expect(data.customer.totalSpent).toBe(0);
+    expect(data.customer.lastVisitAt).toBeNull();
   });
 
   it("menolak payload tanpa nama dengan 422", async () => {
