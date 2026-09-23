@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { LoginForm } from "@/components/auth/login-form";
-import { getCurrentSession } from "@/lib/auth-session";
 
 export default async function LoginPage() {
-  if (await getCurrentSession()) redirect("/dashboard");
-
+  // Selalu tampilkan form: user yang sudah login tetap bisa membuka /login
+  // (mis. ingin ganti akun). Auto-redirect ke /dashboard di sini membuat
+  // klik "Masuk" terasa melewati halaman login secara langsung.
   return (
     <AuthPageShell
       eyebrow="Selamat datang kembali"

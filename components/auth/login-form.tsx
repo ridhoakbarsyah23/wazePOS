@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { GoogleSsoButton } from "@/components/auth/google-sso-button";
@@ -16,7 +16,11 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
   const searchParams = useSearchParams();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
-  const [isPending, setIsPending] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigating, startNavigation] = useTransition();
+  // Tetap "pending" selama proses verifikasi akun DAN sampai navigasi ke
+  // dashboard selesai, supaya spinner tidak menghilang di tengah transisi.
+  const isPending = isSubmitting || isNavigating;
 
   function clearError(field: keyof FieldErrors) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -40,7 +44,7 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
       return;
     }
 
-    setIsPending(true);
+    setIsSubmitting(true);
     try {
       const response = await authClient.signIn.email({
         email: result.data.email,
@@ -53,12 +57,16 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
         return;
       }
 
-      router.replace("/dashboard");
-      router.refresh();
+      // Navigasi dibungkus useTransition: isNavigating tetap true sampai
+      // dashboard selesai dirender, sehingga animasi loading tidak terputus.
+      startNavigation(() => {
+        router.replace("/dashboard");
+        router.refresh();
+      });
     } catch {
       setErrorMessage("Tidak dapat terhubung ke server. Silakan coba lagi.");
     } finally {
-      setIsPending(false);
+      setIsSubmitting(false);
     }
   }
 
