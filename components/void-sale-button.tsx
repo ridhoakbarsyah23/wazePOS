@@ -30,7 +30,7 @@ export function VoidSaleButton({
     return (
       <div className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-extrabold text-rose-700 shadow-sm print:hidden">
         <Ban className="size-4 text-rose-600" />
-        <span>STATUS: TRANSAKSI DIBATALKAN (VOID)</span>
+        <span>STATUS: TRANSAKSI DIBATALKAN</span>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export function VoidSaleButton({
         className="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-white px-3.5 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98] print:hidden"
       >
         <Ban className="size-3.5" />
-        <span>Void / Batalkan Transaksi</span>
+        <span>Batalkan Transaksi</span>
       </button>
 
       {isOpen && (
@@ -92,7 +92,7 @@ export function VoidSaleButton({
             <div className="flex items-center justify-between border-b border-[#e7efea] pb-3">
               <div className="flex items-center gap-2 text-rose-600 font-extrabold text-base">
                 <Ban className="size-5" />
-                <span>Konfirmasi Pembatalan (Void)</span>
+                <span>Konfirmasi Pembatalan</span>
               </div>
               <button
                 type="button"
@@ -159,7 +159,7 @@ export function VoidSaleButton({
                 {isLoading ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
-                    <span>Memproses Void...</span>
+                    <span>Memproses pembatalan...</span>
                   </>
                 ) : (
                   <>

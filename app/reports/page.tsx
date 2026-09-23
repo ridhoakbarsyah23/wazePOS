@@ -643,7 +643,7 @@ export default async function ReportsPage({
           </CardContent>
         </Card>
 
-        {/* Audit Transaksi Dibatalkan (VOID) jika ada */}
+        {/* Audit Transaksi Dibatalkan jika ada */}
         {voidedSales.length > 0 && (
           <Card className="mt-7 border-rose-200 bg-rose-50/20">
             <CardHeader>
@@ -653,7 +653,7 @@ export default async function ReportsPage({
                 </span>
                 <div>
                   <CardTitle className="text-lg text-rose-900">
-                    Transaksi Dibatalkan (VOID)
+                    Transaksi Dibatalkan
                   </CardTitle>
                   <CardDescription className="text-xs text-rose-700">
                     Transaksi berikut telah dibatalkan oleh pengelola, stok barang telah otomatis dikembalikan, dan tidak dihitung ke dalam omzet.
@@ -670,7 +670,7 @@ export default async function ReportsPage({
                       <TableHead className="font-bold text-rose-900">Gerai</TableHead>
                       <TableHead className="font-bold text-rose-900">Waktu Pembatalan</TableHead>
                       <TableHead className="font-bold text-rose-900">Metode</TableHead>
-                      <TableHead className="text-right font-bold text-rose-900">Nominal Void</TableHead>
+                      <TableHead className="text-right font-bold text-rose-900">Nominal Dibatalkan</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -685,7 +685,7 @@ export default async function ReportsPage({
                               {item.invoiceNumber}
                             </Link>
                             <Badge variant="destructive" className="text-[10px]">
-                              VOID
+                              BATAL
                             </Badge>
                           </div>
                         </TableCell>

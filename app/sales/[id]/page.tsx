@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Ban } from "lucide-react";
+import { IBM_Plex_Mono } from "next/font/google";
 import { db } from "@/db";
 import { business, outlet, sale, saleItem, user } from "@/db/schema";
 import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
@@ -14,6 +15,16 @@ import {
 import { PrintButton } from "@/components/print-button";
 import { VoidSaleButton } from "@/components/void-sale-button";
 import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
+
+// Font struk self-hosted via next/font: tajam, angka sejajar, dan tetap
+// tersedia offline saat print (sesuai CSP font-src 'self').
+const receiptFont = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-receipt",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+});
 
 
 export default async function SaleReceiptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +56,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
       voidReason: sale.voidReason,
       businessName: business.name,
       outletName: outlet.name,
+      outletAddress: outlet.address,
       cashierName: user.name,
       receiptSettings: business.receiptSettings,
     })
@@ -89,7 +101,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
 
 
   return (
-    <main className="min-h-dvh bg-[#f4faf7] px-4 py-8 text-[#15211d] print:bg-white print:p-0 print:m-0">
+    <main className={`${receiptFont.variable} min-h-dvh bg-[#f4faf7] px-4 py-8 text-[#15211d] print:bg-white print:p-0 print:m-0`}>
       <style>{`
         @media print {
           body {
@@ -101,23 +113,17 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
             print-color-adjust: exact !important;
           }
           .thermal-receipt {
-            width: 100% !important;
-            margin: 0 auto !important;
-            padding: 6px 8px !important;
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            font-family: var(--font-receipt), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
           html[data-receipt-paper="58mm"] .thermal-receipt {
-            max-width: 58mm !important;
             font-size: 11px !important;
-            line-height: 1.25 !important;
+            line-height: 1.3 !important;
           }
           html[data-receipt-paper="80mm"] .thermal-receipt {
-            max-width: 80mm !important;
             font-size: 13px !important;
-            line-height: 1.35 !important;
+            line-height: 1.4 !important;
           }
         }
       `}</style>
@@ -161,12 +167,12 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
             isVoided ? "border-rose-300 bg-rose-50/20" : "border-[#dfe8e3]"
           }`}
         >
-          {/* Stempel VOID jika status transaksi voided */}
+          {/* Stempel pembatalan jika status transaksi voided */}
           {isVoided && (
             <div className="mb-4 rounded-xl border-2 border-dashed border-rose-500 bg-rose-50/80 px-4 py-2.5 text-center text-rose-700">
               <div className="flex items-center justify-center gap-1.5 font-black text-sm uppercase tracking-wider">
                 <Ban className="size-4" />
-                <span>Transaksi Telah Dibatalkan (VOID)</span>
+                <span>Transaksi Telah Dibatalkan</span>
               </div>
               <p className="m-0 mt-0.5 text-[10px] text-rose-600">
                 Stok produk telah dikembalikan dan nominal tidak dihitung ke omzet gerai.
@@ -187,15 +193,40 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
 
           <header className="border-b border-dashed border-[#cddbd3] pb-4 text-center">
             {settings.showLogo && (
-              <h1 className="text-xl font-extrabold tracking-tight">
-                waze<span className="text-[#198760]">POS</span>
-              </h1>
+              <div className="flex flex-col items-center gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element -- logo lokal satu file, next/image tidak berdampak di struk print */}
+                <img
+                  src="/logo.png"
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="size-14 rounded-2xl border border-[#e2ece6] bg-white object-contain p-1 shadow-[0_2px_8px_rgba(16,65,48,.08)]"
+                />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#8b9991]">
+                  waze<span className="text-[#198760]">POS</span>
+                </span>
+              </div>
             )}
-            <p className="mt-1 text-sm font-bold">{receipt.businessName}</p>
+            <h1
+              className={`font-black tracking-[-0.5px] text-[#15211d] ${
+                settings.showLogo ? "mt-2 text-lg leading-tight" : "text-xl"
+              }`}
+            >
+              {receipt.businessName}
+            </h1>
             {receipt.outletName !== receipt.businessName && (
-              <p className="m-0 text-xs text-[#627069]">{receipt.outletName}</p>
+              <p className="m-0 text-xs font-semibold text-[#627069]">{receipt.outletName}</p>
             )}
-            {settings.headerNote && <p className="m-0 mt-1 text-[11px] text-[#627069]">{settings.headerNote}</p>}
+            {receipt.outletAddress && (
+              <p className="mx-auto m-0 mt-1 max-w-[90%] text-[11px] leading-relaxed text-[#8b9991]">
+                {receipt.outletAddress}
+              </p>
+            )}
+            {settings.headerNote && (
+              <p className="m-0 mt-2 inline-block rounded-full border border-[#e0ebe5] bg-[#f6faf8] px-3 py-1 text-[10px] font-semibold italic text-[#627069]">
+                {settings.headerNote}
+              </p>
+            )}
           </header>
 
           <div className="flex justify-between gap-4 border-b border-dashed border-[#cddbd3] py-3 text-xs text-[#627069]">
@@ -256,7 +287,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
                 <div className="flex justify-between pt-2 text-[#627069]">
                   <span className="font-bold text-[#de232c] flex items-center gap-1">QRIS</span>
                   <span className={`rounded px-1.5 py-0.5 text-[10px] font-extrabold ${isVoided ? "bg-rose-100 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
-                    {isVoided ? "VOID" : "LUNAS"}
+                    {isVoided ? "BATAL" : "LUNAS"}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-[#627069]">

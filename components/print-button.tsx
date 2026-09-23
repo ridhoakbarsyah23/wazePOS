@@ -56,6 +56,23 @@ export function PrintButton({
               ? "width: auto !important; min-width: 0 !important;"
               : `width: ${printPage.pageWidthMm}mm !important; min-width: ${printPage.pageWidthMm}mm !important;`}
             min-height: 0 !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          /* Samakan latar halaman agar tidak menambah area cetak ekstra */
+          html {
+            background: #ffffff !important;
+          }
+          main {
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #ffffff !important;
+          }
+          /* Batasi konten yang dicetak hanya pada struk */
+          body > main > div > .print\\:hidden {
+            display: none !important;
           }
           .thermal-receipt {
             box-sizing: border-box !important;

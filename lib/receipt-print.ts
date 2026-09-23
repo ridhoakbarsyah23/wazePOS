@@ -18,11 +18,16 @@ export function getReceiptPrintPage(
   }
 
   const widthMm = paperSize === "58mm" ? 58 : 80;
-  const minimumHeightMm = paperSize === "58mm" ? 120 : 110;
-  const baseHeightMm = paperSize === "58mm" ? 92 : 84;
-  const itemHeightMm = paperSize === "58mm" ? 11 : 9;
+  // Base height memperhitungkan header struk terkini (logo + brand + nama
+  // usaha + alamat gerai 2 baris), blok invoice, ringkasan total, pembayaran,
+  // dan footer ucapan — plus buffer agar tidak perlu halaman kedua. Ukuran
+  // font Tailwind (text-xs/text-sm) tetap saat print, jadi estimasi memakai
+  // tinggi baris aktual, bukan font-size struk.
+  const minimumHeightMm = paperSize === "58mm" ? 152 : 142;
+  const baseHeightMm = paperSize === "58mm" ? 128 : 120;
+  const itemHeightMm = paperSize === "58mm" ? 12 : 10;
   const optionalHeightMm =
-    (options.hasDiscount ? 5 : 0) + (options.isVoided ? 16 : 0);
+    (options.hasDiscount ? 6 : 0) + (options.isVoided ? 18 : 0);
 
   return {
     pageWidthMm: widthMm,
