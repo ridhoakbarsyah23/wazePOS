@@ -7,6 +7,10 @@ import { trackEvent } from "@/lib/analytics";
 import { marketingFaqs } from "@/lib/marketing-content";
 import { formatPlanAnnualPrice, getMarketingPlanCards, getPlanFeatureComparison } from "@/lib/plans";
 
+const BUSINESS_TYPES = ["Toko", "Warung", "Kedai Kopi", "Restoran", "Usaha Laundry", "Ritel"];
+
+const MARQUEE_GROUPS = 8;
+
 type MarketingPageProps = {
   trialUrl: string;
   whatsappGeneralUrl: string;
@@ -224,12 +228,12 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
             <div className="hero-visual reveal delay-1"><div className="visual-backdrop"/><DashboardMockup/><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
           </div>
           <div className="business-strip">
+            <span className="business-strip-label">Sesuai untuk</span>
             <div className="business-strip-track">
-              {[0, 1].map((group) => (
-                <div className="business-strip-group" key={group} aria-hidden={group === 1 || undefined}>
-                  <span>Sesuai untuk</span>
-                  {["Toko", "Warung", "Kedai Kopi", "Restoran", "Usaha Laundry", "Ritel"].map((item) => (
-                    <b key={`${group}-${item}`}>{item}</b>
+              {Array.from({ length: MARQUEE_GROUPS }, (_, group) => (
+                <div className="business-strip-group" key={group} aria-hidden={group > 0 || undefined}>
+                  {[...BUSINESS_TYPES, ...BUSINESS_TYPES].map((item, index) => (
+                    <b key={`${group}-${index}`}>{item}</b>
                   ))}
                 </div>
               ))}
