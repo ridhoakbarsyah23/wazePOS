@@ -21,7 +21,7 @@ export type SalesReportRow = {
   createdAt: Date | string;
 };
 
-function dateKeyInJakarta(date: Date) {
+export function dateKeyInJakarta(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: REPORT_TIME_ZONE,
     year: "numeric",

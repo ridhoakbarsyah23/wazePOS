@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, lt, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import {
   Ban,
   Banknote,
@@ -16,11 +16,9 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { outlet, sale, saleItem } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,13 +30,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
 import { PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
-import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
-import { formatReportRange, getReportDateRange } from "@/lib/reporting";
-
-const paymentMethods = ["cash", "qris", "debit", "credit"] as const;
-const reportStatuses = ["completed", "voided"] as const;
+import { hasPlanFeature } from "@/lib/plans";
+import { formatReportRange } from "@/lib/reporting";
+import {
+  buildSaleFilterConditions,
+  buildSaleFilterQuery,
+  parseSaleFilterParams,
+} from "@/lib/sale-filters";
 
 export default async function ReportsPage({
   searchParams,
@@ -54,41 +54,13 @@ export default async function ReportsPage({
     page?: string;
   }>;
 }) {
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (!canManageBusiness(membership.role)) redirect("/pos");
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") {
-      redirect("/subscription?expired=1");
-    }
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader
-          businessName={membership.businessName}
-          role={membership.role}
-        />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
+  if (!access.ok) return access.lockout;
+  const { membership, currentSubscription, subDetails } = access;
 
   const params = await searchParams;
-  const { fromKey, toKey, start, end } = getReportDateRange(
-    params.from ?? params.date,
-    params.to ?? params.date,
-  );
-  const paymentMethod = paymentMethods.find((method) => method === params.payment) ?? null;
-  const reportStatus = reportStatuses.find((status) => status === params.status) ?? null;
-  const invoiceQuery = (params.q ?? "").trim().slice(0, 80);
-  const requestedPage = Number.parseInt(params.page ?? "1", 10);
-  const currentPage = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
+  const saleFilters = parseSaleFilterParams(params);
+  const { fromKey, toKey, paymentMethod, transactionStatus: reportStatus, invoiceQuery, currentPage } = saleFilters;
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
@@ -98,15 +70,10 @@ export default async function ReportsPage({
   const requestedOutletId = params.outlet;
   const activeOutlet = outlets.find((item) => item.id === requestedOutletId) ?? null;
   const reportOutlets = [{ id: "all", name: "Semua Gerai" }, ...outlets];
-  const reportFilters = [
-    eq(sale.businessId, membership.businessId),
-    gte(sale.createdAt, start),
-    lt(sale.createdAt, end),
-    ...(activeOutlet ? [eq(sale.outletId, activeOutlet.id)] : []),
-    ...(paymentMethod ? [eq(sale.paymentMethod, paymentMethod)] : []),
-    ...(reportStatus ? [eq(sale.status, reportStatus)] : []),
-    ...(invoiceQuery ? [ilike(sale.invoiceNumber, `%${invoiceQuery}%`)] : []),
-  ];
+  const reportFilters = buildSaleFilterConditions(saleFilters, {
+    businessId: membership.businessId,
+    outletId: activeOutlet?.id ?? null,
+  });
 
   const [sales, completedSummary, topProducts, itemTotals, paymentRows, voidedSales] = await Promise.all([
     db
@@ -190,17 +157,8 @@ export default async function ReportsPage({
   const rangeStart = totalTransactions === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const rangeEnd = rangeStart + pageRows.length - 1;
 
-  const currentQuery: Record<string, string> = {
-    from: fromKey,
-    to: toKey,
-    ...(activeOutlet ? { outlet: activeOutlet.id } : {}),
-    ...(paymentMethod ? { payment: paymentMethod } : {}),
-    ...(reportStatus ? { status: reportStatus } : {}),
-    ...(invoiceQuery ? { q: invoiceQuery } : {}),
-  };
-
   function pageHref(targetPage: number) {
-    const search = new URLSearchParams(currentQuery);
+    const search = buildSaleFilterQuery(saleFilters, { outletId: activeOutlet?.id ?? null });
     if (targetPage > 1) search.set("page", String(targetPage));
     const queryString = search.toString();
     return queryString ? `/reports?${queryString}` : "/reports";
@@ -211,11 +169,7 @@ export default async function ReportsPage({
     paymentRows.map((item) => [item.paymentMethod, Number(item.total)]),
   );
   const canExportReports = hasPlanFeature(currentSubscription?.plan, "exportReports");
-  const exportParams = new URLSearchParams({ from: fromKey, to: toKey });
-  if (activeOutlet) exportParams.set("outlet", activeOutlet.id);
-  if (paymentMethod) exportParams.set("payment", paymentMethod);
-  if (reportStatus) exportParams.set("status", reportStatus);
-  if (invoiceQuery) exportParams.set("q", invoiceQuery);
+  const exportParams = buildSaleFilterQuery(saleFilters, { outletId: activeOutlet?.id ?? null });
   const selectedPeriodLabel = formatReportRange(fromKey, toKey);
 
   function getPaymentIcon(method: string) {

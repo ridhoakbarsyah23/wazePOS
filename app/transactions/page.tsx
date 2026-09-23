@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, lt, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import {
   Banknote,
   CalendarDays,
@@ -13,30 +13,18 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { outlet, sale, user } from "@/db/schema";
-import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
 import { PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
-import { getSubscriptionStatusDetails } from "@/lib/plans";
-import { formatReportRange, getReportDateRange, paymentLabel } from "@/lib/reporting";
-
-const paymentMethods = ["cash", "qris", "debit", "credit"] as const;
-const transactionStatuses = ["completed", "voided"] as const;
-
-function dateKeyInJakarta(date: Date) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
+import { formatReportRange, paymentLabel } from "@/lib/reporting";
+import {
+  buildSaleFilterConditions,
+  buildSaleFilterQuery,
+  parseSaleFilterParams,
+} from "@/lib/sale-filters";
 
 function paymentIcon(method: string) {
   if (method === "cash") return <Banknote className="size-3.5" />;
@@ -57,37 +45,13 @@ export default async function TransactionsPage({
     page?: string;
   }>;
 }) {
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") redirect("/subscription?expired=1");
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader businessName={membership.businessName} role={membership.role} />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
+  const access = await requireDashboardAccess();
+  if (!access.ok) return access.lockout;
+  const { session, membership, subDetails } = access;
 
   const params = await searchParams;
-  const today = new Date();
-  const defaultFrom = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
-  const { fromKey, toKey, start, end } = getReportDateRange(
-    params.from ?? dateKeyInJakarta(defaultFrom),
-    params.to ?? dateKeyInJakarta(today),
-  );
-  const paymentMethod = paymentMethods.find((method) => method === params.payment) ?? null;
-  const transactionStatus = transactionStatuses.find((status) => status === params.status) ?? null;
-  const invoiceQuery = (params.q ?? "").trim().slice(0, 80);
-  const requestedPage = Number.parseInt(params.page ?? "1", 10);
-  const currentPage = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
+  const saleFilters = parseSaleFilterParams(params);
+  const { fromKey, toKey, paymentMethod, transactionStatus, invoiceQuery, currentPage } = saleFilters;
 
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
@@ -96,16 +60,11 @@ export default async function TransactionsPage({
     .orderBy(outlet.name);
   const activeOutlet = outlets.find((item) => item.id === params.outlet) ?? null;
 
-  const filters = [
-    eq(sale.businessId, membership.businessId),
-    gte(sale.createdAt, start),
-    lt(sale.createdAt, end),
-    ...(membership.role === "cashier" ? [eq(sale.cashierId, session.user.id)] : []),
-    ...(activeOutlet ? [eq(sale.outletId, activeOutlet.id)] : []),
-    ...(paymentMethod ? [eq(sale.paymentMethod, paymentMethod)] : []),
-    ...(transactionStatus ? [eq(sale.status, transactionStatus)] : []),
-    ...(invoiceQuery ? [ilike(sale.invoiceNumber, `%${invoiceQuery}%`)] : []),
-  ];
+  const filterConditions = buildSaleFilterConditions(saleFilters, {
+    businessId: membership.businessId,
+    outletId: activeOutlet?.id ?? null,
+    cashierId: membership.role === "cashier" ? session.user.id : null,
+  });
 
   const [transactions, summary] = await Promise.all([
     db
@@ -122,7 +81,7 @@ export default async function TransactionsPage({
       .from(sale)
       .innerJoin(outlet, eq(outlet.id, sale.outletId))
       .innerJoin(user, eq(user.id, sale.cashierId))
-      .where(and(...filters))
+      .where(and(...filterConditions))
       .orderBy(desc(sale.createdAt))
       .limit(PAGE_SIZE + 1),
     db
@@ -132,7 +91,7 @@ export default async function TransactionsPage({
         voidedCount: sql<number>`count(*) filter (where ${sale.status} = 'voided')::int`,
       })
       .from(sale)
-      .where(and(...filters)),
+      .where(and(...filterConditions)),
   ]);
 
   const resultCount = Number(summary[0]?.count ?? 0);
@@ -146,17 +105,8 @@ export default async function TransactionsPage({
   const rangeStart = resultCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const rangeEnd = rangeStart + pageRows.length - 1;
 
-  const currentQuery: Record<string, string> = {
-    from: fromKey,
-    to: toKey,
-    ...(activeOutlet ? { outlet: activeOutlet.id } : {}),
-    ...(paymentMethod ? { payment: paymentMethod } : {}),
-    ...(transactionStatus ? { status: transactionStatus } : {}),
-    ...(invoiceQuery ? { q: invoiceQuery } : {}),
-  };
-
   function pageHref(targetPage: number) {
-    const search = new URLSearchParams(currentQuery);
+    const search = buildSaleFilterQuery(saleFilters, { outletId: activeOutlet?.id ?? null });
     if (targetPage > 1) search.set("page", String(targetPage));
     const queryString = search.toString();
     return queryString ? `/transactions?${queryString}` : "/transactions";
