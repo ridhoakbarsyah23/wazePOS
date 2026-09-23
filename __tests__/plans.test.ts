@@ -38,4 +38,13 @@ describe("hak fitur paket", () => {
     expect(cardPayments?.availability).toEqual({ tumbuh: false, bisnis: true });
     expect(reportExport?.availability).toEqual({ tumbuh: false, bisnis: true });
   });
+
+  it("membatasi Paket Tumbuh sampai riwayat transaksi dan cetak struk", () => {
+    const items = getPlanFeatureComparison().flatMap((group) => group.items);
+    const cutoffIndex = items.findIndex((item) => item.name === "Riwayat transaksi & cetak struk");
+
+    expect(cutoffIndex).toBeGreaterThanOrEqual(0);
+    expect(items.slice(0, cutoffIndex + 1).every((item) => item.availability.tumbuh)).toBe(true);
+    expect(items.slice(cutoffIndex + 1).every((item) => !item.availability.tumbuh)).toBe(true);
+  });
 });

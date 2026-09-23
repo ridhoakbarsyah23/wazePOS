@@ -215,6 +215,10 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
     tumbuh: hasPlanFeature("tumbuh", feature),
     bisnis: hasPlanFeature("bisnis", feature),
   });
+  const businessOnlyAvailability = (feature: PlanFeature): Record<PlanId, boolean> => ({
+    tumbuh: false,
+    bisnis: hasPlanFeature("bisnis", feature),
+  });
 
   return [
     {
@@ -236,18 +240,18 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
     {
       category: "Metode pembayaran & laporan",
       items: [
-        { name: "Pembayaran QRIS", detail: "Terima pembayaran QRIS dari seluruh e-wallet dan mobile banking.", availability: availability("qrisPayments") },
-        { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: availability("allPaymentMethods") },
-        { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: availability("exportReports") },
-        { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: availability("onscreenReports") },
+        { name: "Pembayaran QRIS", detail: "Terima pembayaran QRIS dari seluruh e-wallet dan mobile banking.", availability: businessOnlyAvailability("qrisPayments") },
+        { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: businessOnlyAvailability("allPaymentMethods") },
+        { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: businessOnlyAvailability("exportReports") },
+        { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: businessOnlyAvailability("onscreenReports") },
       ],
     },
     {
       category: "Tim & kapasitas usaha",
       items: [
-        { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada Paket Tumbuh, hingga ${plans.bisnis.limits.maxOutlets} gerai pada Paket Bisnis.`, availability: availability("multiOutlet") },
-        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} staf pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
-        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", availability: availability("roleBasedAccess") },
+        { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada Paket Tumbuh, hingga ${plans.bisnis.limits.maxOutlets} gerai pada Paket Bisnis.`, availability: businessOnlyAvailability("multiOutlet") },
+        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} staf pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: businessOnlyAvailability("staffManagement") },
+        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", availability: businessOnlyAvailability("roleBasedAccess") },
       ],
     },
   ];
