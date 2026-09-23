@@ -5,7 +5,12 @@ import { ArrowLeft, Ban } from "lucide-react";
 import { db } from "@/db";
 import { business, outlet, sale, saleItem, user } from "@/db/schema";
 import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
-import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
+import { paymentLabel } from "@/lib/payment";
+import {
+  DEFAULT_RECEIPT_DISCLAIMER,
+  DEFAULT_RECEIPT_FOOTER,
+  normalizeReceiptSettings,
+} from "@/lib/validation/receipt-settings";
 import { PrintButton } from "@/components/print-button";
 import { VoidSaleButton } from "@/components/void-sale-button";
 import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
@@ -187,7 +192,9 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               </h1>
             )}
             <p className="mt-1 text-sm font-bold">{receipt.businessName}</p>
-            <p className="m-0 text-xs text-[#627069]">{receipt.outletName}</p>
+            {receipt.outletName !== receipt.businessName && (
+              <p className="m-0 text-xs text-[#627069]">{receipt.outletName}</p>
+            )}
             {settings.headerNote && <p className="m-0 mt-1 text-[11px] text-[#627069]">{settings.headerNote}</p>}
           </header>
 
@@ -247,20 +254,20 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
             {receipt.paymentMethod === "qris" ? (
               <>
                 <div className="flex justify-between pt-2 text-[#627069]">
-                  <span className="font-bold text-[#de232c] flex items-center gap-1">QRIS DIGITAL</span>
+                  <span className="font-bold text-[#de232c] flex items-center gap-1">QRIS</span>
                   <span className={`rounded px-1.5 py-0.5 text-[10px] font-extrabold ${isVoided ? "bg-rose-100 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
                     {isVoided ? "VOID" : "LUNAS"}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-[#627069]">
-                  <span>Nominal Pas</span>
+                  <span>Dibayar</span>
                   <span>{money(receipt.paidAmount)}</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex justify-between pt-2 text-[#627069]">
-                  <span className="font-semibold uppercase">{receipt.paymentMethod}</span>
+                  <span className="font-semibold">{paymentLabel(receipt.paymentMethod)}</span>
                   <span>Dibayar {money(receipt.paidAmount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-[#198760]">
@@ -275,8 +282,8 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
             <footer className="m-0 mt-5 border-t border-dashed border-[#cddbd3] pt-4 text-center text-xs text-[#627069]">
               {settings.footerMessage === "thankYou" && (
                 <>
-                  <p className="m-0">Terima kasih sudah berbelanja.</p>
-                  <p className="m-0 mt-1 text-[10px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
+                  <p className="m-0">{DEFAULT_RECEIPT_FOOTER}</p>
+                  <p className="m-0 mt-1 text-[10px] text-[#8b9991]">{DEFAULT_RECEIPT_DISCLAIMER}</p>
                 </>
               )}
               {settings.footerNote && <p className="m-0 mt-1">{settings.footerNote}</p>}

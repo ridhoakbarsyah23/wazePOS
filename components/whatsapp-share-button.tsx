@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageSquareShare, Send, X } from "lucide-react";
+import { paymentLabel } from "@/lib/payment";
 
 export type ReceiptShareData = {
   businessName: string;
@@ -50,7 +51,7 @@ export function buildReceiptWhatsAppMessage(data: ReceiptShareData, siteUrl: str
     lines.push(`Diskon: -${money(data.discount)}`);
   }
   lines.push(`*TOTAL: ${money(data.total)}*`);
-  lines.push(`Metode Bayar: ${data.paymentMethod.toUpperCase()}`);
+  lines.push(`Metode Bayar: ${paymentLabel(data.paymentMethod)}`);
   lines.push(`Dibayar: ${money(data.paidAmount)}`);
   if (data.paymentMethod === "cash") {
     lines.push(`Kembalian: ${money(data.changeAmount)}`);

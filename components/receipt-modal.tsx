@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { ArrowRight, CheckCircle2, ChevronDown, MessageSquareShare, PlusCircle, Printer, ReceiptText, Send, X } from "lucide-react";
 import { getReceiptPrintPage, type ReceiptPaperSize } from "@/lib/receipt-print";
 import { normalizeReceiptSettings, type ReceiptSettings } from "@/lib/validation/receipt-settings";
+import { DEFAULT_RECEIPT_DISCLAIMER, DEFAULT_RECEIPT_FOOTER } from "@/lib/validation/receipt-settings";
+import { paymentLabel } from "@/lib/payment";
 import { buildReceiptWhatsAppMessage, type ReceiptShareData } from "./whatsapp-share-button";
 
 export type PaperSize = ReceiptPaperSize;
@@ -285,7 +287,7 @@ export function ReceiptModal({
                     ? receipt.changeAmount > 0
                       ? money(receipt.changeAmount)
                       : "Uang pas"
-                    : receipt.paymentMethod.toUpperCase()}
+                    : paymentLabel(receipt.paymentMethod)}
                 </strong>
               </div>
             </div>
@@ -350,7 +352,9 @@ export function ReceiptModal({
                   </h4>
                 )}
                 <p className="font-bold text-xs mt-0.5">{receipt.businessName}</p>
-                <p className="text-[11px] text-[#627069]">{receipt.outletName}</p>
+                {receipt.outletName !== receipt.businessName && (
+                  <p className="text-[11px] text-[#627069]">{receipt.outletName}</p>
+                )}
                 {settings.headerNote && <p className="m-0 mt-1 text-[10px] text-[#627069]">{settings.headerNote}</p>}
               </div>
 
@@ -408,8 +412,8 @@ export function ReceiptModal({
                   <span className="text-[#198760]">{money(receipt.total)}</span>
                 </div>
                 <div className="flex justify-between text-[11px] text-[#627069] pt-1">
-                  <span className="uppercase">{receipt.paymentMethod}</span>
-                  <span>Bayar {money(receipt.paidAmount)}</span>
+                  <span>{paymentLabel(receipt.paymentMethod)}</span>
+                  <span>Dibayar {money(receipt.paidAmount)}</span>
                 </div>
                 {receipt.paymentMethod === "cash" && (
                   <div className="receipt-change-row flex justify-between text-xs font-bold text-[#198760]">
@@ -423,8 +427,8 @@ export function ReceiptModal({
                 <div className="receipt-footer-block mt-3 rounded-lg border-t border-dashed border-[#cddbd3] bg-[#f7faf8] px-2 py-2.5 text-center text-[10px] text-[#627069]">
                   {settings.footerMessage === "thankYou" && (
                     <>
-                      <p className="m-0">Terima kasih atas kunjungan Anda!</p>
-                      <p className="m-0 text-[9px] text-[#8b9991]">Simpan struk ini sebagai bukti pembayaran sah.</p>
+                      <p className="m-0">{DEFAULT_RECEIPT_FOOTER}</p>
+                      <p className="m-0 text-[9px] text-[#8b9991]">{DEFAULT_RECEIPT_DISCLAIMER}</p>
                     </>
                   )}
                   {settings.footerNote && <p className="m-0 mt-0.5">{settings.footerNote}</p>}

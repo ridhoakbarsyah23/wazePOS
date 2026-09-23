@@ -7,6 +7,9 @@ import { z } from "zod";
 
 export const receiptFooterMessages = ["thankYou", "none"] as const;
 
+export const DEFAULT_RECEIPT_FOOTER = "Terima kasih atas kunjungan Anda." as const;
+export const DEFAULT_RECEIPT_DISCLAIMER = "Struk ini merupakan bukti pembayaran yang sah." as const;
+
 export const receiptSettingsSchema = z.object({
   /** Baris teks tambahan di kepala struk, mis. alamat atau slogan */
   headerNote: z

@@ -1,5 +1,9 @@
 import type { Cell, SheetData } from "write-excel-file/node";
 
+import { paymentLabel } from "@/lib/payment";
+
+export { paymentLabel };
+
 const REPORT_TIME_ZONE = "Asia/Jakarta";
 const JAKARTA_OFFSET_MS = 7 * 60 * 60 * 1000;
 
@@ -111,16 +115,6 @@ function protectSpreadsheetFormula(value: string) {
 function csvCell(value: string | number) {
   const normalized = typeof value === "string" ? protectSpreadsheetFormula(value) : String(value);
   return `"${normalized.replaceAll('"', '""')}"`;
-}
-
-export function paymentLabel(method: string) {
-  const labels: Record<string, string> = {
-    cash: "Tunai",
-    qris: "QRIS",
-    debit: "Kartu Debit",
-    credit: "Kartu Kredit",
-  };
-  return labels[method.toLowerCase()] ?? method;
 }
 
 export async function createSalesReportWorkbook({
