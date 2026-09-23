@@ -9,7 +9,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SubscriptionPlanManager } from "@/components/subscription-plan-manager";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +24,9 @@ import {
 } from "@/components/ui/table";
 import { db } from "@/db";
 import { subscriptionPayment } from "@/db/schema";
-import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
 import { isMidtransConfigured } from "@/lib/midtrans";
-import { getSubscriptionStatusDetails, normalizePlan, plans } from "@/lib/plans";
+import { normalizePlan, plans } from "@/lib/plans";
 
 const statusLabels = {
   trialing: "Masa trial",
@@ -50,12 +49,9 @@ export default async function SubscriptionPage({
   searchParams: Promise<{ payment?: string; expired?: string }>;
 }) {
   const query = await searchParams;
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (membership.role !== "owner") redirect("/dashboard");
-
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
+  const access = await requireDashboardAccess({ rule: "ownerOnly", enforceSubscription: false });
+  if (!access.ok) return access.lockout;
+  const { membership, currentSubscription, subDetails } = access;
 
   const payments = await db
     .select({

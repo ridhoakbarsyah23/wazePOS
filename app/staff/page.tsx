@@ -1,20 +1,17 @@
 import { desc, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { businessMember, user } from "@/db/schema";
 import { Users } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { StaffManager } from "@/components/staff-manager";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
-import { canManageStaff, getWorkspaceContext, requireSession } from "@/lib/auth-session";
-import { getPlanLimits, getSubscriptionStatusDetails, normalizePlan, plans } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { getPlanLimits, normalizePlan, plans } from "@/lib/plans";
 
 export default async function StaffPage() {
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (!canManageStaff(membership.role)) redirect("/pos");
+  const access = await requireDashboardAccess({ rule: "manageStaff" });
+  if (!access.ok) return access.lockout;
+  const { session, membership, currentSubscription, subDetails } = access;
 
   const staffRows = await db
       .select({
@@ -29,26 +26,6 @@ export default async function StaffPage() {
       .innerJoin(user, eq(user.id, businessMember.userId))
       .where(eq(businessMember.businessId, membership.businessId))
       .orderBy(desc(businessMember.createdAt));
-
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") {
-      redirect("/subscription?expired=1");
-    }
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader
-          businessName={membership.businessName}
-          role={membership.role}
-        />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
 
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const planLimits = getPlanLimits(selectedPlan);

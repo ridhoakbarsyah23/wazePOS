@@ -1,16 +1,14 @@
 import { and, eq, gte, lt, or, sql } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
 import { DashboardHeader, PeriodKey } from "@/components/dashboard-header";
 import { DashboardMetrics } from "@/components/dashboard-metrics";
 import { DashboardInsights } from "@/components/dashboard-insights";
 import { DashboardOverview } from "@/components/dashboard-overview";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
-import { getWorkspaceContext, requireSession } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails, normalizePlan } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { normalizePlan } from "@/lib/plans";
 
 const dayInMilliseconds = 86_400_000;
 const jakartaDateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -37,30 +35,9 @@ export default async function DashboardPage({
   searchParams: Promise<{ status?: string; message?: string; period?: string; outlet?: string }>;
 }) {
   const feedback = await searchParams;
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (membership.role === "cashier") redirect("/pos");
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") {
-      redirect("/subscription?expired=1");
-    }
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader
-          businessName={membership.businessName}
-          role={membership.role}
-        />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
+  if (!access.ok) return access.lockout;
+  const { session, membership, currentSubscription, subDetails } = access;
 
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const selectedPeriod: PeriodKey =

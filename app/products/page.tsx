@@ -1,40 +1,16 @@
 import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { category, outlet, product } from "@/db/schema";
 import { Package } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { ProductManager } from "@/components/product-manager";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
-import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
 
 export default async function ProductsPage() {
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (!canManageBusiness(membership.role)) redirect("/pos");
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") {
-      redirect("/subscription?expired=1");
-    }
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader
-          businessName={membership.businessName}
-          role={membership.role}
-        />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
+  if (!access.ok) return access.lockout;
+  const { membership, subDetails } = access;
 
   const [products, categories, outlets] = await Promise.all([
     db.select({

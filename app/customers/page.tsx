@@ -1,35 +1,17 @@
 import { and, eq, sql } from "drizzle-orm";
 import { Users } from "lucide-react";
-import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { CustomerManager, type CustomerListItem } from "@/components/customer-manager";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/db";
 import { customer, sale } from "@/db/schema";
-import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
-import { getPlanLimits, getSubscriptionStatusDetails } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { getPlanLimits } from "@/lib/plans";
 
 export default async function CustomersPage() {
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (!canManageBusiness(membership.role)) redirect("/pos");
-
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") redirect("/subscription?expired=1");
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader businessName={membership.businessName} role={membership.role} />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
+  if (!access.ok) return access.lockout;
+  const { membership, currentSubscription, subDetails } = access;
 
   const rows = await db
     .select({

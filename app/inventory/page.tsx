@@ -7,12 +7,10 @@ import {
   Store,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { StockAdjustmentForm } from "@/components/stock-adjustment-form";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
 
 export default async function InventoryPage({
   searchParams,
@@ -33,30 +30,9 @@ export default async function InventoryPage({
   searchParams: Promise<{ status?: string; outlet?: string; product?: string }>;
 }) {
   const filters = await searchParams;
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (!canManageBusiness(membership.role)) redirect("/pos");
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") {
-      redirect("/subscription?expired=1");
-    }
-    return (
-      <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader
-          businessName={membership.businessName}
-          role={membership.role}
-        />
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </main>
-    );
-  }
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
+  if (!access.ok) return access.lockout;
+  const { membership, subDetails } = access;
 
   const [outlets, products, stocks, movements] = await Promise.all([
     db.select({ id: outlet.id, name: outlet.name, slug: outlet.slug }).from(outlet).where(eq(outlet.businessId, membership.businessId)).orderBy(outlet.name),

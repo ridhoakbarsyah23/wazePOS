@@ -4,18 +4,15 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { DashboardSetupManager } from "@/components/dashboard-setup-manager";
 import { SettingsManager } from "@/components/settings-manager";
-import { SubscriptionLockout } from "@/components/subscription-lockout";
 import { db } from "@/db";
 import { business, category, outlet, product } from "@/db/schema";
-import { canManageBusiness, getWorkspaceContext, requireSession } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/dashboard-access";
 import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
 
 export default async function SettingsPage() {
-  const session = await requireSession();
-  const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
-  if (!membership) redirect("/onboarding");
-  if (!canManageBusiness(membership.role)) redirect("/pos");
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
+  if (!access.ok) return access.lockout;
+  const { membership, subDetails } = access;
 
   const [businessRows, outlets, categories] = await Promise.all([
     db
@@ -53,19 +50,6 @@ export default async function SettingsPage() {
   const businessData = businessRows[0];
   if (!businessData) redirect("/onboarding");
 
-  const subDetails = getSubscriptionStatusDetails(currentSubscription);
-  if (!subDetails.isValid) {
-    if (membership.role === "owner") redirect("/subscription?expired=1");
-    return (
-      <AppHeader businessName={membership.businessName} role={membership.role}>
-        <SubscriptionLockout
-          businessName={membership.businessName}
-          role={membership.role}
-          reason={subDetails.message}
-        />
-      </AppHeader>
-    );
-  }
 
   return (
     <AppHeader
