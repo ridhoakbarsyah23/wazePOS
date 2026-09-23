@@ -1,6 +1,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,10 @@ const asText = (value: unknown, maxLength: number) =>
 const validPhone = (value: string) => /^[+]?\d[\d\s-]{7,18}$/.test(value);
 
 export async function POST(request: Request) {
+  // Form publik: batasi 5 kiriman per IP per 10 menit (di luar honeypot).
+  const rate = checkRateLimit({ key: `leads:${getClientIp(request)}`, limit: 5, windowSeconds: 600 });
+  if (!rate.ok) return rateLimitResponse(rate.retryAfterSeconds);
+
   let body: LeadPayload;
 
   try {

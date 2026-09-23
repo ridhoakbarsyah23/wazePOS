@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
 import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
 import { saleSchema } from "@/lib/validation/sale";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 function makeInvoiceNumber() {
   const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
@@ -71,6 +72,10 @@ export async function POST(request: Request) {
   if (!membership) {
     return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
   }
+
+  // Kunci per user (bukan IP): kasir satu toko sering memakai IP yang sama.
+  const rate = checkRateLimit({ key: `sales:${session.user.id}`, limit: 120, windowSeconds: 60 });
+  if (!rate.ok) return rateLimitResponse(rate.retryAfterSeconds);
 
   let payload: unknown;
   try {

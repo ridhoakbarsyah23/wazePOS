@@ -8,6 +8,7 @@ import { account, businessMember, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { canManageStaff, getBusinessSubscription, getMembership } from "@/lib/auth-session";
 import { getPlanLimits, normalizePlan, plans } from "@/lib/plans";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -43,6 +44,10 @@ export async function POST(request: Request) {
   if (!membership || !canManageStaff(membership.role)) {
     return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
   }
+
+  // Pembuatan akun itu mahal (hash + insert): batasi 10 per user per 10 menit.
+  const rate = checkRateLimit({ key: `staff-create:${session.user.id}`, limit: 10, windowSeconds: 600 });
+  if (!rate.ok) return rateLimitResponse(rate.retryAfterSeconds);
 
   const subscription = await getBusinessSubscription(membership.businessId);
   const planLimits = getPlanLimits(subscription?.plan);
