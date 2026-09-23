@@ -80,7 +80,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       onscreenReports: true,
       staffManagement: true,
       roleBasedAccess: true,
-      qrisPayments: false,
+      qrisPayments: true,
       allPaymentMethods: true,
       exportReports: true,
       unlimitedStaff: true,
@@ -169,7 +169,13 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
   if (plan === "bisnis") {
     return [
       `Seluruh fitur Paket ${plans.tumbuh.name}`,
-      ...(config.features.allPaymentMethods ? ["Pembayaran tunai, kartu debit & kredit EDC"] : []),
+      ...(config.features.allPaymentMethods
+        ? [
+            config.features.qrisPayments
+              ? "Pembayaran tunai, QRIS, kartu debit & kredit EDC"
+              : "Pembayaran tunai, kartu debit & kredit EDC",
+          ]
+        : []),
       ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
       formatOutletLimit(plan),
       formatStaffLimit(plan),
@@ -230,6 +236,7 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
     {
       category: "Metode pembayaran & laporan",
       items: [
+        { name: "Pembayaran QRIS", detail: "Terima pembayaran QRIS dari seluruh e-wallet dan mobile banking.", availability: availability("qrisPayments") },
         { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: availability("allPaymentMethods") },
         { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: availability("exportReports") },
         { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: availability("onscreenReports") },

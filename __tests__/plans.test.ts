@@ -8,9 +8,9 @@ import {
 } from "@/lib/plans";
 
 describe("hak fitur paket", () => {
-  it("menonaktifkan QRIS sampai integrasi pembayaran resmi tersedia", () => {
+  it("QRIS hanya untuk Paket Bisnis, Tumbuh tetap tunai saja", () => {
     expect(hasPlanFeature("tumbuh", "qrisPayments")).toBe(false);
-    expect(hasPlanFeature("bisnis", "qrisPayments")).toBe(false);
+    expect(hasPlanFeature("bisnis", "qrisPayments")).toBe(true);
   });
 
   it("mempertahankan metode kartu hanya untuk Paket Bisnis", () => {
@@ -30,9 +30,11 @@ describe("hak fitur paket", () => {
 
   it("menyamakan tabel perbandingan dengan hak fitur paket", () => {
     const items = getPlanFeatureComparison().flatMap((group) => group.items);
+    const qris = items.find((item) => item.name === "Pembayaran QRIS");
     const cardPayments = items.find((item) => item.name === "Seluruh metode pembayaran (Kartu EDC)");
     const reportExport = items.find((item) => item.name === "Ekspor laporan Excel");
 
+    expect(qris?.availability).toEqual({ tumbuh: false, bisnis: true });
     expect(cardPayments?.availability).toEqual({ tumbuh: false, bisnis: true });
     expect(reportExport?.availability).toEqual({ tumbuh: false, bisnis: true });
   });

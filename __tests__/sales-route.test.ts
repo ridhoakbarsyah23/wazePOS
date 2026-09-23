@@ -110,15 +110,57 @@ describe("POST /api/sales", () => {
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
-  it("menolak QRIS sebelum integrasi pembayaran resmi tersedia", async () => {
-    mocks.getBusinessSubscription.mockResolvedValue(activeSubscription("bisnis"));
-
-    const response = await POST(saleRequest({ paymentMethod: "qris" }));
+  it("menolak QRIS pada Paket Tumbuh (hanya tunai)", async () => {
+    const response = await POST(saleRequest({ paymentMethod: "qris", paidAmount: 20_000 }));
     const body = await response.json();
 
     expect(response.status).toBe(403);
     expect(body.code).toBe("PAYMENT_METHOD_UNAVAILABLE");
     expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it("menerima QRIS pada Paket Bisnis dan mencatat lunas tanpa kembalian", async () => {
+    mocks.getBusinessSubscription.mockResolvedValue(activeSubscription("bisnis"));
+    const queryResults = [
+      [{ id: outletId }],
+      [{
+        id: productId,
+        name: "Kopi Susu",
+        sellingPrice: 10_000,
+        costPrice: 6_000,
+        trackStock: true,
+        stockId: "stock-1",
+        quantity: 5,
+      }],
+    ];
+    const insertedValues: unknown[] = [];
+    const updateBuilder = {
+      set: vi.fn(),
+      where: vi.fn(),
+      returning: vi.fn(async () => [{ id: "stock-1" }]),
+    };
+    updateBuilder.set.mockReturnValue(updateBuilder);
+    updateBuilder.where.mockReturnValue(updateBuilder);
+
+    const tx = {
+      select: vi.fn(() => selectBuilder(queryResults.shift() ?? [])),
+      update: vi.fn(() => updateBuilder),
+      insert: vi.fn(() => ({
+        values: vi.fn(async (values: unknown) => {
+          insertedValues.push(values);
+        }),
+      })),
+    };
+    mocks.transaction.mockImplementation(async (callback) => callback(tx));
+
+    const response = await POST(saleRequest({ paymentMethod: "qris", paidAmount: 20_000 }));
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body).toMatchObject({ total: 20_000, changeAmount: 0 });
+    expect(insertedValues[0]).toEqual(
+      expect.objectContaining({ paymentMethod: "qris", changeAmount: 0 }),
+    );
   });
 
   it("membatasi kartu debit dan kredit ke Paket Bisnis", async () => {

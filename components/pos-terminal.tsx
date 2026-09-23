@@ -50,6 +50,13 @@ type CartItem = PosProduct & { quantity: number };
 
 const money = (value: number) => `Rp ${value.toLocaleString("id-ID")}`;
 
+const PAYMENT_METHODS = [
+  { id: "cash", label: "Tunai", icon: Banknote, hint: "Uang tunai & kembalian" },
+  { id: "qris", label: "QRIS", icon: QrCode, hint: "Satu kode untuk semua e-wallet" },
+  { id: "debit", label: "Debit", icon: CreditCard, hint: "Kartu debit via mesin EDC" },
+  { id: "credit", label: "Kredit", icon: CreditCard, hint: "Kartu kredit via mesin EDC" },
+] as const;
+
 export function PosTerminal({
   products,
   outlets,
@@ -230,6 +237,12 @@ export function PosTerminal({
       });
       return;
     }
+    if (paymentMethod !== "cash" && paid < total) {
+      // Tidak pernah seharusnya terjadi (non-tunai otomatis dianggap lunas),
+      // tapi tetap dijaga agar total selalu tertutup.
+      setMessage({ type: "error", text: "Pembayaran masih kurang dari total transaksi." });
+      return;
+    }
     if (paid < total) {
       setMessage({ type: "error", text: "Pembayaran masih kurang dari total transaksi." });
       return;
@@ -287,7 +300,9 @@ export function PosTerminal({
         text:
           paymentMethod === "qris"
             ? "Pembayaran QRIS berhasil dikonfirmasi (Lunas)."
-            : `Transaksi berhasil. Kembalian ${money(result.changeAmount)}.`,
+            : paymentMethod === "cash"
+              ? `Transaksi berhasil. Kembalian ${money(result.changeAmount)}.`
+              : `Transaksi ${paymentMethod === "debit" ? "kartu debit" : "kartu kredit"} berhasil (Lunas).`,
       });
       setInvoiceId(result.saleId);
       setCart([]);
@@ -414,12 +429,12 @@ export function PosTerminal({
   const activeOutletName = outlets.find((outlet) => outlet.id === outletId)?.name ?? "Gerai";
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
-      <section className="min-w-0 border border-[#d9e2dd] bg-white">
-        <div className="border-b border-[#e5ebe8] p-4 sm:p-5">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+      <section className="min-w-0 overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_4px_20px_rgba(16,65,48,.04)]">
+        <div className="border-b border-[#edf2ee] p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="min-w-0 flex-1">
-              <label htmlFor="pos-product-search" className="mb-1.5 block text-xs font-semibold text-[#44534c]">
+              <label htmlFor="pos-product-search" className="mb-1.5 block text-xs font-bold text-[#44534c]">
                 Cari atau pindai produk
               </label>
               <div className="relative">
@@ -437,35 +452,39 @@ export function PosTerminal({
                   }}
                   placeholder="Nama produk atau SKU"
                   aria-label="Cari produk berdasarkan nama atau SKU"
-                  className="h-11 w-full border border-[#cbd6d0] bg-white pl-10 pr-16 text-sm text-[#17211d] outline-none placeholder:text-[#96a19b] focus:border-[#187c59] focus:ring-2 focus:ring-[#187c59]/10"
+                  className="h-11 w-full rounded-xl border border-[#dbe5df] bg-[#f8faf9] pl-10 pr-16 text-sm text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:bg-white focus:ring-2 focus:ring-[#198760]/10"
                 />
-                <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border border-[#d9e2dd] bg-[#f6f8f7] px-1.5 py-0.5 font-mono text-[10px] text-[#6c7a73]">F2</kbd>
+                <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono text-[10px] text-[#6c7a73]">F2</kbd>
               </div>
             </div>
-            <div className="flex h-11 items-center gap-2 border border-[#d9e2dd] bg-[#f8faf9] px-3 text-sm text-[#44534c] sm:min-w-48">
-              <Store className="size-4 text-[#187c59]" />
-              <span className="truncate font-semibold">{activeOutletName}</span>
+            <div className="flex h-11 items-center gap-2 rounded-xl border border-[#dbe5df] bg-[#f8faf9] px-3.5 text-sm text-[#44534c] sm:min-w-48">
+              <Store className="size-4 text-[#198760]" />
+              <span className="truncate font-bold">{activeOutletName}</span>
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-4 border-b border-[#e5ebe8]">
-            <div className="flex min-w-0 gap-5 overflow-x-auto">
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
               {categories.map((category) => (
                 <button
                   type="button"
                   key={category}
                   onClick={() => setCategoryFilter(category)}
-                  className={`relative shrink-0 pb-2.5 text-sm font-semibold transition-colors ${
+                  className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-bold transition-all ${
                     categoryFilter === category
-                      ? "text-[#126b4b] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-[#187c59]"
-                      : "text-[#6c7a73] hover:text-[#17211d]"
+                      ? "border-[#198760] bg-[#198760] text-white shadow-[0_2px_8px_rgba(25,135,96,.3)]"
+                      : "border-[#dbe5df] bg-white text-[#596861] hover:border-[#9ac3b0] hover:text-[#198760]"
                   }`}
                 >
                   {category}
                 </button>
               ))}
             </div>
-            <div className="hidden shrink-0 items-center gap-1.5 pb-2.5 text-xs text-[#6c7a73] sm:flex">
+            <div className="hidden shrink-0 items-center gap-1.5 text-xs font-semibold text-[#6c7a73] sm:flex">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#198760] opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-[#198760]" />
+              </span>
               <ScanBarcode className="size-3.5" /> Scanner siap
             </div>
           </div>
@@ -473,11 +492,11 @@ export function PosTerminal({
 
         <div className="p-4 sm:p-5">
           <div className="mb-3 flex items-center justify-between text-xs text-[#6c7a73]">
-            <span>{filteredProducts.length} produk</span>
-            {search && <span>Hasil untuk “{search}”</span>}
+            <span className="font-semibold">{filteredProducts.length} produk</span>
+            {search && <span className="rounded-full bg-[#eaf5ef] px-2.5 py-1 font-semibold text-[#126b4b]">Hasil: “{search}”</span>}
           </div>
 
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {filteredProducts.map((product) => {
               const unavailable = product.trackStock && product.stock < 1;
               const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
@@ -488,7 +507,7 @@ export function PosTerminal({
                   disabled={unavailable}
                   key={product.id}
                   onClick={() => addProduct(product)}
-                  className={`group min-h-32 border border-[#dde5e1] bg-white p-3.5 text-left hover:border-[#7fb59e] hover:bg-[#f6faf8] disabled:cursor-not-allowed disabled:bg-[#f6f7f6] disabled:opacity-55 ${styles.productCard} ${isJustAdded ? styles.productCardAdded : ""}`}
+                  className={`group min-h-32 rounded-2xl border border-[#e5ede8] bg-white p-3.5 text-left transition hover:border-[#7fb59e] hover:bg-[#f6faf8] hover:shadow-[0_6px_16px_rgba(16,65,48,.08)] disabled:cursor-not-allowed disabled:bg-[#f6f7f6] disabled:opacity-55 ${styles.productCard} ${isJustAdded ? styles.productCardAdded : ""}`}
                 >
                   {isJustAdded && (
                     <span
@@ -499,11 +518,11 @@ export function PosTerminal({
                       <ShoppingCart className="size-3.5" /> Ditambahkan
                     </span>
                   )}
-                  <span className="block truncate text-xs text-[#6c7a73]">{product.categoryName ?? "Umum"}</span>
-                  <strong className="mt-1.5 block min-h-10 text-sm leading-5 text-[#17211d]">{product.name}</strong>
+                  <span className="inline-block rounded-md bg-[#f0f5f2] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#6c7a73]">{product.categoryName ?? "Umum"}</span>
+                  <strong className="mt-2 block min-h-10 text-sm leading-5 text-[#17211d]">{product.name}</strong>
                   <div className="mt-2 flex items-end justify-between gap-3">
                     <div>
-                      <span className="block text-sm font-bold text-[#126b4b]">{money(product.sellingPrice)}</span>
+                      <span className="block text-sm font-black text-[#198760]">{money(product.sellingPrice)}</span>
                       <span className={`mt-0.5 block text-xs ${unavailable ? "font-semibold text-rose-600" : "text-[#78857f]"}`}>
                         {product.trackStock ? (unavailable ? "Stok habis" : `Stok ${product.stock}`) : "Tanpa stok"}
                       </span>
@@ -511,7 +530,7 @@ export function PosTerminal({
                     {quantityInCart > 0 && (
                       <span
                         key={isJustAdded ? addedFeedback.sequence : 0}
-                        className={`grid size-7 place-items-center bg-[#187c59] text-xs font-bold text-white ${isJustAdded ? styles.quantityPulse : ""}`}
+                        className={`grid size-7 place-items-center rounded-full bg-[#198760] text-xs font-bold text-white shadow-[0_2px_8px_rgba(25,135,96,.35)] ${isJustAdded ? styles.quantityPulse : ""}`}
                         aria-label={`${quantityInCart} di keranjang`}
                       >
                         {quantityInCart}
@@ -519,7 +538,7 @@ export function PosTerminal({
                     )}
                     {quantityInCart === 0 && (
                       <span
-                        className="grid size-7 place-items-center border border-[#cbd8d1] text-[#187c59] transition-colors group-hover:border-[#7fb59e] group-hover:bg-[#eaf5ef]"
+                        className="grid size-7 place-items-center rounded-full border border-[#cbd8d1] text-[#198760] transition-colors group-hover:border-[#7fb59e] group-hover:bg-[#eaf5ef]"
                         aria-hidden="true"
                       >
                         <Plus className="size-3.5" />
@@ -532,36 +551,45 @@ export function PosTerminal({
           </div>
 
           {filteredProducts.length === 0 && (
-            <div className="grid min-h-56 place-items-center border border-dashed border-[#d9e2dd] text-center">
+            <div className="grid min-h-56 place-items-center rounded-2xl border-2 border-dashed border-[#dfe8e3] bg-[#fbfdfc] text-center">
               <div>
-                <Search className="mx-auto size-5 text-[#9aa69f]" />
-                <p className="mt-2 text-sm font-semibold text-[#44534c]">Produk tidak ditemukan</p>
+                <span className="mx-auto grid size-11 place-items-center rounded-2xl bg-emerald-50 text-[#198760]">
+                  <Search className="size-5" />
+                </span>
+                <p className="mt-2.5 text-sm font-bold text-[#44534c]">Produk tidak ditemukan</p>
                 <p className="mt-1 text-xs text-[#78857f]">Coba nama, kategori, atau SKU lain.</p>
               </div>
             </div>
           )}
         </div>
 
-        <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[#e5ebe8] bg-[#fafbfa] px-4 py-2.5 text-[11px] text-[#78857f] sm:px-5">
-          <span><kbd className="font-mono font-semibold text-[#44534c]">F2</kbd> cari</span>
-          <span><kbd className="font-mono font-semibold text-[#44534c]">F4</kbd> metode bayar</span>
-          <span><kbd className="font-mono font-semibold text-[#44534c]">F9</kbd> uang pas</span>
-          <span><kbd className="font-mono font-semibold text-[#44534c]">Esc</kbd> bersihkan</span>
+        <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[#edf2ee] bg-[#fafbfa] px-4 py-2.5 text-[11px] text-[#78857f] sm:px-5">
+          <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">F2</kbd> cari</span>
+          <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">F9</kbd> uang pas</span>
+          <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">Esc</kbd> bersihkan</span>
         </footer>
       </section>
 
-      <aside className="border border-[#d9e2dd] bg-white xl:sticky xl:top-4">
-        <div className="flex items-center justify-between border-b border-[#e5ebe8] px-4 py-3.5">
-          <div>
-            <h2 className="flex items-center gap-2 text-base font-bold text-[#17211d]">
-              <ShoppingCart className="size-4 text-[#187c59]" /> Pesanan
-            </h2>
-            <p
-              key={addedFeedback?.sequence ?? 0}
-              className={`mt-0.5 text-xs text-[#78857f] ${addedFeedback ? styles.cartCountPulse : ""}`}
-            >
-              {cartItemCount} item dipilih
-            </p>
+      <aside className="overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_4px_20px_rgba(16,65,48,.04)] xl:sticky xl:top-4">
+        <div className="flex items-center justify-between border-b border-[#edf2ee] bg-gradient-to-r from-[#f7fbf9] to-white px-4 py-3.5">
+          <div className="flex items-center gap-2.5">
+            <span className="relative grid size-9 place-items-center rounded-xl bg-[#198760] text-white shadow-[0_2px_10px_rgba(25,135,96,.3)]">
+              <ShoppingCart className="size-4" />
+              {cartItemCount > 0 && (
+                <span className="absolute -right-1 -top-1 grid min-w-4.5 place-items-center rounded-full border-2 border-white bg-amber-400 px-1 text-[9px] font-black text-[#5b3a00]">
+                  {cartItemCount}
+                </span>
+              )}
+            </span>
+            <div>
+              <h2 className="text-base font-black text-[#17211d]">Pesanan</h2>
+              <p
+                key={addedFeedback?.sequence ?? 0}
+                className={`mt-0.5 text-xs text-[#78857f] ${addedFeedback ? styles.cartCountPulse : ""}`}
+              >
+                {cartItemCount} item dipilih
+              </p>
+            </div>
           </div>
           {cart.length > 0 && (
             <button
@@ -571,7 +599,7 @@ export function PosTerminal({
                 setPaidAmount("");
                 setMessage(null);
               }}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9a4b28] hover:text-[#7d3518]"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-[#9a4b28] transition hover:bg-rose-50 hover:text-rose-700"
             >
               <Trash2 className="size-3.5" /> Kosongkan
             </button>
@@ -590,7 +618,7 @@ export function PosTerminal({
           </div>
         )}
 
-        <div className="max-h-[340px] overflow-y-auto px-4">
+        <div className="max-h-[320px] overflow-y-auto px-4">
           {cart.map((item) => {
             const isJustAdded = addedFeedback?.productId === item.id;
             const quantityChange = quantityFeedback?.productId === item.id ? quantityFeedback : null;
@@ -608,19 +636,19 @@ export function PosTerminal({
                 <strong className="shrink-0 text-sm text-[#17211d]">{money(item.sellingPrice * item.quantity)}</strong>
               </div>
               <div className="mt-2.5 flex items-center">
-                <div className="flex items-center border border-[#d9e2dd]">
+                <div className="flex items-center rounded-xl border border-[#dbe5df] bg-white">
                   <button
                     type="button"
                     aria-label={`Kurangi ${item.name}`}
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     disabled={isRemoving}
-                    className={`grid size-8 place-items-center text-[#44534c] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
+                    className={`grid size-8 place-items-center rounded-l-xl text-[#44534c] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
                   >
                     <Minus className="size-3.5" />
                   </button>
                   <span
                     key={quantityChange?.sequence ?? 0}
-                    className={`min-w-9 border-x border-[#d9e2dd] text-center text-sm font-bold leading-8 ${
+                    className={`min-w-9 border-x border-[#dbe5df] text-center text-sm font-bold leading-8 ${
                       quantityChange?.direction === "increase"
                         ? styles.quantityIncrease
                         : quantityChange?.direction === "decrease"
@@ -635,7 +663,7 @@ export function PosTerminal({
                     aria-label={`Tambah ${item.name}`}
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     disabled={isRemoving || (item.trackStock && item.quantity >= item.stock)}
-                    className={`grid size-8 place-items-center text-[#126b4b] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
+                    className={`grid size-8 place-items-center rounded-r-xl text-[#126b4b] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
                   >
                     <Plus className="size-3.5" />
                   </button>
@@ -646,7 +674,7 @@ export function PosTerminal({
                   title={`Hapus ${item.name}`}
                   disabled={isRemoving}
                   onClick={() => removeCartItem(item.id)}
-                  className={`ml-auto inline-flex items-center gap-1.5 px-1 py-1 text-xs text-[#78857f] hover:text-rose-600 disabled:pointer-events-none ${styles.removeButton}`}
+                  className={`ml-auto inline-flex items-center gap-1.5 rounded-lg px-1 py-1 text-xs text-[#78857f] hover:text-rose-600 disabled:pointer-events-none ${styles.removeButton}`}
                 >
                   <Trash2 className="size-3.5" /> Hapus
                 </button>
@@ -658,131 +686,129 @@ export function PosTerminal({
           {cart.length === 0 && (
             <div className="grid min-h-44 place-items-center text-center">
               <div>
-                <ShoppingBasket className="mx-auto size-6 text-[#a3ada8]" />
-                <p className="mt-2 text-sm font-semibold text-[#44534c]">Pesanan masih kosong</p>
+                <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-emerald-50 text-[#198760]">
+                  <ShoppingBasket className="size-6" />
+                </span>
+                <p className="mt-2.5 text-sm font-bold text-[#44534c]">Pesanan masih kosong</p>
                 <p className="mt-1 max-w-52 text-xs leading-5 text-[#78857f]">Pilih produk di sebelah kiri atau pindai SKU.</p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="border-t border-[#d9e2dd] p-4">
+        <div className="border-t border-[#d9e2dd] bg-[#fbfdfc] p-4">
           <div className="flex items-end justify-between gap-4">
-            <span className="text-sm text-[#6c7a73]">Total</span>
-            <strong className="text-2xl tracking-[-0.5px] text-[#17211d]">{money(total)}</strong>
+            <span className="text-sm font-semibold text-[#6c7a73]">Total</span>
+            <strong className="text-2xl font-black tracking-[-0.5px] text-[#17211d]">{money(total)}</strong>
           </div>
 
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold text-[#44534c]">Metode pembayaran</p>
-            <div className={`grid gap-2 ${allowNonCashPayments ? "grid-cols-4" : "grid-cols-2"}`}>
-              <button
-                type="button"
-                aria-pressed={paymentMethod === "cash"}
-                onClick={() => {
-                  setPaymentMethod("cash");
-                  setMessage(null);
-                }}
-                className={`flex h-10 items-center justify-center gap-1.5 border text-xs font-semibold ${paymentMethod === "cash" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8]"}`}
-              >
-                <Banknote className="size-3.5" /> Tunai
-              </button>
-              <button
-                type="button"
-                aria-pressed={paymentMethod === "qris"}
-                disabled={!allowQrisPayments}
-                title={allowQrisPayments ? "Gunakan pembayaran QRIS" : "QRIS belum tersedia"}
-                onClick={() => {
-                  if (!allowQrisPayments) return;
-                  setPaymentMethod("qris");
-                  setMessage(null);
-                }}
-                className={`flex h-10 items-center justify-center gap-1.5 border text-xs font-semibold ${paymentMethod === "qris" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8] disabled:cursor-not-allowed disabled:bg-[#f5f6f5] disabled:text-[#a4ada8]"}`}
-              >
-                <QrCode className="size-3.5" /> QRIS
-              </button>
-              {allowNonCashPayments && (
-                <>
+          <div className="mt-4 rounded-2xl border border-[#e5ede8] bg-white p-3">
+            <p className="mb-2 text-xs font-bold text-[#44534c]">Metode pembayaran</p>
+            <div className="grid grid-cols-4 gap-2">
+              {PAYMENT_METHODS.map((method) => {
+                const Icon = method.icon;
+                const isSelected = paymentMethod === method.id;
+                const isLocked =
+                  (method.id === "qris" && !allowQrisPayments) ||
+                  ((method.id === "debit" || method.id === "credit") && !allowNonCashPayments);
+                return (
                   <button
+                    key={method.id}
                     type="button"
-                    aria-pressed={paymentMethod === "debit"}
-                    onClick={() => setPaymentMethod("debit")}
-                    className={`h-10 border text-xs font-semibold ${paymentMethod === "debit" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8]"}`}
+                    aria-pressed={isSelected}
+                    disabled={isLocked}
+                    title={isLocked ? "Tersedia di paket lebih tinggi" : method.hint}
+                    onClick={() => {
+                      setPaymentMethod(method.id);
+                      setMessage(null);
+                    }}
+                    className={`flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-bold transition-all active:scale-95 ${
+                      isSelected
+                        ? "border-[#198760] bg-[#edf7f2] text-[#126b4b] shadow-[0_2px_10px_rgba(25,135,96,.18)]"
+                        : isLocked
+                          ? "cursor-not-allowed border-[#e5ede8] bg-[#f6f7f6] text-[#a4ada8]"
+                          : "border-[#dbe5df] bg-white text-[#596861] hover:border-[#7fb59e] hover:text-[#126b4b]"
+                    }`}
                   >
-                    Debit
+                    <Icon className="size-4.5" />
+                    {method.label}
+                    {isLocked && <span aria-hidden="true" className="text-[8px] font-extrabold uppercase tracking-wide">🔒 Paket</span>}
                   </button>
-                  <button
-                    type="button"
-                    aria-pressed={paymentMethod === "credit"}
-                    onClick={() => setPaymentMethod("credit")}
-                    className={`h-10 border text-xs font-semibold ${paymentMethod === "credit" ? "border-[#187c59] bg-[#edf7f2] text-[#126b4b]" : "border-[#d9e2dd] text-[#596861] hover:bg-[#f7f9f8]"}`}
-                  >
-                    Kredit
-                  </button>
-                </>
-              )}
+                );
+              })}
             </div>
-            {!allowQrisPayments && <p className="mt-1.5 text-[11px] text-[#87928d]">QRIS menunggu integrasi pembayaran resmi.</p>}
+
+            {(paymentMethod === "debit" || paymentMethod === "credit") && (
+              <div className="mt-3 flex gap-2 rounded-xl border-l-4 border-[#198760] bg-[#f4f8f6] px-3 py-2.5 text-xs leading-5 text-[#44534c]">
+                <CreditCard className="mt-0.5 size-4 shrink-0 text-[#198760]" />
+                Proses {paymentMethod === "debit" ? "kartu debit" : "kartu kredit"} di mesin EDC sebesar <strong className="whitespace-nowrap">{money(total)}</strong>.
+              </div>
+            )}
           </div>
+
+          {paymentMethod === "cash" && (
+            <div className="mt-3 rounded-2xl border border-[#e5ede8] bg-white p-3">
+
+            <p className="flex items-center gap-1.5 text-xs font-bold text-[#44534c]">
+              <Banknote className="size-4 text-[#198760]" /> Uang diterima
+            </p>
+
+            <label className="mt-2 grid gap-1.5 text-xs font-bold text-[#44534c]">
+              <RupiahInput
+                value={Number(paidAmount) || 0}
+                onChange={(value) => setPaidAmount(String(value))}
+                onEmpty={() => setPaidAmount("")}
+                max={2_000_000_000}
+                className="h-11 w-full rounded-xl border border-[#cbd6d0] bg-white pl-10 pr-3 text-base font-bold text-[#17211d] outline-none transition focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10"
+              />
+            </label>
+
+            {total > 0 && (
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {quickCashOptions.map((amount) => (
+                  <button
+                    key={amount}
+                    type="button"
+                    onClick={() => setPaidAmount(String(amount))}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+                      Number(paidAmount) === amount
+                        ? "border-[#198760] bg-[#198760] text-white shadow-[0_2px_8px_rgba(25,135,96,.3)]"
+                        : "border-[#dbe5df] bg-white text-[#44534c] hover:border-[#198760] hover:text-[#198760]"
+                    }`}
+                  >
+                    {amount === total ? "Uang pas" : money(amount)}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {paid > 0 && (
+              <div className={`mt-3 flex items-center justify-between rounded-xl border-l-4 px-3 py-2.5 text-sm font-semibold ${paid >= total ? "border-[#198760] bg-[#f1f8f4] text-[#126b4b]" : "border-amber-500 bg-amber-50 text-amber-900"}`}>
+                <span className="flex items-center gap-1.5">
+                  <Banknote className="size-4" />
+                  {paid >= total ? "Kembalian" : "Kurang"}
+                </span>
+                <strong className="text-base">{money(paid >= total ? change : shortfall)}</strong>
+              </div>
+            )}
+            </div>
+          )}  
 
           {checkoutDisabledReason && (
-            <p className="m-0 mt-3 border-l-2 border-amber-500 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
+            <p className="m-0 mt-3 rounded-xl border-l-4 border-amber-500 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
               {checkoutDisabledReason}
             </p>
           )}
 
-          {paymentMethod === "cash" && (
-            <div className="mt-4 border-t border-[#edf1ef] pt-4">
-              <label className="grid gap-1.5 text-xs font-semibold text-[#44534c]">
-                Uang diterima
-                <RupiahInput
-                  value={Number(paidAmount) || 0}
-                  onChange={(value) => setPaidAmount(String(value))}
-                  onEmpty={() => setPaidAmount("")}
-                  max={2_000_000_000}
-                  className="h-11 w-full border border-[#cbd6d0] bg-white pl-10 pr-3 text-base font-bold text-[#17211d] outline-none focus:border-[#187c59] focus:ring-2 focus:ring-[#187c59]/10"
-                />
-              </label>
-
-              {total > 0 && (
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  {quickCashOptions.map((amount) => (
-                    <button
-                      key={amount}
-                      type="button"
-                      onClick={() => setPaidAmount(String(amount))}
-                      className={`border px-2.5 py-1.5 text-xs font-semibold ${Number(paidAmount) === amount ? "border-[#187c59] bg-[#187c59] text-white" : "border-[#d9e2dd] bg-white text-[#44534c] hover:border-[#9aaca2]"}`}
-                    >
-                      {amount === total ? "Uang pas" : money(amount)}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {paid > 0 && (
-                <div className={`mt-3 flex items-center justify-between border-l-2 px-3 py-2.5 text-sm ${paid >= total ? "border-[#187c59] bg-[#f1f8f4] text-[#126b4b]" : "border-amber-500 bg-amber-50 text-amber-900"}`}>
-                  <span>{paid >= total ? "Kembalian" : "Kurang"}</span>
-                  <strong>{money(paid >= total ? change : shortfall)}</strong>
-                </div>
-              )}
-            </div>
-          )}
-
-          {(paymentMethod === "debit" || paymentMethod === "credit") && (
-            <div className="mt-3 flex gap-2 border-l-2 border-[#187c59] bg-[#f4f8f6] px-3 py-2.5 text-xs leading-5 text-[#44534c]">
-              <CreditCard className="mt-0.5 size-4 shrink-0 text-[#187c59]" />
-              Proses {paymentMethod === "debit" ? "kartu debit" : "kartu kredit"} di mesin EDC sebesar {money(total)}.
-            </div>
-          )}
-
           {message && (
-            <p className={`m-0 mt-3 flex items-start gap-2 border-l-2 px-3 py-2.5 text-xs leading-5 ${message.type === "success" ? "border-[#187c59] bg-[#f1f8f4] text-[#126b4b]" : "border-amber-500 bg-amber-50 text-amber-900"}`} role="status">
+            <p className={`m-0 mt-3 flex items-start gap-2 rounded-xl border-l-4 px-3 py-2.5 text-xs leading-5 ${message.type === "success" ? "border-[#198760] bg-[#f1f8f4] text-[#126b4b]" : "border-amber-500 bg-amber-50 text-amber-900"}`} role="status">
               {message.type === "success" ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0" /> : <AlertCircle className="mt-0.5 size-3.5 shrink-0" />}
               <span>{message.text}</span>
             </p>
           )}
 
           {invoiceId && (
-            <a href={`/sales/${invoiceId}`} className="mt-3 flex items-center justify-center gap-1.5 border border-[#b8cbc1] py-2 text-xs font-semibold text-[#126b4b] hover:bg-[#f4f8f6]">
+            <a href={`/sales/${invoiceId}`} className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-[#b8cbc1] bg-white py-2 text-xs font-bold text-[#126b4b] transition hover:bg-[#f4f8f6]">
               Lihat struk terakhir <ArrowRight className="size-3.5" />
             </a>
           )}
@@ -791,7 +817,7 @@ export function PosTerminal({
             type="button"
             disabled={isSubmitting || cart.length === 0 || Boolean(checkoutDisabledReason)}
             onClick={completeSale}
-            className="mt-3 h-12 w-full bg-[#187c59] px-4 text-sm font-bold text-white transition-colors hover:bg-[#126a4b] disabled:cursor-not-allowed disabled:bg-[#c8d0cc]"
+            className="mt-3 h-13 w-full rounded-2xl bg-gradient-to-r from-[#198760] to-[#116b4c] px-4 text-sm font-black text-white shadow-[0_6px_18px_rgba(25,135,96,.35)] transition hover:shadow-[0_8px_24px_rgba(25,135,96,.45)] active:scale-[0.98] disabled:cursor-not-allowed disabled:from-[#c8d0cc] disabled:to-[#c8d0cc] disabled:shadow-none"
           >
             {isSubmitting
               ? "Menyimpan transaksi..."
