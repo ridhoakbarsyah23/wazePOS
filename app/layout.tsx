@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
+import { PwaRegister } from "@/components/pwa-register";
 import { siteConfig } from "@/lib/site";
 
 const manrope = Manrope({
@@ -32,6 +33,19 @@ export const metadata: Metadata = {
     siteName: "wazePOS",
   },
   twitter: { card: "summary_large_image" },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/pwa-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/pwa-192.png", sizes: "192x192", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "wazePOS",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -40,12 +54,17 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   interactiveWidget: "resizes-visual",
   themeColor: "#146b4f",
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" className={manrope.variable} data-scroll-behavior="smooth">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <PwaRegister />
+      </body>
     </html>
   );
 }
