@@ -41,6 +41,14 @@ export const auth = betterAuth({
   }),
   account: {
     encryptOAuthTokens: true,
+    // Pengguna dapat mendaftar via email/kata sandi tanpa verifikasi email
+    // (requireEmailVerification: false), sehingga penautan otomatis akun Google
+    // ke user yang sama emailnya harus diizinkan secara eksplisit melalui
+    // trustedProviders — tanpa ini, login Google mengembalikan account_not_linked.
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
+    },
   },
   emailAndPassword: {
     enabled: true,
