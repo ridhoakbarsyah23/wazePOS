@@ -33,6 +33,24 @@ const outletId = "33333333-3333-4333-8333-333333333333";
 const productId = "44444444-4444-4444-8444-444444444444";
 const clientRequestId = "55555555-5555-4555-8555-555555555555";
 
+/**
+ * Membuat mock tx.insert yang merekam nilai yang di-insert sekaligus
+ * mendukung rantai `.values().onConflictDoUpdate().returning()` untuk
+ * counter nomor invoice.
+ */
+function makeTxInsert(insertedValues: unknown[]) {
+  return vi.fn(() => ({
+    values: vi.fn((values: unknown) => {
+      insertedValues.push(values);
+      return {
+        onConflictDoUpdate: vi.fn(() => ({
+          returning: vi.fn(async () => [{ lastNumber: 1 }]),
+        })),
+      };
+    }),
+  }));
+}
+
 function activeSubscription(plan: "tumbuh" | "bisnis") {
   return {
     id: "subscription-1",
@@ -145,11 +163,7 @@ describe("POST /api/sales", () => {
     const tx = {
       select: vi.fn(() => selectBuilder(queryResults.shift() ?? [])),
       update: vi.fn(() => updateBuilder),
-      insert: vi.fn(() => ({
-        values: vi.fn(async (values: unknown) => {
-          insertedValues.push(values);
-        }),
-      })),
+      insert: makeTxInsert(insertedValues),
     };
     mocks.transaction.mockImplementation(async (callback) => callback(tx));
 
@@ -158,7 +172,10 @@ describe("POST /api/sales", () => {
 
     expect(response.status).toBe(201);
     expect(body).toMatchObject({ total: 20_000, changeAmount: 0 });
-    expect(insertedValues[0]).toEqual(
+    const saleInsert = insertedValues.find(
+      (value) => typeof value === "object" && value !== null && "paymentMethod" in value,
+    );
+    expect(saleInsert).toEqual(
       expect.objectContaining({ paymentMethod: "qris", changeAmount: 0 }),
     );
   });
@@ -210,11 +227,7 @@ describe("POST /api/sales", () => {
     const tx = {
       select: vi.fn(() => selectBuilder(queryResults.shift() ?? [])),
       update: vi.fn(() => updateBuilder),
-      insert: vi.fn(() => ({
-        values: vi.fn(async (values: unknown) => {
-          insertedValues.push(values);
-        }),
-      })),
+      insert: makeTxInsert(insertedValues),
     };
     mocks.transaction.mockImplementation(async (callback) => callback(tx));
 
@@ -223,9 +236,13 @@ describe("POST /api/sales", () => {
 
     expect(response.status).toBe(201);
     expect(body).toMatchObject({ total: 20_000, changeAmount: 5_000 });
+    expect(body.invoiceNumber).toMatch(/^INV-\d{8}-\d{4}$/);
     expect(tx.update).toHaveBeenCalledOnce();
-    expect(insertedValues).toHaveLength(3);
-    expect(insertedValues[1]).toEqual([
+    // Insert ke-1 = counter invoice, ke-2 = sale, ke-3 = saleItem, ke-4 = stockMovement.
+    expect(insertedValues[0]).toEqual(
+      expect.objectContaining({ counterDate: expect.any(String), lastNumber: 1 }),
+    );
+    expect(insertedValues[2]).toEqual([
       expect.objectContaining({
         productId,
         productName: "Kopi Susu",
@@ -235,7 +252,7 @@ describe("POST /api/sales", () => {
         subtotal: 20_000,
       }),
     ]);
-    expect(insertedValues[0]).toEqual(
+    expect(insertedValues[1]).toEqual(
       expect.objectContaining({ clientRequestId }),
     );
   });

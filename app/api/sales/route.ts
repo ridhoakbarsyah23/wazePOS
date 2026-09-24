@@ -6,14 +6,15 @@ import { db } from "@/db";
 import { customer, inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
+import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
 import { saleSchema } from "@/lib/validation/sale";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
-function makeInvoiceNumber() {
-  const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
-  return `INV-${stamp}-${randomUUID().slice(0, 6).toUpperCase()}`;
-}
+const IDEMPOTENCY_HINTS = [
+  "sale_business_client_request_idx",
+  "sale_business_invoice_idx",
+] as const;
 
 function isClientRequestConflict(error: unknown) {
   let current = error;
@@ -28,10 +29,10 @@ function isClientRequestConflict(error: unknown) {
       cause?: unknown;
     };
     const isUniqueViolation = candidate.code === "23505";
+    const message = typeof candidate.message === "string" ? candidate.message : null;
     const isClientRequestConstraint =
       candidate.constraint === "sale_business_client_request_idx" ||
-      (typeof candidate.message === "string" &&
-        candidate.message.includes("sale_business_client_request_idx"));
+      (message !== null && IDEMPOTENCY_HINTS.some((hint) => message.includes(hint)));
 
     if (isUniqueViolation && isClientRequestConstraint) return true;
     current = candidate.cause;
@@ -202,7 +203,8 @@ export async function POST(request: Request) {
         throw new Error("TRANSACTION_LIMIT");
       }
       const total = subtotal;
-      const invoiceNumber = makeInvoiceNumber();
+      // Nomor invoice urut per usaha per hari (WIB), diambil secara atomik di dalam transaksi.
+      const invoiceNumber = await nextInvoiceNumber(tx, membership.businessId);
       if (parsed.data.paidAmount < total) {
         throw new Error("INSUFFICIENT_PAYMENT");
       }

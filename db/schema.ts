@@ -346,6 +346,28 @@ export const sale = pgTable(
   ],
 );
 
+/**
+ * Counter nomor invoice per usaha per hari (zona WIB).
+ * Baris di-upsert secara atomik saat transaksi kasir, sehingga nomor antrian
+ * tidak akan bentrok meskipun ada beberapa transaksi bersamaan.
+ */
+export const invoiceCounter = pgTable(
+  "invoice_counter",
+  {
+    id: text("id").primaryKey(),
+    businessId: text("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    /** Kunci tanggal format YYYYMMDD zona Asia/Jakarta. */
+    counterDate: text("counter_date").notNull(),
+    lastNumber: integer("last_number").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("invoice_counter_business_date_idx").on(table.businessId, table.counterDate),
+  ],
+);
+
 export const saleItem = pgTable(
   "sale_item",
   {
@@ -387,4 +409,5 @@ export const schema = {
   cashShift,
   sale,
   saleItem,
+  invoiceCounter,
 };

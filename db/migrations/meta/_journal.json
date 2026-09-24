@@ -127,6 +127,13 @@
       "when": 1790064892259,
       "tag": "0017_nostalgic_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790236675629,
+      "tag": "0018_add_invoice_counter",
+      "breakpoints": true
     }
   ]
 }
