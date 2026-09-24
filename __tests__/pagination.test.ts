@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { PAGE_SIZE, getPageNumbers } from "@/lib/pagination";
+import {
+  PAGE_SIZE,
+  INVENTORY_PAGE_SIZE,
+  PRODUCTS_PAGE_SIZE,
+  TRANSACTIONS_PAGE_SIZE,
+  getPageNumbers,
+} from "@/lib/pagination";
 
 describe("getPageNumbers", () => {
   it("menampilkan seluruh halaman tanpa ellipsis saat jumlah halaman sedikit", () => {
@@ -33,5 +39,17 @@ describe("PAGE_SIZE", () => {
   it("memakai ukuran halaman yang wajar", () => {
     expect(PAGE_SIZE).toBeGreaterThan(0);
     expect(Number.isInteger(PAGE_SIZE)).toBe(true);
+  });
+
+  it("membatasi riwayat transaksi menjadi 10 data per halaman", () => {
+    expect(TRANSACTIONS_PAGE_SIZE).toBe(10);
+  });
+
+  it("membatasi daftar produk menjadi 10 data per halaman", () => {
+    expect(PRODUCTS_PAGE_SIZE).toBe(10);
+  });
+
+  it("membatasi daftar stok menjadi 10 data per halaman", () => {
+    expect(INVENTORY_PAGE_SIZE).toBe(10);
   });
 });

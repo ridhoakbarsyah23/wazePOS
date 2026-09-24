@@ -1,4 +1,8 @@
 export const PAGE_SIZE = 25;
+export const INVENTORY_PAGE_SIZE = 10;
+export const PRODUCTS_PAGE_SIZE = 10;
+export const TRANSACTIONS_PAGE_SIZE = 10;
+export const REPORTS_PAGE_SIZE = 10;
 
 export const pageLinkClass =
   "inline-flex h-8 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] transition hover:border-[#187c59] hover:text-[#187c59]";

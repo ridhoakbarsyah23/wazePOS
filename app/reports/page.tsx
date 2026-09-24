@@ -31,7 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
+import { REPORTS_PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
 import { hasPlanFeature } from "@/lib/plans";
 import { formatReportRange } from "@/lib/reporting";
 import {
@@ -56,7 +56,7 @@ export default async function ReportsPage({
 }) {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
-  const { membership, currentSubscription, subDetails } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const params = await searchParams;
   const saleFilters = parseSaleFilterParams(params);
@@ -75,22 +75,7 @@ export default async function ReportsPage({
     outletId: activeOutlet?.id ?? null,
   });
 
-  const [sales, completedSummary, topProducts, itemTotals, paymentRows, voidedSales] = await Promise.all([
-    db
-      .select({
-        id: sale.id,
-        invoiceNumber: sale.invoiceNumber,
-        total: sale.total,
-        paymentMethod: sale.paymentMethod,
-        outletName: outlet.name,
-        createdAt: sale.createdAt,
-      })
-      .from(sale)
-      .innerJoin(outlet, eq(outlet.id, sale.outletId))
-      .where(and(...reportFilters, eq(sale.status, "completed")))
-      .orderBy(desc(sale.createdAt))
-      .limit(PAGE_SIZE + 1),
-
+  const [completedSummary, topProducts, itemTotals, paymentRows, voidedSales] = await Promise.all([
     db
       .select({
         revenue: sql<number>`coalesce(sum(${sale.total}), 0)::int`,
@@ -150,11 +135,27 @@ export default async function ReportsPage({
   const totalItemsSold = Number(itemTotals[0]?.quantity ?? 0);
   const averageTransaction = totalTransactions > 0 ? Math.round(total / totalTransactions) : 0;
 
-  const totalPages = Math.max(Math.ceil(totalTransactions / PAGE_SIZE), 1);
+  const totalPages = Math.max(Math.ceil(totalTransactions / REPORTS_PAGE_SIZE), 1);
   const page = Math.min(currentPage, totalPages);
   const hasNext = page < totalPages;
-  const pageRows = sales.slice(0, PAGE_SIZE);
-  const rangeStart = totalTransactions === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+
+  const pageRows = await db
+    .select({
+      id: sale.id,
+      invoiceNumber: sale.invoiceNumber,
+      total: sale.total,
+      paymentMethod: sale.paymentMethod,
+      outletName: outlet.name,
+      createdAt: sale.createdAt,
+    })
+    .from(sale)
+    .innerJoin(outlet, eq(outlet.id, sale.outletId))
+    .where(and(...reportFilters, eq(sale.status, "completed")))
+    .orderBy(desc(sale.createdAt))
+    .limit(REPORTS_PAGE_SIZE)
+    .offset((page - 1) * REPORTS_PAGE_SIZE);
+
+  const rangeStart = totalTransactions === 0 ? 0 : (page - 1) * REPORTS_PAGE_SIZE + 1;
   const rangeEnd = rangeStart + pageRows.length - 1;
 
   function pageHref(targetPage: number) {
@@ -187,11 +188,13 @@ export default async function ReportsPage({
   return (
     <AppHeader
       businessName={membership.businessName}
+      userName={session.user.name}
       outletName={activeOutlet?.name ?? "Semua Gerai"}
       outlets={reportOutlets}
       activeOutletId={activeOutlet?.id ?? "all"}
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+      allowDarkMode={allowDarkMode}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
         <div className="flex flex-col gap-2">

@@ -14,7 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Option = { id: string; name: string };
-type StockSetting = { outletId: string; productId: string; lowStockThreshold: number };
+type StockSetting = {
+  outletId: string;
+  productId: string;
+  currentQuantity: number;
+  lowStockThreshold: number;
+};
 
 export function StockAdjustmentForm({
   outlets,
@@ -22,12 +27,14 @@ export function StockAdjustmentForm({
   stockSettings,
   initialOutletId,
   initialProductId,
+  showSelectionHint = false,
 }: {
   outlets: Option[];
   products: Option[];
   stockSettings: StockSetting[];
   initialOutletId?: string;
   initialProductId?: string;
+  showSelectionHint?: boolean;
 }) {
   const defaultOutletId = outlets.some((item) => item.id === initialOutletId)
     ? initialOutletId!
@@ -45,6 +52,16 @@ export function StockAdjustmentForm({
   const [note, setNote] = useState("");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [pending, setPending] = useState(false);
+  const currentStockSetting = stockSettings.find(
+    (item) => item.outletId === outletId && item.productId === productId,
+  );
+  const parsedQuantity = Number(quantity);
+  const hasValidQuantity = quantity !== "" && Number.isFinite(parsedQuantity) && parsedQuantity >= 0;
+  const currentQuantity = currentStockSetting?.currentQuantity ?? 0;
+  const quantityDiff = hasValidQuantity ? parsedQuantity - currentQuantity : null;
+  const wouldBeLow = hasValidQuantity
+    ? parsedQuantity <= Number(threshold || 0)
+    : false;
 
   function syncThreshold(nextOutletId: string, nextProductId: string) {
     const setting = stockSettings.find(
@@ -89,14 +106,14 @@ export function StockAdjustmentForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      {initialProductId && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-sm text-blue-900">
-          <Boxes className="mt-0.5 size-4 shrink-0" />
+    <form onSubmit={submit} className="space-y-5">
+      {showSelectionHint && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-[#cae8d9] bg-[#f1f8f4] p-3.5 text-sm text-[#106348]">
+          <Boxes className="mt-0.5 size-4 shrink-0 text-[#198760]" />
           <div>
-            <strong className="block text-xs font-extrabold uppercase tracking-wide">Restock cepat aktif</strong>
+            <strong className="block text-xs font-extrabold">Produk siap diperbarui</strong>
             <span className="mt-1 block text-xs leading-5">
-              Produk dan gerai sudah dipilih. Masukkan jumlah stok aktual setelah barang diterima, bukan jumlah penambahannya.
+              Gerai dan produk telah dipilih. Masukkan jumlah fisik terbaru; nilai ini menggantikan stok sistem, bukan menambahnya.
             </span>
           </div>
         </div>
@@ -120,10 +137,10 @@ export function StockAdjustmentForm({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="adj-outlet" className="text-xs font-bold flex items-center gap-1.5">
-            <Store className="size-3.5 text-[#198760]" /> Pilih Gerai
+            <Store className="size-3.5 text-[#198760]" /> Gerai
           </Label>
           <select
             id="adj-outlet"
@@ -133,7 +150,7 @@ export function StockAdjustmentForm({
               setOutletId(nextOutletId);
               syncThreshold(nextOutletId, productId);
             }}
-            className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+            className="h-11 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
             disabled={pending || outlets.length === 0}
             required
           >
@@ -147,7 +164,7 @@ export function StockAdjustmentForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="adj-product" className="text-xs font-bold flex items-center gap-1.5">
-            <Boxes className="size-3.5 text-[#198760]" /> Pilih Produk
+            <Boxes className="size-3.5 text-[#198760]" /> Produk
           </Label>
           <select
             id="adj-product"
@@ -157,7 +174,7 @@ export function StockAdjustmentForm({
               setProductId(nextProductId);
               syncThreshold(outletId, nextProductId);
             }}
-            className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+            className="h-11 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
             disabled={pending || products.length === 0}
             required
           >
@@ -169,9 +186,18 @@ export function StockAdjustmentForm({
           </select>
         </div>
 
+        <div className="rounded-xl border border-[#dce9e2] bg-[#f7faf8] p-3.5 md:col-span-2">
+          <p className="m-0 text-xs font-bold text-[#405148]">
+            Stok sistem: {currentStockSetting?.currentQuantity.toLocaleString("id-ID") ?? 0} unit
+          </p>
+          <p className="m-0 mt-1 text-[11px] leading-4 text-[#71857c]">
+            Masukkan hasil perhitungan fisik terbaru. Sistem akan mencatat selisihnya secara otomatis.
+          </p>
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="adj-quantity" className="text-xs font-bold flex items-center gap-1.5">
-            <SlidersHorizontal className="size-3.5 text-[#198760]" /> Jumlah Stok Aktual *
+            <SlidersHorizontal className="size-3.5 text-[#198760]" /> Stok aktual <span className="text-rose-600">*</span>
           </Label>
           <Input
             id="adj-quantity"
@@ -182,13 +208,14 @@ export function StockAdjustmentForm({
             required
             placeholder="0"
             disabled={pending}
-            autoFocus={Boolean(initialProductId)}
+            autoFocus={showSelectionHint}
           />
+          <p className="m-0 text-[11px] leading-4 text-[#82928a]">Jumlah produk yang tersedia saat ini.</p>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="adj-threshold" className="text-xs font-bold flex items-center gap-1.5">
-            <AlertTriangle className="size-3.5 text-amber-600" /> Batas Stok Minimum
+            <AlertTriangle className="size-3.5 text-amber-600" /> Batas stok minimum
           </Label>
           <Input
             id="adj-threshold"
@@ -200,30 +227,60 @@ export function StockAdjustmentForm({
             placeholder="5"
             disabled={pending}
           />
+          <p className="m-0 text-[11px] leading-4 text-[#82928a]">Peringatan muncul saat stok mencapai angka ini.</p>
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        {quantityDiff !== null && (
+          <div
+            className={`flex items-start gap-2.5 rounded-xl border p-3.5 md:col-span-2 ${
+              quantityDiff === 0
+                ? "border-[#dce9e2] bg-[#f7faf8] text-[#405148]"
+                : quantityDiff > 0
+                  ? "border-[#cae8d9] bg-[#f1f8f4] text-[#106348]"
+                  : "border-[#f2d4b9] bg-[#fff0e5] text-[#a35f12]"
+            }`}
+          >
+            {quantityDiff === 0 ? (
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#198760]" />
+            ) : (
+              <Boxes className="mt-0.5 size-4 shrink-0" />
+            )}
+            <span className="text-xs font-semibold leading-5">
+              {quantityDiff === 0
+                ? "Stok aktual sama dengan stok sistem. Tidak ada selisih yang akan dicatat."
+                : `Stok akan ${quantityDiff > 0 ? "bertambah" : "berkurang"} ${Math.abs(quantityDiff).toLocaleString("id-ID")} unit menjadi ${parsedQuantity.toLocaleString("id-ID")} unit.`}
+              {wouldBeLow && (
+                <span className="mt-1 block font-medium">
+                  Perhatian: nilai ini berada pada atau di bawah batas stok minimum.
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
+        <div className="space-y-1.5 md:col-span-2">
           <Label htmlFor="adj-note" className="text-xs font-bold flex items-center gap-1.5">
-            <FileText className="size-3.5 text-[#198760]" /> Catatan / Keterangan Penyesuaian
+            <FileText className="size-3.5 text-[#198760]" /> Catatan <span className="font-medium text-[#82928a]">(opsional)</span>
           </Label>
           <Input
             id="adj-note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
             maxLength={200}
-            placeholder="Contoh: Stok opname berkala, retur supplier, barang rusak"
+            placeholder="Contoh: Stok opname berkala, retur pemasok, atau barang rusak"
             disabled={pending}
           />
         </div>
       </div>
 
-      <div className="flex justify-end pt-2">
+      <div className="flex justify-end border-t border-[#edf2ee] pt-4">
         <Button
           type="submit"
           size="sm"
+          className="h-11 w-full px-5 sm:w-auto"
           disabled={pending || !outletId || !productId || quantity === ""}
         >
-          {pending ? "Menyimpan..." : "Simpan Perubahan Stok"}
+          {pending ? "Menyimpan..." : "Simpan penyesuaian"}
         </Button>
       </div>
     </form>

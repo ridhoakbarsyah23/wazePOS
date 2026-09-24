@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PRODUCTS_PAGE_SIZE, getPageNumbers } from "@/lib/pagination";
 
 export type Product = {
   id: string;
@@ -71,6 +72,7 @@ export function ProductManager({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingItem, setEditingItem] = useState<Product | null>(null);
@@ -136,6 +138,16 @@ export function ProductManager({
     });
   }, [items, searchQuery, categoryFilter, statusFilter]);
 
+  const totalPages = Math.max(Math.ceil(filteredItems.length / PRODUCTS_PAGE_SIZE), 1);
+  const page = Math.min(currentPage, totalPages);
+  const pageItems = filteredItems.slice(
+    (page - 1) * PRODUCTS_PAGE_SIZE,
+    page * PRODUCTS_PAGE_SIZE,
+  );
+  const pageNumbers = getPageNumbers(page, totalPages);
+  const rangeStart = filteredItems.length === 0 ? 0 : (page - 1) * PRODUCTS_PAGE_SIZE + 1;
+  const rangeEnd = rangeStart + pageItems.length - 1;
+
   // Margin calculation for create form
   const newMargin = useMemo(() => {
     if (newProduct.sellingPrice <= 0) return 0;
@@ -179,6 +191,7 @@ export function ProductManager({
         ...emptyProduct,
         outletId: outlets[0]?.id ?? "",
       });
+      setCurrentPage(1);
       // Tambahkan ke list dari respons API agar alert tetap terlihat
       // (window.location.reload() akan menghapus feedback sebelum 15 detik).
       setItems((prev) => [
@@ -650,7 +663,10 @@ export function ProductManager({
               <Input
                 placeholder="Cari nama produk atau SKU..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-9"
               />
             </div>
@@ -661,7 +677,10 @@ export function ProductManager({
                 <Tag className="size-3.5 text-[#627069]" />
                 <select
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#15211d] outline-none"
                 >
                   <option value="all">Semua Kategori</option>
@@ -678,7 +697,10 @@ export function ProductManager({
                 <Filter className="size-3.5 text-[#627069]" />
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value as "all" | "active" | "inactive");
+                    setCurrentPage(1);
+                  }}
                   className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#15211d] outline-none"
                 >
                   <option value="all">Semua Status</option>
@@ -707,7 +729,7 @@ export function ProductManager({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredItems.map((item) => {
+              {pageItems.map((item) => {
                 const categoryName = item.categoryId ? categoryMap.get(item.categoryId) : null;
                 const margin =
                   item.sellingPrice > 0
@@ -836,6 +858,57 @@ export function ProductManager({
             </TableBody>
           </Table>
         </div>
+        {filteredItems.length > 0 && (
+          <div className="flex flex-col gap-3 border-t border-[#e2ece6] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="m-0 text-xs text-[#71857c]">
+              Menampilkan <span className="font-semibold text-[#405148]">{rangeStart}&ndash;{rangeEnd}</span> dari{" "}
+              <span className="font-semibold text-[#405148]">{filteredItems.length}</span> produk
+            </p>
+            <nav className="flex flex-wrap items-center gap-1" aria-label="Navigasi halaman produk">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(page - 1)}
+                disabled={page === 1}
+                className="inline-flex h-8 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] transition hover:border-[#198760] hover:text-[#198760] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Sebelumnya
+              </button>
+              {pageNumbers.map((item, index) =>
+                item === "ellipsis" ? (
+                  <span key={`ellipsis-${index}`} className="px-1 text-xs text-[#95a59e]">
+                    &hellip;
+                  </span>
+                ) : item === page ? (
+                  <span
+                    key={item}
+                    aria-current="page"
+                    className="grid size-8 place-items-center rounded-lg bg-[#eaf7f0] text-xs font-bold text-[#198760]"
+                  >
+                    {item}
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setCurrentPage(item)}
+                    className="grid size-8 place-items-center rounded-lg text-xs font-semibold text-[#627069] transition hover:bg-[#f0f7f3] hover:text-[#198760]"
+                    aria-label={`Buka halaman produk ${item}`}
+                  >
+                    {item}
+                  </button>
+                ),
+              )}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(page + 1)}
+                disabled={page === totalPages}
+                className="inline-flex h-8 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] transition hover:border-[#198760] hover:text-[#198760] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Berikutnya
+              </button>
+            </nav>
+          </div>
+        )}
       </Card>
     </div>
   );
