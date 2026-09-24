@@ -57,11 +57,29 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
         return;
       }
 
+      // Gunakan server continuation sebagai fallback agar sesi tetap diproses
+      // di server meskipun request tujuan gagal atau tidak dapat diproses.
+      let destination = "/auth/continue";
+      try {
+        const destinationResponse = await fetch("/api/auth/destination", {
+          method: "GET",
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (destinationResponse.ok) {
+          const payload = await destinationResponse.json() as { destination?: unknown };
+          if (payload.destination === "/admin" || payload.destination === "/dashboard") {
+            destination = payload.destination;
+          }
+        }
+      } catch {
+        // Server continuation akan menentukan tujuan dari sesi yang baru dibuat.
+      }
+
       // Navigasi dibungkus useTransition: isNavigating tetap true sampai
-      // dashboard selesai dirender, sehingga animasi loading tidak terputus.
+      // halaman tujuan selesai dirender, sehingga animasi loading tidak terputus.
       startNavigation(() => {
-        router.replace("/dashboard");
-        router.refresh();
+        router.replace(destination);
       });
     } catch {
       setErrorMessage("Tidak dapat terhubung ke server. Silakan coba lagi.");
