@@ -7,6 +7,7 @@ const sensitiveKeys = new Set([
   "GOOGLE_CLIENT_SECRET",
   "MIDTRANS_SERVER_KEY",
   "LEAD_WEBHOOK_SECRET",
+  "PLATFORM_ADMIN_SEED_PASSWORD",
 ]);
 
 const placeholderTokens = [

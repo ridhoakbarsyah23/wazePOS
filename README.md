@@ -139,6 +139,9 @@ NEXT_PUBLIC_SITE_URL=https://contoh-domain-resmi
 MIDTRANS_SERVER_KEY=server-key-dari-midtrans
 MIDTRANS_IS_PRODUCTION=false
 MIDTRANS_NOTIFICATION_URL=https://contoh-domain-resmi/api/payments/midtrans/webhook
+PLATFORM_ADMIN_EMAILS=owner@contoh-domain-resmi.com
+PLATFORM_ADMIN_NAME=Platform Admin
+PLATFORM_ADMIN_SEED_PASSWORD=
 LEAD_WEBHOOK_URL=https://endpoint-backend-atau-crm/leads
 LEAD_WEBHOOK_SECRET=secret-opsional
 ```
@@ -152,10 +155,46 @@ LEAD_WEBHOOK_SECRET=secret-opsional
 - `MIDTRANS_SERVER_KEY`: Server Key Midtrans yang hanya boleh tersedia di server.
 - `MIDTRANS_IS_PRODUCTION`: gunakan `false` untuk sandbox dan ubah ke `true` hanya setelah pengujian serta konfigurasi production selesai.
 - `MIDTRANS_NOTIFICATION_URL`: URL publik `POST /api/payments/midtrans/webhook` untuk notifikasi pembayaran.
+- `PLATFORM_ADMIN_EMAILS`: allowlist email akun internal yang boleh membuka `/admin`; pisahkan beberapa email dengan koma dan jangan gunakan awalan `NEXT_PUBLIC_`.
+- `PLATFORM_ADMIN_NAME`: nama akun yang dibuat oleh seeder Platform Admin lokal.
+- `PLATFORM_ADMIN_SEED_PASSWORD`: password sementara untuk seeder; simpan hanya di environment lokal/secret store dan hapus setelah akun selesai dibuat.
 - `LEAD_WEBHOOK_URL`: endpoint backend/CRM yang menerima JSON lead. Wajib untuk form di production.
 - `LEAD_WEBHOOK_SECRET`: Bearer token opsional untuk webhook.
 
 Nilai `NEXT_PUBLIC_*` dimasukkan ke bundle ketika proses build. Jalankan ulang `npm run build` setelah nilainya berubah.
+
+### Seeder Platform Admin
+
+Pastikan PostgreSQL lokal aktif dan isi `PLATFORM_ADMIN_EMAILS` di `.env.local`, lalu jalankan:
+
+```powershell
+docker compose up -d
+npm.cmd run admin:seed
+```
+
+Seeder memakai email pertama dari `PLATFORM_ADMIN_EMAILS`. Seeder membuat akun credential bila email belum terdaftar, atau menambahkan login password ke akun Google yang belum memiliki credential. Jika `PLATFORM_ADMIN_SEED_PASSWORD` dikosongkan, password kuat akan dibuat dan ditampilkan sekali di terminal.
+
+Seeder tidak mengganti password akun yang sudah ada. Untuk akun lama yang passwordnya tidak diketahui, jalankan:
+
+```powershell
+npm.cmd run admin:reset
+```
+
+Seeder menolak database remote secara default. Setelah berhasil, hapus `PLATFORM_ADMIN_SEED_PASSWORD` dari environment jika sebelumnya diisi, lalu jalankan aplikasi. Login menggunakan email dan password seeder (atau Google dengan email yang sama) akan otomatis diarahkan ke `/admin`.
+
+## Platform Admin
+
+Halaman `/admin` adalah dashboard internal read-only untuk memantau data pelanggan dan subscription. Fitur saat ini mencakup:
+
+- Filter status subscription, jenis usaha, paket, onboarding, dan rentang tanggal pendaftaran.
+- Sorting berdasarkan tanggal, nama, akhir trial/periode, atau aktivitas transaksi terakhir.
+- Pagination 10 usaha per halaman.
+- Detail usaha berbasis tab: subscription, pembayaran, tim, outlet, aktivitas transaksi, dan audit admin.
+- Ringkasan subscription, estimasi MRR aktif, trial yang akan berakhir, dan trial conversion.
+- Export CSV untuk seluruh hasil filter, bukan hanya halaman yang sedang terlihat.
+- Audit log untuk akses detail usaha dan export daftar usaha.
+
+Jalankan `npm run db:migrate` setelah pulling perubahan yang menambah tabel audit Platform Admin. Endpoint admin memverifikasi allowlist `PLATFORM_ADMIN_EMAILS` di server dan response detail/export menggunakan `private, no-store`.
 
 ## Pembayaran subscription
 

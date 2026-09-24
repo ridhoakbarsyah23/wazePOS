@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "security:secrets": "node scripts/check-secrets.mjs",
+    "admin:seed": "node scripts/seed-platform-admin.mjs --generate-password",
+    "admin:reset": "node scripts/seed-platform-admin.mjs --reset-password --generate-password",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
     "db:studio": "drizzle-kit studio"

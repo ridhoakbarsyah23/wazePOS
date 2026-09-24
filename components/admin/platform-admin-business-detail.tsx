@@ -1,0 +1,410 @@
+"use client";
+
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  Activity,
+  AlertCircle,
+  Building2,
+  CalendarDays,
+  ChevronRight,
+  Clock3,
+  CreditCard,
+  Eye,
+  History,
+  LayoutDashboard,
+  Mail,
+  MapPin,
+  Package,
+  ReceiptText,
+  ShieldCheck,
+  Store,
+  UserRound,
+  UsersRound,
+  WalletCards,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type {
+  PlatformAdminBusiness,
+  PlatformAdminBusinessDetailData,
+  PlatformAdminPaymentDetail,
+} from "@/lib/platform-admin-types";
+import { platformAdminStateMeta } from "@/lib/platform-admin-ui";
+
+type DetailTrigger = "icon" | "full";
+
+type PlatformAdminBusinessDetailProps = {
+  business: PlatformAdminBusiness;
+  trigger?: DetailTrigger;
+};
+
+type DetailTab = "overview" | "subscription" | "payments" | "team" | "outlets" | "activity" | "audit";
+
+function formatDate(value: Date | string | null | undefined) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatDateTime(value: Date | string | null | undefined) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
+}
+
+function getBoundary(item: PlatformAdminBusiness) {
+  return item.state.startsWith("trial") ? item.trialEndsAt : item.currentPeriodEnd;
+}
+
+function getBoundaryLabel(item: PlatformAdminBusiness) {
+  if (item.state.startsWith("trial")) return "Akhir trial";
+  if (item.state === "active") return "Akhir periode";
+  return "Batas waktu";
+}
+
+function getPlanLabel(plan: PlatformAdminBusiness["plan"]) {
+  return plan === "bisnis" ? "Bisnis" : plan === "tumbuh" ? "Tumbuh" : "Belum ada paket";
+}
+
+function getPaymentMeta(status: PlatformAdminPaymentDetail["status"]) {
+  switch (status) {
+    case "paid":
+      return { label: "Berhasil", variant: "default" as const };
+    case "pending":
+      return { label: "Pending", variant: "warning" as const };
+    case "failed":
+      return { label: "Gagal", variant: "destructive" as const };
+    case "refunded":
+      return { label: "Dikembalikan", variant: "secondary" as const };
+    default:
+      return { label: "Kedaluwarsa", variant: "outline" as const };
+  }
+}
+
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  mono = false,
+  full = false,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail?: string;
+  mono?: boolean;
+  full?: boolean;
+}) {
+  return (
+    <div className={`min-w-0 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5 ${full ? "sm:col-span-2" : ""}`}>
+      <dt className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#718078]">
+        <span className="grid size-7 place-items-center rounded-lg bg-white text-[#198760] shadow-sm">
+          <Icon className="size-3.5" aria-hidden="true" />
+        </span>
+        {label}
+      </dt>
+      <dd className={`mt-2 break-words text-sm font-extrabold text-[#15211d] ${mono ? "font-mono text-xs" : ""}`}>
+        {value}
+        {detail && <span className="mt-1 block text-xs font-medium leading-5 text-[#627069]">{detail}</span>}
+      </dd>
+    </div>
+  );
+}
+
+function EmptyDetail({ children }: { children: string }) {
+  return <div className="rounded-2xl border border-dashed border-[#dce8e1] bg-[#f9fcfa] px-4 py-8 text-center text-sm text-[#627069]">{children}</div>;
+}
+
+function LoadingDetail() {
+  return (
+    <div className="space-y-3" aria-live="polite" aria-label="Memuat detail usaha">
+      <div className="h-10 animate-pulse rounded-xl bg-[#edf3ef]" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[1, 2, 3, 4].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-[#edf3ef]" />)}
+      </div>
+    </div>
+  );
+}
+
+function PaymentList({ payments }: { payments: PlatformAdminBusinessDetailData["payments"] }) {
+  if (payments.length === 0) return <EmptyDetail>Belum ada pembayaran untuk usaha ini.</EmptyDetail>;
+  return (
+    <ul className="space-y-2">
+      {payments.map((payment) => {
+        const meta = getPaymentMeta(payment.status);
+        return (
+          <li key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-extrabold text-[#15211d]">{formatRupiah(payment.amount)}</span>
+                <Badge variant={meta.variant}>{meta.label}</Badge>
+              </div>
+              <p className="mt-1 text-xs text-[#627069]">{payment.provider} · {payment.providerOrderId}</p>
+              <p className="mt-1 text-[11px] text-[#82928a]">{formatDateTime(payment.paidAt ?? payment.createdAt)}</p>
+            </div>
+            <span className="text-xs font-bold capitalize text-[#527066]">{payment.plan}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+export function PlatformAdminBusinessDetail({
+  business,
+  trigger = "full",
+}: PlatformAdminBusinessDetailProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<DetailTab>("overview");
+  const [detail, setDetail] = useState<PlatformAdminBusinessDetailData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const controller = new AbortController();
+
+    void fetch(`/api/admin/businesses/${encodeURIComponent(business.id)}`, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+          throw new Error(payload?.message ?? "Detail usaha belum dapat dimuat.");
+        }
+        return (await response.json()) as { detail: PlatformAdminBusinessDetailData };
+      })
+      .then((payload) => setDetail(payload.detail))
+      .catch((fetchError: unknown) => {
+        if (fetchError instanceof DOMException && fetchError.name === "AbortError") return;
+        setError(fetchError instanceof Error ? fetchError.message : "Detail usaha belum dapat dimuat.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [business.id, isOpen, reloadKey]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
+  const currentBusiness = detail?.business ?? business;
+  const currentMeta = platformAdminStateMeta[currentBusiness.state];
+
+  function openDetail() {
+    setError("");
+    setIsLoading(true);
+    setActiveTab("overview");
+    setIsOpen(true);
+  }
+
+  function retryDetail() {
+    setError("");
+    setIsLoading(true);
+    setReloadKey((value) => value + 1);
+  }
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant={trigger === "icon" ? "ghost" : "outline"}
+        size="sm"
+        onClick={openDetail}
+        aria-label={`Lihat detail ${business.name}`}
+        className={trigger === "icon" ? "size-9 p-0 text-[#527066] hover:bg-[#eaf7f0] hover:text-[#106348]" : "h-10 w-full gap-2 text-xs sm:w-auto"}
+      >
+        <Eye className="size-4" aria-hidden="true" />
+        {trigger === "full" && <span>Lihat detail</span>}
+        {trigger === "full" && <ChevronRight className="ml-auto size-4" aria-hidden="true" />}
+      </Button>
+
+      {isOpen && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[250] flex items-end justify-center bg-[#09271d]/55 p-0 backdrop-blur-[3px] sm:items-center sm:p-5"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={descriptionId}
+        >
+          <div className="absolute inset-0" aria-hidden="true" onClick={() => setIsOpen(false)} />
+          <section ref={dialogRef} className="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] sm:max-w-2xl sm:rounded-3xl">
+            <div className="flex items-start gap-3 border-b border-[#e8efeb] p-4 sm:p-5">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#eaf7f0] text-[#198760]">
+                <Building2 className="size-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078]">Detail usaha</p>
+                <h2 id={titleId} className="m-0 mt-1 truncate text-lg font-black text-[#15211d]">{currentBusiness.name}</h2>
+                <p id={descriptionId} className="m-0 mt-1 text-xs leading-5 text-[#627069]">
+                  {currentBusiness.type} · {currentBusiness.onboardingCompleted ? "Onboarding selesai" : "Onboarding belum selesai"}
+                </p>
+              </div>
+              <button
+                ref={closeButtonRef}
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="grid size-9 shrink-0 place-items-center rounded-xl text-[#718078] transition hover:bg-[#eef6f2] hover:text-[#15211d]"
+                aria-label="Tutup detail usaha"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <Badge variant={currentMeta.variant}>{currentMeta.label}</Badge>
+                <span className="max-w-full truncate text-xs font-semibold text-[#718078]">ID: {currentBusiness.id}</span>
+              </div>
+
+              {isLoading && !detail ? <LoadingDetail /> : error && !detail ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <div>
+                      <p className="m-0 font-extrabold">Detail belum dapat dimuat</p>
+                      <p className="m-0 mt-1 text-xs leading-5">{error}</p>
+                      <Button type="button" variant="outline" size="sm" className="mt-3" onClick={retryDetail}>
+                        Coba lagi
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)}>
+                  <TabsList className="flex max-w-full gap-1 overflow-x-auto" aria-label="Tab detail usaha">
+                    <TabsTrigger value="overview"><span className="inline-flex items-center gap-1.5"><LayoutDashboard className="size-3.5" />Ringkasan</span></TabsTrigger>
+                    <TabsTrigger value="subscription"><span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5" />Subscription</span></TabsTrigger>
+                    <TabsTrigger value="payments"><span className="inline-flex items-center gap-1.5"><CreditCard className="size-3.5" />Pembayaran</span></TabsTrigger>
+                    <TabsTrigger value="team"><span className="inline-flex items-center gap-1.5"><UsersRound className="size-3.5" />Tim</span></TabsTrigger>
+                    <TabsTrigger value="outlets"><span className="inline-flex items-center gap-1.5"><Store className="size-3.5" />Outlet</span></TabsTrigger>
+                    <TabsTrigger value="activity"><span className="inline-flex items-center gap-1.5"><Activity className="size-3.5" />Aktivitas</span></TabsTrigger>
+                    <TabsTrigger value="audit"><span className="inline-flex items-center gap-1.5"><History className="size-3.5" />Audit</span></TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="overview">
+                    <dl className="grid gap-3 sm:grid-cols-2">
+                      <DetailItem icon={UserRound} label="Owner" value={currentBusiness.ownerName ?? "Belum tersedia"} detail={currentBusiness.ownerEmail ?? undefined} />
+                      <DetailItem icon={Mail} label="Email owner" value={currentBusiness.ownerEmail ?? "Belum tersedia"} />
+                      <DetailItem icon={Package} label="Paket" value={getPlanLabel(currentBusiness.plan)} />
+                      <DetailItem icon={ShieldCheck} label="Status subscription" value={currentMeta.label} detail={currentBusiness.subscriptionStatus ?? "Tidak ada subscription"} />
+                      <DetailItem icon={Clock3} label={getBoundaryLabel(currentBusiness)} value={formatDate(getBoundary(currentBusiness))} />
+                      <DetailItem icon={CalendarDays} label="Terdaftar" value={formatDate(currentBusiness.createdAt)} />
+                      <DetailItem icon={MapPin} label="Outlet" value={`${currentBusiness.outletCount} lokasi`} />
+                      <DetailItem icon={UsersRound} label="Anggota" value={`${currentBusiness.memberCount} anggota`} />
+                      <DetailItem icon={Building2} label="ID usaha" value={currentBusiness.id} mono full />
+                    </dl>
+                  </TabsContent>
+
+                  <TabsContent value="subscription">
+                    {currentBusiness.subscriptionStatus ? (
+                      <div className="space-y-3">
+                        <div className="rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="grid size-9 place-items-center rounded-xl bg-white text-[#198760]"><WalletCards className="size-4" /></span>
+                              <div><p className="m-0 text-sm font-extrabold text-[#15211d]">Paket {getPlanLabel(currentBusiness.plan)}</p><p className="m-0 text-xs text-[#627069]">{currentBusiness.subscriptionStatus}</p></div>
+                            </div>
+                            <Badge variant={currentMeta.variant}>{currentMeta.label}</Badge>
+                          </div>
+                        </div>
+                        <dl className="grid gap-3 sm:grid-cols-2">
+                          <DetailItem icon={Clock3} label="Akhir trial" value={formatDate(currentBusiness.trialEndsAt)} />
+                          <DetailItem icon={CalendarDays} label="Akhir periode" value={formatDate(currentBusiness.currentPeriodEnd)} />
+                        </dl>
+                        <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+                          Status ini bersifat read-only. Perubahan subscription dilakukan melalui alur pelanggan, bukan dari halaman Platform Admin.
+                        </p>
+                      </div>
+                    ) : <EmptyDetail>Belum ada subscription untuk usaha ini.</EmptyDetail>}
+                  </TabsContent>
+
+                  <TabsContent value="payments">
+                    <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="m-0 text-sm font-black text-[#15211d]">Riwayat pembayaran</h3><p className="m-0 mt-1 text-xs text-[#627069]">10 transaksi terakhir</p></div><ReceiptText className="size-4 text-[#82928a]" /></div>
+                    <PaymentList payments={detail?.payments ?? []} />
+                  </TabsContent>
+
+                  <TabsContent value="team">
+                    {detail?.members?.length ? <ul className="space-y-2">{detail.members.map((member) => <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5"><div className="min-w-0"><p className="m-0 truncate text-sm font-extrabold text-[#15211d]">{member.name}</p><p className="m-0 mt-1 truncate text-xs text-[#627069]">{member.email}</p></div><Badge variant="outline">{member.role}</Badge></li>)}</ul> : <EmptyDetail>Data anggota belum tersedia.</EmptyDetail>}
+                  </TabsContent>
+
+                  <TabsContent value="outlets">
+                    {detail?.outlets?.length ? <ul className="space-y-2">{detail.outlets.map((item) => <li key={item.id} className="rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5"><div className="flex items-center gap-2"><MapPin className="size-4 text-[#198760]" /><p className="m-0 text-sm font-extrabold text-[#15211d]">{item.name}</p></div><p className="m-0 mt-1 pl-6 text-xs text-[#627069]">{item.address ?? "Alamat belum diisi"}</p></li>)}</ul> : <EmptyDetail>Belum ada outlet terdaftar.</EmptyDetail>}
+                  </TabsContent>
+
+                  <TabsContent value="activity">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <DetailItem icon={ReceiptText} label="Transaksi selesai" value={String(detail?.activity.saleCount ?? 0)} />
+                      <DetailItem icon={WalletCards} label="Pendapatan transaksi" value={formatRupiah(detail?.activity.grossRevenue ?? 0)} />
+                      <DetailItem icon={Clock3} label="Aktivitas terakhir" value={formatDate(detail?.activity.lastSaleAt)} />
+                    </div>
+                    {detail?.activity.latestSales.length ? <ul className="mt-3 space-y-2">{detail.activity.latestSales.map((item) => <li key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-[#e5eee9] px-3 py-2.5"><div className="min-w-0"><p className="m-0 truncate text-xs font-extrabold text-[#15211d]">{item.invoiceNumber}</p><p className="m-0 mt-0.5 truncate text-[11px] text-[#627069]">{item.outletName ?? "Tanpa outlet"} · {formatDateTime(item.createdAt)}</p></div><span className="shrink-0 text-xs font-extrabold text-[#15211d]">{formatRupiah(item.total)}</span></li>)}</ul> : <div className="mt-3"><EmptyDetail>Belum ada aktivitas transaksi.</EmptyDetail></div>}
+                  </TabsContent>
+
+                  <TabsContent value="audit">
+                    {detail?.auditLog.length ? <ul className="space-y-2">{detail.auditLog.map((item) => <li key={item.id} className="rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5"><div className="flex flex-wrap items-center justify-between gap-2"><p className="m-0 text-xs font-extrabold text-[#15211d]">{item.action === "business_detail_view" ? "Detail usaha dibuka" : item.action === "business_export" ? "Daftar usaha diekspor" : item.action}</p><time className="text-[11px] text-[#82928a]">{formatDateTime(item.createdAt)}</time></div><p className="m-0 mt-1 text-xs text-[#627069]">{item.adminName ?? item.adminEmail ?? "Admin"}</p></li>)}</ul> : <EmptyDetail>Belum ada aktivitas admin terekam.</EmptyDetail>}
+                  </TabsContent>
+                </Tabs>
+              )}
+            </div>
+
+            <div className="flex justify-end border-t border-[#e8efeb] p-4 sm:p-5">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Tutup</Button>
+            </div>
+          </section>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}

@@ -1,0 +1,141 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PlatformAdminBusinessList } from "@/components/admin/platform-admin-business-list";
+
+const businesses = [
+  {
+    id: "business-1",
+    name: "Nest Coffee",
+    type: "Kedai Kopi",
+    onboardingCompleted: true,
+    createdAt: new Date("2026-09-24T00:00:00.000Z"),
+    ownerName: "Ridho Akbarsyah",
+    ownerEmail: "ridho@example.com",
+    plan: "tumbuh" as const,
+    subscriptionStatus: "trialing" as const,
+    trialEndsAt: new Date("2026-10-08T00:00:00.000Z"),
+    currentPeriodEnd: null,
+    memberCount: 2,
+    outletCount: 1,
+    state: "trial_active" as const,
+  },
+];
+
+const detailResponse = {
+  business: {
+    ...businesses[0],
+    lastActivityAt: null,
+    saleCount: 0,
+    grossRevenue: 0,
+  },
+  outlets: [],
+  members: [],
+  payments: [],
+  activity: { saleCount: 0, grossRevenue: 0, lastSaleAt: null, latestSales: [] },
+  auditLog: [],
+};
+
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ detail: detailResponse }),
+  }));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("PlatformAdminBusinessList", () => {
+  it("menyediakan tabel desktop dan ringkasan kartu mobile", () => {
+    render(
+      <PlatformAdminBusinessList
+        businesses={businesses}
+        filters={{ query: "", status: "all" }}
+        overview={{ expiredSubscriptions: 1, pastDue: 2, cancelled: 3 }}
+        directory={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Daftar usaha" })).toBeDefined();
+    expect(screen.getByRole("table")).toBeDefined();
+    expect(screen.getAllByText("Nest Coffee").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("1 data")).toBeDefined();
+    expect(screen.getByText(/maksimal 10 per halaman/)).toBeDefined();
+    expect(screen.getByText("Langganan berakhir:")).toBeDefined();
+  });
+
+  it("membuka detail usaha dalam dialog kustom", async () => {
+    render(
+      <PlatformAdminBusinessList
+        businesses={businesses}
+        filters={{ query: "", status: "all" }}
+        overview={{ expiredSubscriptions: 0, pastDue: 0, cancelled: 0 }}
+        directory={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    const detailButtons = screen.getAllByRole("button", { name: "Lihat detail Nest Coffee" });
+    expect(detailButtons).toHaveLength(2);
+    fireEvent.click(detailButtons[0]);
+
+    expect(screen.getByRole("alertdialog")).toBeDefined();
+    expect(screen.getByText("Detail usaha")).toBeDefined();
+    expect(await screen.findByText("ID usaha")).toBeDefined();
+  });
+
+  it("menampilkan navigasi pagination dengan filter yang dipertahankan", () => {
+    render(
+      <PlatformAdminBusinessList
+        businesses={businesses}
+        filters={{ query: "Nest", status: "trial_active" }}
+        overview={{ expiredSubscriptions: 0, pastDue: 0, cancelled: 0 }}
+        directory={{ total: 11, page: 1, pageSize: 10, totalPages: 2, from: 1, to: 10 }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "2" }).getAttribute("href")).toBe(
+      "/admin?q=Nest&status=trial_active&page=2",
+    );
+  });
+
+  it("mempertahankan filter tambahan pada pagination dan export", () => {
+    render(
+      <PlatformAdminBusinessList
+        businesses={businesses}
+        filters={{
+          query: "Nest",
+          status: "trial_active",
+          businessType: "Kedai",
+          plan: "tumbuh",
+          onboarding: "completed",
+          registeredFrom: "2026-01-01",
+          registeredTo: "2026-12-31",
+          sort: "activity",
+        }}
+        overview={{ expiredSubscriptions: 0, pastDue: 0, cancelled: 0 }}
+        directory={{ total: 11, page: 1, pageSize: 10, totalPages: 2, from: 1, to: 10 }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "2" }).getAttribute("href")).toBe(
+      "/admin?q=Nest&status=trial_active&businessType=Kedai&plan=tumbuh&onboarding=completed&registeredFrom=2026-01-01&registeredTo=2026-12-31&sort=activity&page=2",
+    );
+    expect(screen.getByRole("link", { name: "Export CSV" }).getAttribute("href")).toBe(
+      "/api/admin/businesses/export?q=Nest&status=trial_active&businessType=Kedai&plan=tumbuh&onboarding=completed&registeredFrom=2026-01-01&registeredTo=2026-12-31&sort=activity",
+    );
+  });
+
+  it("menampilkan reset ketika filter aktif", () => {
+    render(
+      <PlatformAdminBusinessList
+        businesses={businesses}
+        filters={{ query: "Nest", status: "trial_active" }}
+        overview={{ expiredSubscriptions: 0, pastDue: 0, cancelled: 0 }}
+        directory={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Reset filter" })).toBeDefined();
+  });
+});

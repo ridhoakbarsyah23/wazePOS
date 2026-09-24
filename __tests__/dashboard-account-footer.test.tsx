@@ -60,7 +60,7 @@ describe("DashboardAccountFooter", () => {
     expect(screen.queryByRole("menuitem", { name: "Pengaturan" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Keluar" }));
-    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByRole("alertdialog")).toBeDefined();
     expect(screen.getByText("Keluar dari wazePOS?")).toBeDefined();
   });
 });
