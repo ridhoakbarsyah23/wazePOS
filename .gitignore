@@ -14,3 +14,5 @@ data/*.ndjson
 .tmp/
 npm-debug.log*
 *.tsbuildinfo
+backups/
+.dev-server.log
