@@ -1,5 +1,220 @@
 @import "tailwindcss";
 
+/* Dashboard-only dark theme. Access is gated by the active subscription plan. */
+html[data-dashboard-theme="dark"] [data-dashboard-shell] {
+  color-scheme: dark;
+  background: #050505 !important;
+  color: #f5f5f5 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="bg-white"],
+  [class~="bg-white/95"],
+  [class~="bg-white/80"]
+) {
+  background-color: #0d0d0d !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="bg-[#f0f4f1]"],
+  [class~="bg-[#f0f5f2]"],
+  [class~="bg-[#f1f8f4]"],
+  [class~="bg-[#f2f5f3]"],
+  [class~="bg-[#f2f7f4]"],
+  [class~="bg-[#f2f8f5]"],
+  [class~="bg-[#f3f8f5]"],
+  [class~="bg-[#f4f8f6]"],
+  [class~="bg-[#f4faf7]"],
+  [class~="bg-[#f5faf7]"],
+  [class~="bg-[#f6f7f6]"],
+  [class~="bg-[#f6f8f7]"],
+  [class~="bg-[#f6faf8]"],
+  [class~="bg-[#f7faf8]"],
+  [class~="bg-[#f7fbf9]"],
+  [class~="bg-[#f8faf9]"],
+  [class~="bg-[#f8fbf9]"],
+  [class~="bg-[#f9fbf9]"],
+  [class~="bg-[#f9fcfa]"],
+  [class~="bg-[#fafbfa]"],
+  [class~="bg-[#fafcfa]"],
+  [class~="bg-[#fafcfb]"],
+  [class~="bg-[#fbfdfc]"]
+) {
+  background-color: #151515 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="bg-[#d7e6de]"],
+  [class~="bg-[#d9f0e4]"],
+  [class~="bg-[#dcebe3]"],
+  [class~="bg-[#dfe8e3]"],
+  [class~="bg-[#dfeae4]"],
+  [class~="bg-[#e2ece6]"],
+  [class~="bg-[#e2f7ec]"],
+  [class~="bg-[#e3ebe7]"],
+  [class~="bg-[#e3f8ec]"],
+  [class~="bg-[#e7f0eb]"],
+  [class~="bg-[#e7f8ee]"],
+  [class~="bg-[#e8efeb]"],
+  [class~="bg-[#eaf5ef]"],
+  [class~="bg-[#eaf7f0]"],
+  [class~="bg-[#edf7f2]"],
+  [class~="bg-[#edf8f2]"],
+  [class~="bg-[#eef2f0]"],
+  [class~="bg-[#eef4f0]"],
+  [class~="bg-[#eef4f1]"],
+  [class~="bg-[#eef5f1]"],
+  [class~="bg-[#eef6f2]"],
+  [class~="bg-[#eef7f2]"],
+  [class~="bg-[#eefaf4]"],
+  [class~="bg-[#f0f4f2]"],
+  [class~="bg-[#f0f6f3]"],
+  [class~="bg-[#f0faf5]"],
+  [class~="bg-[#f0fbf4]"],
+  [class~="bg-[#f1fbf6]"],
+  [class~="bg-[#f3f6f4]"],
+  [class~="bg-[#f3faf6]"],
+  [class~="bg-[#f5f8f6]"],
+  [class~="bg-[#f7f9f8]"]
+) {
+  background-color: #191919 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class*="from-white"],
+  [class*="from-[#f"],
+  [class*="via-[#f"],
+  [class*="to-white"]
+) {
+  background-image: none !important;
+  background-color: #0d0d0d !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="bg-slate-50/60"],
+  [class~="bg-slate-50/70"],
+  [class~="bg-slate-100"],
+  [class~="bg-slate-200"]
+) {
+  background-color: #191919 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="bg-rose-50"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-rose-50"]:hover {
+  background-color: #2a1215 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="text-[#15211d]"],
+  [class~="text-[#17211d]"],
+  [class~="text-[#14231d]"],
+  [class~="text-[#263c33]"],
+  [class~="text-[#34443d]"],
+  [class~="text-[#3f5148]"],
+  [class~="text-[#405149]"],
+  [class~="text-[#42534c]"],
+  [class~="text-[#44534c]"],
+  [class~="text-[#455850]"],
+  [class~="text-[#496058]"],
+  [class~="text-[#4d5e57]"],
+  [class~="text-[#52645c]"],
+  [class~="text-[#53635b]"],
+  [class~="text-[#556961]"],
+  [class~="text-[#596861]"]
+) {
+  color: #f5f5f5 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="text-[#5e6d65]"],
+  [class~="text-[#607068]"],
+  [class~="text-[#627069]"],
+  [class~="text-[#65736c]"],
+  [class~="text-[#66756e]"],
+  [class~="text-[#68766f]"],
+  [class~="text-[#6a7770]"],
+  [class~="text-[#6b7b73]"],
+  [class~="text-[#6c7a73]"],
+  [class~="text-[#718078]"],
+  [class~="text-[#71857c]"],
+  [class~="text-[#75857e]"],
+  [class~="text-[#758a80]"],
+  [class~="text-[#77837d]"],
+  [class~="text-[#78857f]"],
+  [class~="text-[#7a8881]"],
+  [class~="text-[#7a8981]"],
+  [class~="text-[#7b8982]"],
+  [class~="text-[#82928a]"],
+  [class~="text-[#84928b]"],
+  [class~="text-[#87928d]"],
+  [class~="text-[#8a9891]"],
+  [class~="text-[#8a9992]"],
+  [class~="text-[#8a9b92]"],
+  [class~="text-[#8b9991]"],
+  [class~="text-[#8fa199]"],
+  [class~="text-[#91a099]"],
+  [class~="text-[#95a59e]"],
+  [class~="text-[#96a19b]"],
+  [class~="text-[#9aa59f]"],
+  [class~="text-[#9aa69f]"],
+  [class~="text-[#9cb0a5]"],
+  [class~="text-[#9fb0a7]"],
+  [class~="text-[#a4ada8]"],
+  [class~="text-[#a7b0ab]"]
+) {
+  color: #a3a3a3 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="text-slate-700"]
+) {
+  color: #d4d4d4 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#d"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#e"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#b"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#c"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#7"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#9"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-slate-"] {
+  border-color: #303030 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select) {
+  color-scheme: dark;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select)::placeholder {
+  color: #737373 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-[#f"]:hover,
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-[#e"]:hover {
+  background-color: #242424 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  button[class*="disabled:from-[#c8d0cc]"],
+  button[class*="disabled:bg-[#c8d0cc]"]
+):disabled {
+  background: #262626 !important;
+  color: #737373 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-content"] {
+  background: #101010;
+  border-color: #303030;
+}
+
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-title"] {
+  color: #f5f5f5;
+}
+
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-description"] {
+  color: #a3a3a3;
+}
+
 :root {
   --ink: #15211d;
   --muted: #627069;

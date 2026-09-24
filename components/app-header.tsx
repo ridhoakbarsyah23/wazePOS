@@ -22,16 +22,18 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { LogoutButton } from "@/components/auth/logout-button";
+import { DashboardAccountFooter } from "@/components/dashboard-account-footer";
 import { Button } from "@/components/ui/button";
 
 export type AppHeaderProps = {
   businessName: string;
+  userName?: string;
   outletName?: string;
   outlets?: { id: string; name: string; slug?: string }[];
   activeOutletId?: string;
   role?: "owner" | "admin" | "cashier";
   trialDaysRemaining?: number | null;
+  allowDarkMode?: boolean;
   children?: React.ReactNode;
 };
 
@@ -203,11 +205,13 @@ function SidebarNavLinks({
 
 export function AppHeader({
   businessName,
+  userName,
   outletName,
   outlets = [],
   activeOutletId,
   role = "owner",
   trialDaysRemaining,
+  allowDarkMode = false,
   children,
 }: AppHeaderProps) {
   const pathname = usePathname();
@@ -287,7 +291,7 @@ export function AppHeader({
   // Reset status navigasi saat pindah halaman ditangani di atas (render-phase).
 
   return (
-    <div className="min-h-dvh flex flex-col lg:flex-row bg-[#f4faf7] text-[#15211d]">
+    <div data-dashboard-shell className="min-h-dvh flex flex-col lg:flex-row bg-[#f4faf7] text-[#15211d]">
       {/* Top Animated Route Progress Bar */}
       {navigatingTo && (
         <div className="fixed top-0 left-0 right-0 h-[2.5px] overflow-hidden bg-transparent z-[100] pointer-events-none">
@@ -379,26 +383,15 @@ export function AppHeader({
           )}
         </div>
 
-        {/* Bottom User & Logout Profile Footer */}
-        <div className="p-3.5 border-t border-[#edf3f0] bg-[#fafcfb]">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760] font-extrabold text-sm">
-                <RoleIcon className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="m-0 truncate text-xs font-bold text-[#15211d]">
-                  {roleLabel}
-                </p>
-                <p className="m-0 truncate text-[11px] text-[#71857c]">
-                  {outletName ?? "Gerai Utama"}
-                </p>
-              </div>
-            </div>
-
-            <LogoutButton />
-          </div>
-        </div>
+        <DashboardAccountFooter
+          roleLabel={roleLabel}
+          userName={userName}
+          outletName={outletName ?? "Gerai Utama"}
+          roleIcon={RoleIcon}
+          allowDarkMode={allowDarkMode}
+          showSettings={role !== "cashier"}
+          onNavigate={handleNavigate}
+        />
       </aside>
 
       {/* ========================================================= */}
@@ -537,20 +530,18 @@ export function AppHeader({
               />
             </div>
 
-            {/* Drawer Footer */}
-            <div className="border-t border-[#edf3f0] px-4 py-3 bg-[#fafcfb]">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="m-0 truncate text-xs font-bold text-[#15211d]">
-                    {roleLabel}
-                  </p>
-                  <p className="m-0 truncate text-[11px] text-[#71857c]">
-                    {outletName ?? "Gerai Utama"}
-                  </p>
-                </div>
-                <LogoutButton />
-              </div>
-            </div>
+            <DashboardAccountFooter
+              roleLabel={roleLabel}
+              userName={userName}
+              outletName={outletName ?? "Gerai Utama"}
+              roleIcon={RoleIcon}
+              allowDarkMode={allowDarkMode}
+              showSettings={role !== "cashier"}
+              onNavigate={(href) => {
+                setMobileOpen(false);
+                handleNavigate(href);
+              }}
+            />
           </div>
         </div>
       )}

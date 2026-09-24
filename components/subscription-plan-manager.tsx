@@ -23,6 +23,7 @@ const includedFeatures: Record<PlanId, string[]> = {
     "Akun Staf Kasir & Admin Tanpa Batas",
     "Katalog Produk Tanpa Batas",
     "Ekspor Laporan Penjualan (Excel / CSV)",
+    "Mode Gelap Dashboard",
     "Prioritas Dukungan Teknis",
   ],
 };

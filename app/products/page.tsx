@@ -10,7 +10,7 @@ import { requireDashboardAccess } from "@/lib/dashboard-access";
 export default async function ProductsPage() {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
-  const { membership, subDetails } = access;
+  const { session, membership, subDetails, allowDarkMode } = access;
 
   const [products, categories, outlets] = await Promise.all([
     db.select({
@@ -30,8 +30,10 @@ export default async function ProductsPage() {
   return (
     <AppHeader
       businessName={membership.businessName}
+      userName={session.user.name}
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+      allowDarkMode={allowDarkMode}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
         <div className="flex flex-col gap-2">

@@ -37,7 +37,7 @@ export default async function DashboardPage({
   const feedback = await searchParams;
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
-  const { session, membership, currentSubscription, subDetails } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const selectedPeriod: PeriodKey =
@@ -321,11 +321,13 @@ export default async function DashboardPage({
   return (
     <AppHeader
       businessName={membership.businessName}
+      userName={session.user.name}
       outletName={currentOutletName}
       outlets={outlets}
       activeOutletId={selectedOutletId === "all" ? undefined : selectedOutletId}
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+      allowDarkMode={allowDarkMode}
     >
       <div className="mx-auto w-[min(1240px,calc(100%-32px))] py-8 space-y-6 animate-page-enter">
         {/* Executive Merchant Cockpit & Filter Header */}

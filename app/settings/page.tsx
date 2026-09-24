@@ -12,7 +12,7 @@ import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
 export default async function SettingsPage() {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
-  const { membership, subDetails } = access;
+  const { session, membership, subDetails, allowDarkMode } = access;
 
   const [businessRows, outlets, categories] = await Promise.all([
     db
@@ -54,10 +54,12 @@ export default async function SettingsPage() {
   return (
     <AppHeader
       businessName={businessData.name}
+      userName={session.user.name}
       outletName={outlets[0]?.name}
       outlets={outlets.map(({ id, name }) => ({ id, name }))}
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+      allowDarkMode={allowDarkMode}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-24px))] py-6 sm:w-[min(1140px,calc(100%-40px))] sm:py-8 animate-page-enter">
         <header className="flex items-start gap-3">

@@ -9,7 +9,7 @@ import {
   getWorkspaceContext,
   requireSession,
 } from "@/lib/auth-session";
-import { getSubscriptionStatusDetails } from "@/lib/plans";
+import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
 
 type AccessRule =
   // Owner + admin (cashier dialihkan ke /pos) — produk, stok, pengaturan, laporan, dll.
@@ -41,6 +41,7 @@ type AccessSuccess = {
   membership: NonNullable<Awaited<ReturnType<typeof getWorkspaceContext>>["membership"]>;
   currentSubscription: Awaited<ReturnType<typeof getWorkspaceContext>>["currentSubscription"];
   subDetails: ReturnType<typeof getSubscriptionStatusDetails>;
+  allowDarkMode: boolean;
 };
 
 /**
@@ -76,7 +77,7 @@ export const requireDashboardAccess = cache(
         ok: false,
         lockout: (
           <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-            <AppHeader businessName={membership.businessName} role={membership.role} />
+            <AppHeader businessName={membership.businessName} userName={session.user.name} role={membership.role} />
             <SubscriptionLockout
               businessName={membership.businessName}
               role={membership.role}
@@ -87,6 +88,8 @@ export const requireDashboardAccess = cache(
       };
     }
 
-    return { ok: true, session, membership, currentSubscription, subDetails };
+    const allowDarkMode = subDetails.isValid && hasPlanFeature(currentSubscription?.plan, "darkMode");
+
+    return { ok: true, session, membership, currentSubscription, subDetails, allowDarkMode };
   },
 );

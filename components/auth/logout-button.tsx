@@ -6,7 +6,13 @@ import { AlertCircle, LoaderCircle, LogOut, X } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 
-export function LogoutButton({ className }: { className?: string }) {
+export function LogoutButton({
+  className,
+  onOpen,
+}: {
+  className?: string;
+  onOpen?: () => void;
+}) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -47,7 +53,10 @@ export function LogoutButton({ className }: { className?: string }) {
         size="sm"
         type="button"
         disabled={isPending}
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          onOpen?.();
+          setIsOpen(true);
+        }}
         className={
           className ??
           "h-9 gap-2 rounded-xl px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"

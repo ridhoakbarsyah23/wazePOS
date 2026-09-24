@@ -51,7 +51,7 @@ export default async function SubscriptionPage({
   const query = await searchParams;
   const access = await requireDashboardAccess({ rule: "ownerOnly", enforceSubscription: false });
   if (!access.ok) return access.lockout;
-  const { membership, currentSubscription, subDetails } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const payments = await db
     .select({
@@ -74,8 +74,10 @@ export default async function SubscriptionPage({
   return (
     <AppHeader
       businessName={membership.businessName}
+      userName={session.user.name}
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+      allowDarkMode={allowDarkMode}
     >
       <div className="mx-auto w-[min(1080px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
         <Button asChild variant="ghost" size="sm" className="mb-5">
