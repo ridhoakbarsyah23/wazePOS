@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Ban } from "lucide-react";
 import { IBM_Plex_Mono } from "next/font/google";
 import { db } from "@/db";
-import { business, outlet, sale, saleItem, user } from "@/db/schema";
+import { business, customer, outlet, sale, saleItem, user } from "@/db/schema";
 import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
 import { paymentLabel } from "@/lib/payment";
 import {
@@ -58,12 +58,14 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
       outletName: outlet.name,
       outletAddress: outlet.address,
       cashierName: user.name,
+      customerName: customer.name,
       receiptSettings: business.receiptSettings,
     })
     .from(sale)
     .innerJoin(business, eq(business.id, sale.businessId))
     .innerJoin(outlet, eq(outlet.id, sale.outletId))
     .innerJoin(user, eq(user.id, sale.cashierId))
+    .leftJoin(customer, eq(customer.id, sale.customerId))
     .where(and(...receiptFilters))
     .limit(1);
 
@@ -84,6 +86,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
     outletName: receipt.outletName,
     invoiceNumber: receipt.invoiceNumber,
     createdAt: receipt.createdAt,
+    customerName: receipt.customerName,
     items: items.map((i) => ({
       name: i.productName,
       quantity: i.quantity,
@@ -243,6 +246,13 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               </div>
             )}
           </div>
+
+          {receipt.customerName && (
+            <div className="flex justify-between gap-4 border-b border-dashed border-[#cddbd3] py-3 text-xs">
+              <span className="font-semibold text-[#627069]">Member</span>
+              <strong className={isVoided ? "text-[#8b9991]" : "text-[#15211d]"}>{receipt.customerName}</strong>
+            </div>
+          )}
 
           <div className="space-y-2.5 py-4">
             {items.map((item) => (

@@ -8,6 +8,8 @@ export type ReceiptShareData = {
   businessName: string;
   outletName: string;
   invoiceNumber: string;
+  /** Nama member pelanggan yang dilampirkan pada transaksi (opsional). */
+  customerName?: string | null;
   createdAt: Date | string;
   items: Array<{
     name: string;
@@ -37,6 +39,7 @@ export function buildReceiptWhatsAppMessage(data: ReceiptShareData, siteUrl: str
     `Gerai: ${data.outletName}`,
     `No. Invoice: *${data.invoiceNumber}*`,
     `Waktu: ${dateStr}`,
+    ...(data.customerName ? [`Member: *${data.customerName}*`] : []),
     `--------------------------------`,
     `*Rincian Pesanan:*`,
   ];

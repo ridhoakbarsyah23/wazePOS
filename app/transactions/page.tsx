@@ -11,14 +11,20 @@ import {
   Search,
   Store,
   UserRound,
+  UserRoundCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
-import { outlet, sale, user } from "@/db/schema";
+import { customer, outlet, sale, user } from "@/db/schema";
 import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
+import {
+  TRANSACTIONS_PAGE_SIZE,
+  getPageNumbers,
+  pageDisabledClass,
+  pageLinkClass,
+} from "@/lib/pagination";
 import { formatReportRange, paymentLabel } from "@/lib/reporting";
 import {
   buildSaleFilterConditions,
@@ -47,7 +53,7 @@ export default async function TransactionsPage({
 }) {
   const access = await requireDashboardAccess();
   if (!access.ok) return access.lockout;
-  const { session, membership, subDetails } = access;
+  const { session, membership, subDetails, allowDarkMode } = access;
 
   const params = await searchParams;
   const saleFilters = parseSaleFilterParams(params);
@@ -66,43 +72,43 @@ export default async function TransactionsPage({
     cashierId: membership.role === "cashier" ? session.user.id : null,
   });
 
-  const [transactions, summary] = await Promise.all([
-    db
-      .select({
-        id: sale.id,
-        invoiceNumber: sale.invoiceNumber,
-        status: sale.status,
-        total: sale.total,
-        paymentMethod: sale.paymentMethod,
-        createdAt: sale.createdAt,
-        outletName: outlet.name,
-        cashierName: user.name,
-      })
-      .from(sale)
-      .innerJoin(outlet, eq(outlet.id, sale.outletId))
-      .innerJoin(user, eq(user.id, sale.cashierId))
-      .where(and(...filterConditions))
-      .orderBy(desc(sale.createdAt))
-      .limit(PAGE_SIZE + 1),
-    db
-      .select({
-        count: sql<number>`count(*)::int`,
-        completedTotal: sql<number>`coalesce(sum(case when ${sale.status} = 'completed' then ${sale.total} else 0 end), 0)::int`,
-        voidedCount: sql<number>`count(*) filter (where ${sale.status} = 'voided')::int`,
-      })
-      .from(sale)
-      .where(and(...filterConditions)),
-  ]);
+  const summary = await db
+    .select({
+      count: sql<number>`count(*)::int`,
+      completedTotal: sql<number>`coalesce(sum(case when ${sale.status} = 'completed' then ${sale.total} else 0 end), 0)::int`,
+      voidedCount: sql<number>`count(*) filter (where ${sale.status} = 'voided')::int`,
+    })
+    .from(sale)
+    .where(and(...filterConditions));
 
   const resultCount = Number(summary[0]?.count ?? 0);
   const completedTotal = Number(summary[0]?.completedTotal ?? 0);
   const voidedCount = Number(summary[0]?.voidedCount ?? 0);
 
-  const totalPages = Math.max(Math.ceil(resultCount / PAGE_SIZE), 1);
+  const totalPages = Math.max(Math.ceil(resultCount / TRANSACTIONS_PAGE_SIZE), 1);
   const page = Math.min(currentPage, totalPages);
   const hasNext = page < totalPages;
-  const pageRows = transactions.slice(0, PAGE_SIZE);
-  const rangeStart = resultCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const pageRows = await db
+    .select({
+      id: sale.id,
+      invoiceNumber: sale.invoiceNumber,
+      status: sale.status,
+      total: sale.total,
+      paymentMethod: sale.paymentMethod,
+      createdAt: sale.createdAt,
+      outletName: outlet.name,
+      cashierName: user.name,
+      customerName: customer.name,
+    })
+    .from(sale)
+    .innerJoin(outlet, eq(outlet.id, sale.outletId))
+    .innerJoin(user, eq(user.id, sale.cashierId))
+    .leftJoin(customer, eq(customer.id, sale.customerId))
+    .where(and(...filterConditions))
+    .orderBy(desc(sale.createdAt), desc(sale.id))
+    .limit(TRANSACTIONS_PAGE_SIZE)
+    .offset((page - 1) * TRANSACTIONS_PAGE_SIZE);
+  const rangeStart = resultCount === 0 ? 0 : (page - 1) * TRANSACTIONS_PAGE_SIZE + 1;
   const rangeEnd = rangeStart + pageRows.length - 1;
 
   function pageHref(targetPage: number) {
@@ -118,11 +124,13 @@ export default async function TransactionsPage({
   return (
     <AppHeader
       businessName={membership.businessName}
+      userName={session.user.name}
       outletName={activeOutlet?.name ?? "Semua Gerai"}
       outlets={headerOutlets}
       activeOutletId={activeOutlet?.id ?? "all"}
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+      allowDarkMode={allowDarkMode}
     >
       <section className="mx-auto w-[min(1180px,calc(100%-24px))] py-6 animate-page-enter sm:w-[min(1180px,calc(100%-40px))] sm:py-8">
         <header className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -247,6 +255,11 @@ export default async function TransactionsPage({
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-1 text-xs font-medium"><Store className="size-3 text-[#187c59]" /> {item.outletName}</span>
                       <span className="mt-1 flex items-center gap-1 text-[11px] text-[#78857f]"><UserRound className="size-3" /> {item.cashierName}</span>
+                      {item.customerName && (
+                        <span className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-[#106348]">
+                          <UserRoundCheck className="size-3" /> {item.customerName}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 text-xs text-[#44534c]">{paymentIcon(item.paymentMethod)} {paymentLabel(item.paymentMethod)}</span></td>
                     <td className="px-4 py-3">
@@ -276,10 +289,15 @@ export default async function TransactionsPage({
                   </div>
                   <strong className={item.status === "voided" ? "text-sm text-rose-600 line-through" : "text-sm text-[#17211d]"}>Rp {Number(item.total).toLocaleString("id-ID")}</strong>
                 </div>
-                <div className="mt-3 flex items-center justify-between gap-3 text-xs">
+                <div className="mt-2 flex items-center justify-between gap-3 text-xs">
                   <span className="truncate text-[#68766f]">{item.outletName} · {paymentLabel(item.paymentMethod)}</span>
                   <span className={item.status === "completed" ? "font-semibold text-[#187c59]" : "font-semibold text-rose-600"}>{item.status === "completed" ? "Selesai" : "Dibatalkan"}</span>
                 </div>
+                {item.customerName && (
+                  <p className="m-0 mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-[#106348]">
+                    <UserRoundCheck className="size-3 shrink-0" /> Member: {item.customerName}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
@@ -336,7 +354,7 @@ export default async function TransactionsPage({
             </div>
           )}
 
-          {transactions.length === 0 && (
+          {pageRows.length === 0 && (
             <div className="px-4 py-12 text-center">
               <ReceiptText className="mx-auto size-6 text-[#9aa69f]" />
               <p className="mt-2 text-sm font-semibold text-[#44534c]">Transaksi tidak ditemukan</p>

@@ -20,10 +20,12 @@ export type PlanFeature =
   | "roleBasedAccess"
   | "qrisPayments"
   | "allPaymentMethods"
+  | "customerLookup"
   | "exportReports"
   | "unlimitedStaff"
   | "unlimitedProducts"
-  | "multiOutlet";
+  | "multiOutlet"
+  | "darkMode";
 
 export type PlanConfig = {
   name: string;
@@ -55,10 +57,12 @@ export const plans: Record<PlanId, PlanConfig> = {
       roleBasedAccess: true,
       qrisPayments: false,
       allPaymentMethods: false,
+      customerLookup: false,
       exportReports: false,
       unlimitedStaff: false,
       unlimitedProducts: false,
       multiOutlet: false,
+      darkMode: false,
     },
   },
   bisnis: {
@@ -82,10 +86,12 @@ export const plans: Record<PlanId, PlanConfig> = {
       roleBasedAccess: true,
       qrisPayments: true,
       allPaymentMethods: true,
+      customerLookup: true,
       exportReports: true,
       unlimitedStaff: true,
       unlimitedProducts: true,
       multiOutlet: true,
+      darkMode: true,
     },
   },
 };
@@ -177,6 +183,8 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
           ]
         : []),
       ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
+      ...(config.features.customerLookup ? ["Pencarian member pelanggan saat transaksi kasir"] : []),
+      ...(config.features.darkMode ? ["Mode gelap untuk dashboard"] : []),
       formatOutletLimit(plan),
       formatStaffLimit(plan),
       formatProductLimit(plan),
@@ -243,6 +251,7 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
         { name: "Pembayaran QRIS", detail: "Terima pembayaran QRIS dari seluruh e-wallet dan mobile banking.", availability: businessOnlyAvailability("qrisPayments") },
         { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: businessOnlyAvailability("allPaymentMethods") },
         { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: businessOnlyAvailability("exportReports") },
+        { name: "Pencarian member di kasir", detail: "Melampirkan member pelanggan pada transaksi kasir tanpa mencatat ulang data.", availability: businessOnlyAvailability("customerLookup") },
         { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: businessOnlyAvailability("onscreenReports") },
       ],
     },
@@ -252,6 +261,12 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
         { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada Paket Tumbuh, hingga ${plans.bisnis.limits.maxOutlets} gerai pada Paket Bisnis.`, availability: businessOnlyAvailability("multiOutlet") },
         { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} staf pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: businessOnlyAvailability("staffManagement") },
         { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", availability: businessOnlyAvailability("roleBasedAccess") },
+      ],
+    },
+    {
+      category: "Tampilan & kenyamanan",
+      items: [
+        { name: "Mode gelap dashboard", detail: "Mengurangi silau saat menggunakan aplikasi di lingkungan minim cahaya.", availability: businessOnlyAvailability("darkMode") },
       ],
     },
   ];

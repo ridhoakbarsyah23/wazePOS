@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { customer, sale } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { canManageBusiness, getBusinessSubscription, getMembership } from "@/lib/auth-session";
+import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
 import { getMaxCustomers } from "@/lib/plans";
 import { customerSchema } from "@/lib/validation/customer";
 
@@ -61,9 +61,7 @@ export async function POST(request: Request) {
 
   const membership = await getMembership(session.user.id);
   if (!membership) return NextResponse.json({ message: "Profil tidak ditemukan." }, { status: 403 });
-  if (!canManageBusiness(membership.role)) {
-    return NextResponse.json({ message: "Anda tidak memiliki izin menambah pelanggan." }, { status: 403 });
-  }
+  // Kasir pun diizinkan menambah pelanggan: pendaftaran member terjadi langsung di kasir (POS).
 
   let payload: unknown;
   try {

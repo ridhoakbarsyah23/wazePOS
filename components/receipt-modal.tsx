@@ -378,6 +378,13 @@ export function ReceiptModal({
                 )}
               </div>
 
+              {receipt.customerName && (
+                <div className="flex items-center justify-between border-b border-dashed border-[#cddbd3] py-2 text-[11px] text-[#627069]">
+                  <span>Member</span>
+                  <strong className="text-[#15211d]">{receipt.customerName}</strong>
+                </div>
+              )}
+
               {/* Items List */}
               <div className="receipt-items-block space-y-1.5 py-2.5">
                 {receipt.items.map((item, idx) => (

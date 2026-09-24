@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/lib/pos-calculations";
 import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/lib/pos-product-search";
 import {
@@ -24,8 +25,11 @@ import {
   ShoppingCart,
   Store,
   Trash2,
+  UserRound,
+  X,
 } from "lucide-react";
 import { RupiahInput } from "@/components/ui/rupiah-input";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import type { ReceiptSettings } from "@/lib/validation/receipt-settings";
 import type { ReceiptShareData } from "./whatsapp-share-button";
 import styles from "./pos-terminal.module.css";
@@ -46,6 +50,7 @@ type PosProduct = {
 };
 
 type PosOutlet = { id: string; name: string };
+type PosMember = { id: string; name: string; phone: string | null };
 type CartItem = PosProduct & { quantity: number };
 
 const money = (value: number) => `Rp ${value.toLocaleString("id-ID")}`;
@@ -61,6 +66,7 @@ export function PosTerminal({
   products,
   outlets,
   initialOutletId,
+  allowCustomerLookup = false,
   allowNonCashPayments,
   allowQrisPayments,
   checkoutDisabledReason,
@@ -70,12 +76,14 @@ export function PosTerminal({
   products: PosProduct[];
   outlets: PosOutlet[];
   initialOutletId: string;
+  allowCustomerLookup?: boolean;
   allowNonCashPayments: boolean;
   allowQrisPayments: boolean;
   checkoutDisabledReason: string | null;
   businessName?: string;
   receiptSettings?: ReceiptSettings | null;
 }) {
+  const router = useRouter();
   const outletId = initialOutletId;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeBufferRef = useRef<string>("");
@@ -105,7 +113,21 @@ export function PosTerminal({
     sequence: number;
   } | null>(null);
   const [removingItemIds, setRemovingItemIds] = useState<string[]>([]);
-
+  const [selectedMember, setSelectedMember] = useState<PosMember | null>(null);
+  const [memberQuery, setMemberQuery] = useState("");
+  const [memberResults, setMemberResults] = useState<PosMember[]>([]);
+  const [memberSearching, setMemberSearching] = useState(false);
+  const [memberMessage, setMemberMessage] = useState<string | null>(null);
+  const [memberLoadFailed, setMemberLoadFailed] = useState(false);
+  const [memberList, setMemberList] = useState<PosMember[]>([]);
+  const [memberListLoading, setMemberListLoading] = useState(false);
+  const [memberListError, setMemberListError] = useState(false);
+  const [showNewMemberForm, setShowNewMemberForm] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [creatingMember, setCreatingMember] = useState(false);
+  const memberSearchAbortRef = useRef<AbortController | null>(null);
 
   const categories = useMemo(
     () => ["Semua", ...Array.from(new Set(products.map((item) => item.categoryName ?? "Umum"))).sort()],
@@ -126,9 +148,111 @@ export function PosTerminal({
     if (quantityFeedbackTimerRef.current) clearTimeout(quantityFeedbackTimerRef.current);
     removalTimersRef.current.forEach((timer) => clearTimeout(timer));
     removalTimersRef.current.clear();
+    memberSearchAbortRef.current?.abort();
   }, []);
 
   const quickCashOptions = getQuickCashOptions(total);
+
+  useEffect(() => {
+    if (!allowCustomerLookup) return;
+    const trimmed = memberQuery.trim();
+    if (trimmed.length < 2) return;
+    const timer = setTimeout(async () => {
+      setMemberSearching(true);
+      memberSearchAbortRef.current?.abort();
+      const controller = new AbortController();
+      memberSearchAbortRef.current = controller;
+      try {
+        const response = await fetch(`/api/customers?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("lookup-failed");
+        const data = (await response.json()) as { customers?: PosMember[] };
+        const results = Array.isArray(data.customers) ? data.customers.slice(0, 6) : [];
+        setMemberResults(results);
+        setMemberMessage(results.length > 0 ? null : `Member dengan kata kunci "${trimmed}" tidak ditemukan.`);
+        setMemberLoadFailed(false);
+      } catch (error) {
+        if ((error as Error)?.name !== "AbortError") {
+          setMemberLoadFailed(true);
+          setMemberResults([]);
+        }
+      } finally {
+        setMemberSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [memberQuery, allowCustomerLookup]);
+
+  const selectMember = useCallback((member: PosMember) => {
+    setSelectedMember(member);
+    setMemberQuery("");
+    setMemberResults([]);
+    setMemberMessage(null);
+    setMemberLoadFailed(false);
+    setShowNewMemberForm(false);
+  }, []);
+
+  const loadMemberList = useCallback(async () => {
+    setMemberListLoading(true);
+    try {
+      const response = await fetch("/api/customers");
+      if (!response.ok) throw new Error("load-failed");
+      const data = (await response.json()) as { customers?: PosMember[] };
+      setMemberList(Array.isArray(data.customers) ? data.customers.slice(0, 30) : []);
+      setMemberListError(false);
+    } catch {
+      setMemberListError(true);
+    } finally {
+      setMemberListLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!allowCustomerLookup) return;
+    const timer = setTimeout(() => {
+      void loadMemberList();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [allowCustomerLookup, loadMemberList]);
+
+  async function submitNewMember(event: React.FormEvent) {
+    event.preventDefault();
+    if (creatingMember) return;
+    setCreatingMember(true);
+    try {
+      const response = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newMemberName,
+          phone: newMemberPhone.trim() || undefined,
+          email: newMemberEmail.trim() || undefined,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setMemberMessage(result.message ?? "Member baru gagal disimpan.");
+        return;
+      }
+      const created = result.customer as PosMember | undefined;
+      if (created) {
+        setSelectedMember({ id: created.id, name: created.name, phone: created.phone ?? null });
+        setMemberList((current) =>
+          [{ id: created.id, name: created.name, phone: created.phone ?? null }, ...current].slice(0, 30),
+        );
+      }
+      setShowNewMemberForm(false);
+      setNewMemberName("");
+      setNewMemberPhone("");
+      setNewMemberEmail("");
+      setMemberMessage(null);
+    } catch {
+      setMemberMessage("Tidak dapat terhubung ke server.");
+    } finally {
+      setCreatingMember(false);
+    }
+  }
 
   const showAddedFeedback = useCallback((product: PosProduct) => {
     if (addedFeedbackTimerRef.current) clearTimeout(addedFeedbackTimerRef.current);
@@ -220,6 +344,20 @@ export function PosTerminal({
     setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity } : item)));
   }
 
+  function clearCart() {
+    setCart([]);
+    setPaidAmount("");
+    setSelectedMember(null);
+    setMemberQuery("");
+    setMemberResults([]);
+    setMemberMessage(null);
+    setShowNewMemberForm(false);
+    setNewMemberName("");
+    setNewMemberPhone("");
+    setNewMemberEmail("");
+    setMessage({ type: "success", text: "Pesanan berhasil dikosongkan." });
+  }
+
   async function completeSale() {
     if (!outletId || cart.length === 0) {
       setMessage({ type: "error", text: "Pilih gerai dan tambahkan produk ke keranjang." });
@@ -251,6 +389,7 @@ export function PosTerminal({
     setMessage(null);
     const salePayload = {
       outletId,
+      customerId: selectedMember?.id ?? null,
       paymentMethod,
       paidAmount: paid,
       items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
@@ -290,10 +429,12 @@ export function PosTerminal({
         paidAmount: paid,
         changeAmount: result.changeAmount ?? (paid - total),
         paymentMethod,
+        customerName: selectedMember?.name ?? null,
         saleId: result.saleId,
       });
       clearSaleRequestId(sessionStorage, clientRequestId);
       setShowReceiptModal(true);
+      setSelectedMember(null);
 
       setMessage({
         type: "success",
@@ -307,6 +448,7 @@ export function PosTerminal({
       setInvoiceId(result.saleId);
       setCart([]);
       setPaidAmount("");
+      router.refresh();
     } catch {
       setMessage({ type: "error", text: "Tidak dapat terhubung ke server." });
     } finally {
@@ -373,7 +515,7 @@ export function PosTerminal({
         return;
       }
 
-      // Escape: Close receipt modal, clear search, or clear cart
+      // Escape: Close receipt modal or clear search, but never erase an order silently.
       if (e.key === "Escape") {
         if (showReceiptModal) {
           e.preventDefault();
@@ -387,8 +529,10 @@ export function PosTerminal({
         }
         if (cart.length > 0) {
           e.preventDefault();
-          setCart([]);
-          setMessage({ type: "success", text: "Keranjang belanja telah dikosongkan." });
+          setMessage({
+            type: "error",
+            text: "Pesanan tidak dikosongkan. Gunakan tombol Kosongkan agar tidak terhapus tanpa sengaja.",
+          });
           return;
         }
       }
@@ -566,7 +710,7 @@ export function PosTerminal({
         <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[#edf2ee] bg-[#fafbfa] px-4 py-2.5 text-[11px] text-[#78857f] sm:px-5">
           <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">F2</kbd> cari</span>
           <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">F9</kbd> uang pas</span>
-          <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">Esc</kbd> bersihkan</span>
+          <span><kbd className="rounded-md border border-[#dbe5df] bg-white px-1.5 py-0.5 font-mono font-semibold text-[#44534c]">Esc</kbd> hapus pencarian</span>
         </footer>
       </section>
 
@@ -592,17 +736,20 @@ export function PosTerminal({
             </div>
           </div>
           {cart.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setCart([]);
-                setPaidAmount("");
-                setMessage(null);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-[#9a4b28] transition hover:bg-rose-50 hover:text-rose-700"
-            >
-              <Trash2 className="size-3.5" /> Kosongkan
-            </button>
+            <ConfirmationDialog
+              title="Kosongkan seluruh pesanan?"
+              description={`Semua ${cartItemCount} item akan dihapus dari pesanan. Tindakan ini tidak dapat dibatalkan.`}
+              confirmLabel="Kosongkan pesanan"
+              onConfirm={clearCart}
+              trigger={
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-[#9a4b28] transition hover:bg-rose-50 hover:text-rose-700"
+                >
+                  <Trash2 className="size-3.5" /> Kosongkan
+                </button>
+              }
+            />
           )}
         </div>
 
@@ -695,6 +842,204 @@ export function PosTerminal({
             </div>
           )}
         </div>
+
+        {allowCustomerLookup && (
+          <div className="border-t border-[#edf2ee] bg-white px-4 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="m-0 flex items-center gap-1.5 text-xs font-bold text-[#44534c]">
+                <UserRound className="size-4 text-[#198760]" /> Member pelanggan
+                <span className="font-medium text-[#82928a]">(opsional)</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowNewMemberForm((current) => !current)}
+                disabled={isSubmitting}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-[#198760] transition hover:bg-[#f1f8f4] disabled:opacity-50"
+              >
+                <Plus className="size-3.5" /> Member baru
+              </button>
+            </div>
+
+            {selectedMember && (
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-[#cae8d9] bg-[#f1f8f4] px-3 py-2.5">
+                <div className="min-w-0">
+                  <strong className="block truncate text-sm text-[#106348]">{selectedMember.name}</strong>
+                  <p className="m-0 truncate text-xs text-[#4d7a67]">{selectedMember.phone ?? "Tanpa nomor telepon"}</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Hapus member ${selectedMember.name} dari transaksi`}
+                  onClick={() => setSelectedMember(null)}
+                  disabled={isSubmitting}
+                  className="grid size-7 shrink-0 place-items-center rounded-lg text-[#106348] transition hover:bg-[#dcf1e6] disabled:opacity-50"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            )}
+
+            {showNewMemberForm && !selectedMember && (
+              <form onSubmit={submitNewMember} className="mt-2.5 rounded-xl border border-[#dce9e2] bg-[#f7faf8] p-3">
+                <p className="m-0 text-xs font-bold text-[#405148]">Daftarkan member baru</p>
+                <div className="mt-2 grid gap-2">
+                  <input
+                    type="text"
+                    value={newMemberName}
+                    onChange={(event) => setNewMemberName(event.target.value)}
+                    maxLength={100}
+                    required
+                    placeholder="Nama member *"
+                    aria-label="Nama member baru"
+                    autoComplete="off"
+                    disabled={creatingMember}
+                    className="h-9 w-full rounded-lg border border-[#dbe5df] bg-white px-3 text-sm text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10 disabled:opacity-60"
+                  />
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    value={newMemberPhone}
+                    onChange={(event) => setNewMemberPhone(event.target.value)}
+                    placeholder="Nomor telepon (opsional)"
+                    aria-label="Nomor telepon member baru"
+                    autoComplete="off"
+                    disabled={creatingMember}
+                    className="h-9 w-full rounded-lg border border-[#dbe5df] bg-white px-3 text-sm text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10 disabled:opacity-60"
+                  />
+                  <input
+                    type="email"
+                    value={newMemberEmail}
+                    onChange={(event) => setNewMemberEmail(event.target.value)}
+                    maxLength={200}
+                    placeholder="Email (opsional)"
+                    aria-label="Email member baru"
+                    autoComplete="off"
+                    disabled={creatingMember}
+                    className="h-9 w-full rounded-lg border border-[#dbe5df] bg-white px-3 text-sm text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10 disabled:opacity-60"
+                  />
+                </div>
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={creatingMember || newMemberName.trim().length === 0}
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#198760] px-3 text-xs font-bold text-white transition hover:bg-[#147554] disabled:cursor-not-allowed disabled:from-[#c8d0cc] disabled:to-[#c8d0cc]"
+                  >
+                    {creatingMember ? "Menyimpan..." : "Simpan & pilih"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewMemberForm(false);
+                      setNewMemberName("");
+                      setNewMemberPhone("");
+                      setNewMemberEmail("");
+                      setMemberMessage(null);
+                    }}
+                    disabled={creatingMember}
+                    className="inline-flex h-9 items-center justify-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-bold text-[#52645c] transition hover:bg-[#f2f5f3] disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {!selectedMember && (
+              <>
+                <div className="relative mt-2.5">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8a9b92]" />
+                  <input
+                    type="text"
+                    value={memberQuery}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setMemberQuery(value);
+                      if (value.trim().length < 2) {
+                        setMemberResults([]);
+                        setMemberMessage(null);
+                      }
+                    }}
+                    placeholder="Cari nama atau nomor telepon..."
+                    aria-label="Cari member pelanggan berdasarkan nama atau nomor telepon"
+                    autoComplete="off"
+                    disabled={isSubmitting || memberLoadFailed}
+                    className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white pl-9 pr-16 text-sm text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10 disabled:opacity-60"
+                  />
+                  {memberSearching && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#78857f]">Mencari&hellip;</span>
+                  )}
+                </div>
+
+                <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-[#e5ede8]">
+                  {memberQuery.trim().length >= 2 ? (
+                    memberResults.length > 0 ? (
+                      memberResults.map((member) => (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onClick={() => selectMember(member)}
+                          className="flex w-full items-center justify-between gap-3 border-b border-[#eef4f0] px-3 py-2 text-left transition last:border-b-0 hover:bg-[#f1f8f4]"
+                        >
+                          <span className="min-w-0">
+                            <strong className="block truncate text-sm text-[#17211d]">{member.name}</strong>
+                            <span className="block truncate text-xs text-[#78857f]">{member.phone ?? "Tanpa nomor telepon"}</span>
+                          </span>
+                          <CheckCircle2 className="size-4 shrink-0 text-[#198760]" />
+                        </button>
+                      ))
+                    ) : (
+                      <p className="m-0 px-3 py-3 text-xs leading-5 text-[#78857f]">
+                        {memberSearching ? "Mencari member..." : memberMessage ?? "Ketik minimal 2 karakter untuk mencari."}
+                      </p>
+                    )
+                  ) : memberListLoading ? (
+                    <p className="m-0 px-3 py-3 text-xs text-[#78857f]">Memuat daftar member...</p>
+                  ) : memberListError ? (
+                    <p className="m-0 px-3 py-3 text-xs leading-5 text-amber-900">
+                      Daftar member tidak dapat dimuat. Gunakan pencarian atau lanjutkan tanpa member.
+                    </p>
+                  ) : memberList.length > 0 ? (
+                    memberList.map((member) => (
+                      <button
+                        key={member.id}
+                        type="button"
+                        onClick={() => selectMember(member)}
+                        className="flex w-full items-center justify-between gap-3 border-b border-[#eef4f0] px-3 py-2 text-left transition last:border-b-0 hover:bg-[#f1f8f4]"
+                      >
+                        <span className="min-w-0">
+                          <strong className="block truncate text-sm text-[#17211d]">{member.name}</strong>
+                          <span className="block truncate text-xs text-[#78857f]">{member.phone ?? "Tanpa nomor telepon"}</span>
+                        </span>
+                        <CheckCircle2 className="size-4 shrink-0 text-[#198760]" />
+                      </button>
+                    ))
+                  ) : (
+                    <p className="m-0 px-3 py-3 text-xs leading-5 text-[#78857f]">
+                      Belum ada member terdaftar. Klik “Member baru” untuk mendaftarkan.
+                    </p>
+                  )}
+                </div>
+
+                {memberQuery.trim().length >= 2 && memberResults.length > 0 && (
+                  <p className="m-0 mt-1.5 text-[11px] leading-4 text-[#82928a]">
+                    Menampilkan maksimal 6 hasil pencarian. Perjelas kata kunci jika member tidak terlihat.
+                  </p>
+                )}
+
+                {memberLoadFailed && (
+                  <p className="m-0 mt-2 text-xs leading-5 text-amber-900">
+                    Pencarian member tidak tersedia saat ini. Transaksi tetap dapat dilanjutkan tanpa member.
+                  </p>
+                )}
+              </>
+            )}
+
+            {!selectedMember && !showNewMemberForm && (
+              <p className="m-0 mt-2 text-[11px] leading-4 text-[#82928a]">
+                Transaksi dengan member tercatat otomatis pada pelanggan terkait di menu Pelanggan.
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="border-t border-[#d9e2dd] bg-[#fbfdfc] p-4">
           <div className="flex items-end justify-between gap-4">

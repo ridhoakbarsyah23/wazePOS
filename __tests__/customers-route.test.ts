@@ -17,7 +17,6 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/auth-session", () => ({
-  canManageBusiness: vi.fn((role: string) => role !== "cashier"),
   getMembership: mocks.getMembership,
   getBusinessSubscription: mocks.getBusinessSubscription,
 }));
@@ -115,10 +114,26 @@ describe("POST /api/customers", () => {
     expect(data.code).toBe("PLAN_LIMIT_REACHED");
   });
 
-  it("menolak kasir menambah pelanggan (403)", async () => {
+  it("mengizinkan kasir menambah pelanggan agar member dapat didaftarkan di kasir", async () => {
     mocks.getMembership.mockResolvedValue({ businessId, role: "cashier" });
+    mocks.insert.mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([
+          {
+            id: "customer-2",
+            name: "Pelanggan Kasir",
+            phone: null,
+            email: null,
+            note: null,
+            createdAt: new Date(),
+          },
+        ]),
+      }),
+    });
 
-    const res = await POST(jsonRequest({ name: "Siapa saja" }));
-    expect(res.status).toBe(403);
+    const res = await POST(jsonRequest({ name: "Pelanggan Kasir" }));
+    expect(res.status).toBe(201);
+    const data = await res.json();
+    expect(data.customer.name).toBe("Pelanggan Kasir");
   });
 });

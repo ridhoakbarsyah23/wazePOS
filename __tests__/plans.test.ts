@@ -13,6 +13,17 @@ describe("hak fitur paket", () => {
     expect(hasPlanFeature("bisnis", "qrisPayments")).toBe(true);
   });
 
+  it("mode gelap hanya tersedia untuk Paket Bisnis", () => {
+    expect(hasPlanFeature("tumbuh", "darkMode")).toBe(false);
+    expect(hasPlanFeature("bisnis", "darkMode")).toBe(true);
+
+    const darkMode = getPlanFeatureComparison()
+      .flatMap((group) => group.items)
+      .find((item) => item.name === "Mode gelap dashboard");
+
+    expect(darkMode?.availability).toEqual({ tumbuh: false, bisnis: true });
+  });
+
   it("mempertahankan metode kartu hanya untuk Paket Bisnis", () => {
     expect(hasPlanFeature("tumbuh", "allPaymentMethods")).toBe(false);
     expect(hasPlanFeature("bisnis", "allPaymentMethods")).toBe(true);
