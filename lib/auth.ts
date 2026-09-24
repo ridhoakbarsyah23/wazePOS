@@ -48,6 +48,12 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       trustedProviders: ["google"],
+      // Signup aplikasi ini tidak mewajibkan verifikasi email (lihat
+      // emailAndPassword.requireEmailVerification), sehingga user lokal dapat
+      // berstatus email_verified=false. Default better-auth 1.7 menolak
+      // penautan ke user lokal yang belum terverifikasi — dinonaktifkan karena
+      // email akun Google sendiri sudah diverifikasi oleh Google.
+      requireLocalEmailVerified: false,
     },
   },
   emailAndPassword: {
