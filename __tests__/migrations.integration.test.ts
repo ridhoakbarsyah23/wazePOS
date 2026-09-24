@@ -69,6 +69,41 @@ describe.runIf(dbReady)("kontrak migrasi (integration)", () => {
     expect(rows[0].total).toBe(2);
   });
 
+  it("menyediakan audit log Platform Admin dengan indeks akses", async () => {
+    const columns = await sql`
+      SELECT column_name, is_nullable
+      FROM information_schema.columns
+      WHERE table_name = 'platform_admin_audit_log'
+      ORDER BY ordinal_position
+    `;
+    expect(columns.map((column) => column.column_name)).toEqual([
+      "id",
+      "business_id",
+      "actor_user_id",
+      "actor_email",
+      "actor_name",
+      "action",
+      "entity_type",
+      "entity_id",
+      "metadata",
+      "created_at",
+    ]);
+    expect(columns.find((column) => column.column_name === "actor_email")?.is_nullable).toBe("NO");
+
+    const indexes = await sql`
+      SELECT indexname
+      FROM pg_indexes
+      WHERE tablename = 'platform_admin_audit_log'
+        AND indexname NOT LIKE '%_pkey'
+      ORDER BY indexname
+    `;
+    expect(indexes.map((index) => index.indexname)).toEqual([
+      "platform_admin_audit_action_created_idx",
+      "platform_admin_audit_actor_created_idx",
+      "platform_admin_audit_business_created_idx",
+    ]);
+  });
+
   it("memulihkan akun credential staf agar menautkan user id (migrasi 0014)", async () => {
     await sql`INSERT INTO "user" (id, name, email) VALUES (${STAFF_USER_ID}, ${"Staf Uji"}, ${"itest-staff@example.com"})`;
     await sql`INSERT INTO business_member (id, business_id, user_id, role) VALUES ('itest-member-staff', ${BUSINESS_A}, ${STAFF_USER_ID}, 'cashier')`;

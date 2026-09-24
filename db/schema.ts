@@ -185,6 +185,27 @@ export const subscriptionPayment = pgTable(
   ],
 );
 
+export const platformAdminAuditLog = pgTable(
+  "platform_admin_audit_log",
+  {
+    id: text("id").primaryKey(),
+    businessId: text("business_id").references(() => business.id, { onDelete: "set null" }),
+    actorUserId: text("actor_user_id").references(() => user.id, { onDelete: "set null" }),
+    actorEmail: text("actor_email").notNull(),
+    actorName: text("actor_name"),
+    action: text("action").$type<"business_detail_view" | "business_export">().notNull(),
+    entityType: text("entity_type").$type<"business" | "business_directory">().notNull(),
+    entityId: text("entity_id"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("platform_admin_audit_business_created_idx").on(table.businessId, table.createdAt),
+    index("platform_admin_audit_actor_created_idx").on(table.actorUserId, table.createdAt),
+    index("platform_admin_audit_action_created_idx").on(table.action, table.createdAt),
+  ],
+);
+
 export const category = pgTable(
   "category",
   {
@@ -402,6 +423,7 @@ export const schema = {
   customer,
   subscription,
   subscriptionPayment,
+  platformAdminAuditLog,
   category,
   product,
   inventoryStock,
