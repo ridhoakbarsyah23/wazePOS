@@ -44,6 +44,8 @@ type PlatformAdminBusinessDetailProps = {
 
 type DetailTab = "overview" | "subscription" | "payments" | "team" | "outlets" | "activity" | "audit";
 
+const detailTabClass = "shrink-0 snap-start px-3 sm:px-3.5";
+
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "-";
   const date = new Date(value);
@@ -105,31 +107,31 @@ function DetailItem({
   full?: boolean;
 }) {
   return (
-    <div className={`min-w-0 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5 ${full ? "sm:col-span-2" : ""}`}>
+    <div className={`flex min-h-[108px] min-w-0 flex-col justify-between rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-4 ${full ? "sm:col-span-2 xl:col-span-3" : ""}`}>
       <dt className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#718078]">
-        <span className="grid size-7 place-items-center rounded-lg bg-white text-[#198760] shadow-sm">
+        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-white text-[#198760] shadow-sm">
           <Icon className="size-3.5" aria-hidden="true" />
         </span>
-        {label}
+        <span className="min-w-0 truncate">{label}</span>
       </dt>
-      <dd className={`mt-2 break-words text-sm font-extrabold text-[#15211d] ${mono ? "font-mono text-xs" : ""}`}>
+      <dd className={`mt-3 text-sm font-extrabold leading-5 text-[#15211d] ${mono ? "break-all font-mono text-xs" : "break-words"}`}>
         {value}
-        {detail && <span className="mt-1 block text-xs font-medium leading-5 text-[#627069]">{detail}</span>}
+        {detail && <span className="mt-1 block break-words text-xs font-medium leading-5 text-[#627069]">{detail}</span>}
       </dd>
     </div>
   );
 }
 
 function EmptyDetail({ children }: { children: string }) {
-  return <div className="rounded-2xl border border-dashed border-[#dce8e1] bg-[#f9fcfa] px-4 py-8 text-center text-sm text-[#627069]">{children}</div>;
+  return <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-dashed border-[#dce8e1] bg-[#f9fcfa] px-5 py-10 text-center text-sm leading-6 text-[#627069]">{children}</div>;
 }
 
 function LoadingDetail() {
   return (
     <div className="space-y-3" aria-live="polite" aria-label="Memuat detail usaha">
       <div className="h-10 animate-pulse rounded-xl bg-[#edf3ef]" />
-      <div className="grid gap-3 sm:grid-cols-2">
-        {[1, 2, 3, 4].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-[#edf3ef]" />)}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-28 animate-pulse rounded-2xl bg-[#edf3ef]" />)}
       </div>
     </div>
   );
@@ -142,16 +144,16 @@ function PaymentList({ payments }: { payments: PlatformAdminBusinessDetailData["
       {payments.map((payment) => {
         const meta = getPaymentMeta(payment.status);
         return (
-          <li key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5">
-            <div className="min-w-0">
+          <li key={payment.id} className="flex flex-col gap-3 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-extrabold text-[#15211d]">{formatRupiah(payment.amount)}</span>
                 <Badge variant={meta.variant}>{meta.label}</Badge>
               </div>
-              <p className="mt-1 text-xs text-[#627069]">{payment.provider} · {payment.providerOrderId}</p>
+              <p className="mt-1 break-all text-xs leading-5 text-[#627069]">{payment.provider} · {payment.providerOrderId}</p>
               <p className="mt-1 text-[11px] text-[#82928a]">{formatDateTime(payment.paidAt ?? payment.createdAt)}</p>
             </div>
-            <span className="text-xs font-bold capitalize text-[#527066]">{payment.plan}</span>
+            <span className="shrink-0 text-xs font-bold capitalize text-[#527066]">{payment.plan}</span>
           </li>
         );
       })}
@@ -243,6 +245,7 @@ export function PlatformAdminBusinessDetail({
 
   function openDetail() {
     setError("");
+    setDetail(null);
     setIsLoading(true);
     setActiveTab("overview");
     setIsOpen(true);
@@ -250,6 +253,7 @@ export function PlatformAdminBusinessDetail({
 
   function retryDetail() {
     setError("");
+    setDetail(null);
     setIsLoading(true);
     setReloadKey((value) => value + 1);
   }
@@ -271,22 +275,22 @@ export function PlatformAdminBusinessDetail({
 
       {isOpen && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-[250] flex items-end justify-center bg-[#09271d]/55 p-0 backdrop-blur-[3px] sm:items-center sm:p-5"
+          className="fixed inset-0 z-[250] flex items-end justify-center bg-[#09271d]/60 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-[3px] sm:items-center sm:p-6"
           role="alertdialog"
           aria-modal="true"
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
         >
           <div className="absolute inset-0" aria-hidden="true" onClick={() => setIsOpen(false)} />
-          <section ref={dialogRef} className="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] sm:max-w-2xl sm:rounded-3xl">
-            <div className="flex items-start gap-3 border-b border-[#e8efeb] p-4 sm:p-5">
-              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#eaf7f0] text-[#198760]">
+          <section ref={dialogRef} className="relative flex h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] max-h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] w-full flex-col overflow-hidden rounded-t-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] sm:h-[min(92dvh,900px)] sm:max-h-[92dvh] sm:max-w-5xl sm:rounded-3xl">
+            <div className="flex shrink-0 items-start gap-3 border-b border-[#e8efeb] bg-white p-4 sm:p-5 lg:p-6">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#eaf7f0] text-[#198760] sm:size-12">
                 <Building2 className="size-5" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078]">Detail usaha</p>
-                <h2 id={titleId} className="m-0 mt-1 truncate text-lg font-black text-[#15211d]">{currentBusiness.name}</h2>
-                <p id={descriptionId} className="m-0 mt-1 text-xs leading-5 text-[#627069]">
+                <h2 id={titleId} className="m-0 mt-1 line-clamp-2 break-words text-lg font-black leading-6 text-[#15211d] sm:text-xl">{currentBusiness.name}</h2>
+                <p id={descriptionId} className="m-0 mt-1 break-words text-xs leading-5 text-[#627069]">
                   {currentBusiness.type} · {currentBusiness.onboardingCompleted ? "Onboarding selesai" : "Onboarding belum selesai"}
                 </p>
               </div>
@@ -294,17 +298,17 @@ export function PlatformAdminBusinessDetail({
                 ref={closeButtonRef}
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="grid size-9 shrink-0 place-items-center rounded-xl text-[#718078] transition hover:bg-[#eef6f2] hover:text-[#15211d]"
+                className="grid size-10 shrink-0 place-items-center rounded-xl text-[#718078] transition hover:bg-[#eef6f2] hover:text-[#15211d] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 sm:size-9"
                 aria-label="Tutup detail usaha"
               >
                 <X className="size-4" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <Badge variant={currentMeta.variant}>{currentMeta.label}</Badge>
-                <span className="max-w-full truncate text-xs font-semibold text-[#718078]">ID: {currentBusiness.id}</span>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-6">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Badge className="w-fit" variant={currentMeta.variant}>{currentMeta.label}</Badge>
+                <span className="min-w-0 break-all text-right text-[11px] font-semibold leading-5 text-[#718078] sm:max-w-[58%]">ID: {currentBusiness.id}</span>
               </div>
 
               {isLoading && !detail ? <LoadingDetail /> : error && !detail ? (
@@ -321,19 +325,23 @@ export function PlatformAdminBusinessDetail({
                   </div>
                 </div>
               ) : (
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)}>
-                  <TabsList className="flex max-w-full gap-1 overflow-x-auto" aria-label="Tab detail usaha">
-                    <TabsTrigger value="overview"><span className="inline-flex items-center gap-1.5"><LayoutDashboard className="size-3.5" />Ringkasan</span></TabsTrigger>
-                    <TabsTrigger value="subscription"><span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5" />Subscription</span></TabsTrigger>
-                    <TabsTrigger value="payments"><span className="inline-flex items-center gap-1.5"><CreditCard className="size-3.5" />Pembayaran</span></TabsTrigger>
-                    <TabsTrigger value="team"><span className="inline-flex items-center gap-1.5"><UsersRound className="size-3.5" />Tim</span></TabsTrigger>
-                    <TabsTrigger value="outlets"><span className="inline-flex items-center gap-1.5"><Store className="size-3.5" />Outlet</span></TabsTrigger>
-                    <TabsTrigger value="activity"><span className="inline-flex items-center gap-1.5"><Activity className="size-3.5" />Aktivitas</span></TabsTrigger>
-                    <TabsTrigger value="audit"><span className="inline-flex items-center gap-1.5"><History className="size-3.5" />Audit</span></TabsTrigger>
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)} className="min-w-0">
+                  <p className="mb-2 text-[11px] font-semibold text-[#82928a] sm:hidden">Geser tab untuk melihat menu lainnya</p>
+                  <TabsList
+                    className="platform-admin-tabs-scroll sticky top-0 z-10 !flex w-full min-w-0 snap-x gap-1 overflow-x-auto overscroll-x-contain rounded-xl p-1"
+                    aria-label="Tab detail usaha"
+                  >
+                    <TabsTrigger className={detailTabClass} value="overview"><span className="inline-flex items-center gap-1.5"><LayoutDashboard className="size-3.5" />Ringkasan</span></TabsTrigger>
+                    <TabsTrigger className={detailTabClass} value="subscription"><span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5" />Subscription</span></TabsTrigger>
+                    <TabsTrigger className={detailTabClass} value="payments"><span className="inline-flex items-center gap-1.5"><CreditCard className="size-3.5" />Pembayaran</span></TabsTrigger>
+                    <TabsTrigger className={detailTabClass} value="team"><span className="inline-flex items-center gap-1.5"><UsersRound className="size-3.5" />Tim</span></TabsTrigger>
+                    <TabsTrigger className={detailTabClass} value="outlets"><span className="inline-flex items-center gap-1.5"><Store className="size-3.5" />Outlet</span></TabsTrigger>
+                    <TabsTrigger className={detailTabClass} value="activity"><span className="inline-flex items-center gap-1.5"><Activity className="size-3.5" />Aktivitas</span></TabsTrigger>
+                    <TabsTrigger className={detailTabClass} value="audit"><span className="inline-flex items-center gap-1.5"><History className="size-3.5" />Audit</span></TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="overview">
-                    <dl className="grid gap-3 sm:grid-cols-2">
+                    <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                       <DetailItem icon={UserRound} label="Owner" value={currentBusiness.ownerName ?? "Belum tersedia"} detail={currentBusiness.ownerEmail ?? undefined} />
                       <DetailItem icon={Mail} label="Email owner" value={currentBusiness.ownerEmail ?? "Belum tersedia"} />
                       <DetailItem icon={Package} label="Paket" value={getPlanLabel(currentBusiness.plan)} />
@@ -375,11 +383,35 @@ export function PlatformAdminBusinessDetail({
                   </TabsContent>
 
                   <TabsContent value="team">
-                    {detail?.members?.length ? <ul className="space-y-2">{detail.members.map((member) => <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5"><div className="min-w-0"><p className="m-0 truncate text-sm font-extrabold text-[#15211d]">{member.name}</p><p className="m-0 mt-1 truncate text-xs text-[#627069]">{member.email}</p></div><Badge variant="outline">{member.role}</Badge></li>)}</ul> : <EmptyDetail>Data anggota belum tersedia.</EmptyDetail>}
+                    {detail?.members?.length ? (
+                      <ul className="space-y-2">
+                        {detail.members.map((member) => (
+                          <li key={member.id} className="flex flex-col gap-3 rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0 flex-1">
+                              <p className="m-0 break-words text-sm font-extrabold text-[#15211d]">{member.name}</p>
+                              <p className="m-0 mt-1 break-all text-xs leading-5 text-[#627069]">{member.email}</p>
+                            </div>
+                            <Badge className="w-fit shrink-0 capitalize" variant="outline">{member.role}</Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <EmptyDetail>Data anggota belum tersedia.</EmptyDetail>}
                   </TabsContent>
 
                   <TabsContent value="outlets">
-                    {detail?.outlets?.length ? <ul className="space-y-2">{detail.outlets.map((item) => <li key={item.id} className="rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3.5"><div className="flex items-center gap-2"><MapPin className="size-4 text-[#198760]" /><p className="m-0 text-sm font-extrabold text-[#15211d]">{item.name}</p></div><p className="m-0 mt-1 pl-6 text-xs text-[#627069]">{item.address ?? "Alamat belum diisi"}</p></li>)}</ul> : <EmptyDetail>Belum ada outlet terdaftar.</EmptyDetail>}
+                    {detail?.outlets?.length ? (
+                      <ul className="space-y-2">
+                        {detail.outlets.map((item) => (
+                          <li key={item.id} className="rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-4">
+                            <div className="flex items-start gap-2">
+                              <MapPin className="mt-0.5 size-4 shrink-0 text-[#198760]" aria-hidden="true" />
+                              <p className="m-0 min-w-0 break-words text-sm font-extrabold text-[#15211d]">{item.name}</p>
+                            </div>
+                            <p className="m-0 mt-1 break-words pl-6 text-xs leading-5 text-[#627069]">{item.address ?? "Alamat belum diisi"}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <EmptyDetail>Belum ada outlet terdaftar.</EmptyDetail>}
                   </TabsContent>
 
                   <TabsContent value="activity">
@@ -388,7 +420,19 @@ export function PlatformAdminBusinessDetail({
                       <DetailItem icon={WalletCards} label="Pendapatan transaksi" value={formatRupiah(detail?.activity.grossRevenue ?? 0)} />
                       <DetailItem icon={Clock3} label="Aktivitas terakhir" value={formatDate(detail?.activity.lastSaleAt)} />
                     </div>
-                    {detail?.activity.latestSales.length ? <ul className="mt-3 space-y-2">{detail.activity.latestSales.map((item) => <li key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-[#e5eee9] px-3 py-2.5"><div className="min-w-0"><p className="m-0 truncate text-xs font-extrabold text-[#15211d]">{item.invoiceNumber}</p><p className="m-0 mt-0.5 truncate text-[11px] text-[#627069]">{item.outletName ?? "Tanpa outlet"} · {formatDateTime(item.createdAt)}</p></div><span className="shrink-0 text-xs font-extrabold text-[#15211d]">{formatRupiah(item.total)}</span></li>)}</ul> : <div className="mt-3"><EmptyDetail>Belum ada aktivitas transaksi.</EmptyDetail></div>}
+                    {detail?.activity.latestSales.length ? (
+                      <ul className="mt-3 space-y-2">
+                        {detail.activity.latestSales.map((item) => (
+                          <li key={item.id} className="flex flex-col gap-2 rounded-xl border border-[#e5eee9] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                            <div className="min-w-0">
+                              <p className="m-0 truncate text-xs font-extrabold text-[#15211d]">{item.invoiceNumber}</p>
+                              <p className="m-0 mt-0.5 truncate text-[11px] text-[#627069]">{item.outletName ?? "Tanpa outlet"} · {formatDateTime(item.createdAt)}</p>
+                            </div>
+                            <span className="shrink-0 text-xs font-extrabold text-[#15211d] sm:text-right">{formatRupiah(item.total)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <div className="mt-3"><EmptyDetail>Belum ada aktivitas transaksi.</EmptyDetail></div>}
                   </TabsContent>
 
                   <TabsContent value="audit">
@@ -398,8 +442,8 @@ export function PlatformAdminBusinessDetail({
               )}
             </div>
 
-            <div className="flex justify-end border-t border-[#e8efeb] p-4 sm:p-5">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Tutup</Button>
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-[#e8efeb] bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:p-5 sm:pb-5">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setIsOpen(false)}>Tutup</Button>
             </div>
           </section>
         </div>,

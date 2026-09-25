@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* The admin detail tabs stay horizontally scrollable on narrow screens without
+ * showing a bulky native scrollbar. */
+.platform-admin-tabs-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.platform-admin-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Dashboard-only dark theme. Access is gated by the active subscription plan. */
 html[data-dashboard-theme="dark"] [data-dashboard-shell] {
   color-scheme: dark;
