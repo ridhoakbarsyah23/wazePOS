@@ -3,6 +3,7 @@ import {
   getPlatformSubscriptionState,
   getPostLoginDestination,
   isPlatformAdminEmail,
+  isPlatformAdminUser,
   parsePlatformAdminEmails,
 } from "@/lib/platform-admin-access";
 
@@ -20,9 +21,40 @@ describe("akses Platform Admin", () => {
     expect(isPlatformAdminEmail("owner@example.com", "")).toBe(false);
   });
 
-  it("mengarahkan Platform Admin ke admin dan akun biasa ke dashboard", () => {
-    expect(getPostLoginDestination("owner@example.com", "owner@example.com")).toBe("/admin");
-    expect(getPostLoginDestination("cashier@example.com", "owner@example.com")).toBe("/dashboard");
+  it("mengarahkan Platform Admin terverifikasi ke admin dan akun biasa ke dashboard", () => {
+    expect(
+      getPostLoginDestination(
+        { email: "owner@example.com", emailVerified: true },
+        "owner@example.com",
+      ),
+    ).toBe("/admin");
+    expect(
+      getPostLoginDestination(
+        { email: "cashier@example.com", emailVerified: true },
+        "owner@example.com",
+      ),
+    ).toBe("/dashboard");
+  });
+
+  it("menolak akun allowlist yang belum terverifikasi", () => {
+    expect(
+      isPlatformAdminUser(
+        { email: "owner@example.com" },
+        "owner@example.com",
+      ),
+    ).toBe(false);
+    expect(
+      isPlatformAdminUser(
+        { email: "owner@example.com", emailVerified: false },
+        "owner@example.com",
+      ),
+    ).toBe(false);
+    expect(
+      getPostLoginDestination(
+        { email: "owner@example.com", emailVerified: false },
+        "owner@example.com",
+      ),
+    ).toBe("/dashboard");
   });
 });
 

@@ -30,11 +30,27 @@ export function isPlatformAdminEmail(email: string | null | undefined, allowlist
   return parsePlatformAdminEmails(allowlist).has(email.trim().toLowerCase());
 }
 
+export type PlatformAdminIdentity = {
+  email: string | null | undefined;
+  emailVerified?: boolean | null;
+};
+
+/**
+ * Email allowlist saja tidak cukup: signup publik membuat user dengan
+ * email_verified=false. Akses admin tetap harus dimiliki akun terverifikasi.
+ */
+export function isPlatformAdminUser(
+  user: PlatformAdminIdentity | null | undefined,
+  allowlist: string | undefined,
+): boolean {
+  return user?.emailVerified === true && isPlatformAdminEmail(user.email, allowlist);
+}
+
 export function getPostLoginDestination(
-  email: string | null | undefined,
+  user: PlatformAdminIdentity | null | undefined,
   allowlist: string | undefined,
 ): "/admin" | "/dashboard" {
-  return isPlatformAdminEmail(email, allowlist) ? "/admin" : "/dashboard";
+  return isPlatformAdminUser(user, allowlist) ? "/admin" : "/dashboard";
 }
 
 export function getPlatformSubscriptionState(

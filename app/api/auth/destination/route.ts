@@ -4,13 +4,26 @@ import { auth } from "@/lib/auth";
 import { getPostLoginDestination } from "@/lib/platform-admin-access";
 
 export async function GET() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  let session;
+  try {
+    session = await auth.api.getSession({ headers: requestHeaders });
+  } catch (error) {
+    console.error(
+      "[AUTH_DESTINATION_LOOKUP_FAILED]",
+      error instanceof Error ? error.message : "Unknown session lookup error",
+    );
+    return NextResponse.json(
+      { message: "Layanan autentikasi sedang tidak tersedia." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
 
   if (!session) {
     return NextResponse.json({ message: "Sesi tidak ditemukan." }, { status: 401 });
   }
 
   return NextResponse.json({
-    destination: getPostLoginDestination(session.user.email, process.env.PLATFORM_ADMIN_EMAILS),
+    destination: getPostLoginDestination(session.user, process.env.PLATFORM_ADMIN_EMAILS),
   });
 }

@@ -10,6 +10,6 @@ export default async function AuthContinuePage() {
   }
 
   redirect(
-    getPostLoginDestination(session.user.email, process.env.PLATFORM_ADMIN_EMAILS),
+    getPostLoginDestination(session.user, process.env.PLATFORM_ADMIN_EMAILS),
   );
 }

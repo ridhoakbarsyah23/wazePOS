@@ -60,6 +60,8 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
+    // Signup pelanggan tetap tidak memerlukan verifikasi; akses Platform Admin
+    // kembali memeriksa emailVerified + allowlist di server.
     requireEmailVerification: false,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,

@@ -6,10 +6,12 @@ const protectedRoutes = ["/admin", "/auth/continue", "/dashboard", "/onboarding"
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const hasSession = Boolean(getSessionCookie(request));
+  // Ini hanya pemeriksaan cepat di proxy. Validasi session dan otorisasi
+  // tetap dilakukan di server pada route guard (mis. app/admin/layout.tsx).
+  const hasSessionCookie = Boolean(getSessionCookie(request));
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  if (isProtectedRoute && !hasSession) {
+  if (isProtectedRoute && !hasSessionCookie) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

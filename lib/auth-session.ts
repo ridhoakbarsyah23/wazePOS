@@ -9,9 +9,21 @@ import { business, businessMember, subscription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getSubscriptionStatusDetails } from "@/lib/plans";
 
-export const getCurrentSession = cache(async () =>
-  auth.api.getSession({ headers: await headers() }),
-);
+export const getCurrentSession = cache(async () => {
+  const requestHeaders = await headers();
+
+  try {
+    return await auth.api.getSession({ headers: requestHeaders });
+  } catch (error) {
+    // Kegagalan database/auth sementara harus gagal tertutup, bukan memunculkan
+    // Runtime APIError atau overlay dev pada halaman yang sedang dilindungi.
+    console.error(
+      "[AUTH_SESSION_LOOKUP_FAILED]",
+      error instanceof Error ? error.message : "Unknown session lookup error",
+    );
+    return null;
+  }
+});
 
 export async function requireSession() {
   const session = await getCurrentSession();

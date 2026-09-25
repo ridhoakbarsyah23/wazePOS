@@ -30,6 +30,10 @@ const securityHeaders = [
   ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]),
 ];
 
+const privateAdminHeaders = [
+  { key: "Cache-Control", value: "private, no-store" },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
@@ -38,6 +42,14 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      {
+        source: "/admin/:path*",
+        headers: privateAdminHeaders,
+      },
+      {
+        source: "/api/admin/:path*",
+        headers: privateAdminHeaders,
       },
     ];
   },
