@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { outlet } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { canManageBusiness, getMembership, getWorkspaceContext } from "@/lib/auth/auth-session";
+import { getPlanConfig, hasPlanFeature } from "@/lib/billing/plans";
 import { createUniqueOutletSlug } from "@/lib/shared/outlet-slug";
 import { outletSchema } from "@/lib/validation/catalog";
 
@@ -34,10 +35,17 @@ export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ message: "Sesi berakhir." }, { status: 401 });
 
-  const membership = await getMembership(session.user.id);
+  const context = await getWorkspaceContext(session.user.id);
+  const membership = context.membership;
   if (!membership) return NextResponse.json({ message: "Profil tidak ditemukan." }, { status: 403 });
   if (!canManageBusiness(membership.role)) {
     return NextResponse.json({ message: "Anda tidak memiliki izin mengelola gerai." }, { status: 403 });
+  }
+  if (!hasPlanFeature(context.currentSubscription?.plan, "multiOutlet")) {
+    return NextResponse.json(
+      { message: "Menambah gerai hanya tersedia pada Paket Bisnis. Upgrade paket untuk mengelola multi-gerai.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   let payload: unknown;
@@ -58,6 +66,13 @@ export async function POST(request: Request) {
       .select({ slug: outlet.slug })
       .from(outlet)
       .where(eq(outlet.businessId, membership.businessId));
+    const plan = getPlanConfig(context.currentSubscription?.plan);
+    if (existingOutlets.length >= plan.limits.maxOutlets) {
+      return NextResponse.json(
+        { message: `Batas ${plan.limits.maxOutlets} gerai pada Paket ${plan.name} telah tercapai.`, code: "PLAN_LIMIT_REACHED" },
+        { status: 409 },
+      );
+    }
     const slug = createUniqueOutletSlug(
       parsed.data.name,
       existingOutlets.map((item) => item.slug),

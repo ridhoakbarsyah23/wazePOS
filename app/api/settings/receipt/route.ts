@@ -4,17 +4,25 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { business } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { canManageBusiness, getWorkspaceContext } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 import { normalizeReceiptSettings, receiptSettingsSchema } from "@/lib/validation/receipt-settings";
 
 export async function PATCH(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ message: "Sesi berakhir." }, { status: 401 });
 
-  const membership = await getMembership(session.user.id);
+  const context = await getWorkspaceContext(session.user.id);
+  const membership = context.membership;
   if (!membership) return NextResponse.json({ message: "Profil tidak ditemukan." }, { status: 403 });
   if (!canManageBusiness(membership.role)) {
     return NextResponse.json({ message: "Hanya Pemilik Usaha atau Admin yang dapat mengubah pengaturan struk." }, { status: 403 });
+  }
+  if (!hasPlanFeature(context.currentSubscription?.plan, "receiptSettings")) {
+    return NextResponse.json(
+      { message: "Pengaturan struk kustom hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   let payload: unknown;

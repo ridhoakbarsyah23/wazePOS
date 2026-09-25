@@ -10,6 +10,11 @@ export const marketingFaqs = [
       "Ya. wazePOS dirancang untuk mendukung toko, warung, kedai kopi, restoran, usaha laundry, minimarket, dan usaha ritel yang sedang berkembang.",
   },
   {
+    question: "Apa perbedaan Paket Tumbuh dan Paket Bisnis?",
+    answer:
+      "Paket Tumbuh mendukung operasional satu gerai dengan fitur kasir, produk, riwayat transaksi, dan cetak struk. Paket Bisnis menambahkan manajemen stok, hingga lima gerai, metode pembayaran tambahan, export laporan, pengaturan struk kustom, dan fitur lanjutan untuk tim.",
+  },
+  {
     question: "Apakah wazePOS dapat dicoba secara gratis?",
     answer:
       "Ketersediaan dan periode uji coba mengikuti program wazePOS yang sedang berlaku. Silakan isi formulir atau hubungi tim kami untuk memperoleh informasi terbaru.",

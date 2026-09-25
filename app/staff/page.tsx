@@ -4,14 +4,36 @@ import { businessMember, user } from "@/db/schema";
 import { Users } from "lucide-react";
 import { AppHeader } from "@/components/shared/app-header";
 import { StaffManager } from "@/components/staff/staff-manager";
+import { PlanFeatureNotice } from "@/components/subscription/plan-feature-notice";
 import { Badge } from "@/components/ui/badge";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
-import { getPlanLimits, normalizePlan, plans } from "@/lib/billing/plans";
+import { getPlanLimits, hasPlanFeature, normalizePlan, plans } from "@/lib/billing/plans";
 
 export default async function StaffPage() {
   const access = await requireDashboardAccess({ rule: "manageStaff" });
   if (!access.ok) return access.lockout;
   const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
+  const selectedPlan = normalizePlan(currentSubscription?.plan);
+
+  if (!hasPlanFeature(selectedPlan, "staffManagement")) {
+    return (
+      <AppHeader
+        businessName={membership.businessName}
+        userName={session.user.name}
+        role={membership.role}
+        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+        allowDarkMode={allowDarkMode}
+        plan={selectedPlan}
+      >
+        <PlanFeatureNotice
+          businessName={membership.businessName}
+          role={membership.role}
+          featureName="Manajemen karyawan"
+          description="Buat akun kerja, atur peran, dan kelola tim kasir dengan fitur manajemen staf Paket Bisnis."
+        />
+      </AppHeader>
+    );
+  }
 
   const staffRows = await db
       .select({
@@ -27,7 +49,6 @@ export default async function StaffPage() {
       .where(eq(businessMember.businessId, membership.businessId))
       .orderBy(desc(businessMember.createdAt));
 
-  const selectedPlan = normalizePlan(currentSubscription?.plan);
   const planLimits = getPlanLimits(selectedPlan);
 
   const staffFormatted = staffRows.map((s) => ({
@@ -42,6 +63,7 @@ export default async function StaffPage() {
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-24px))] py-6 sm:w-[min(1140px,calc(100%-40px))] sm:py-10 animate-page-enter">
         <div className="relative overflow-hidden rounded-3xl border border-[#d8e8df] bg-gradient-to-br from-white via-[#f8fcfa] to-[#eaf7f0] p-5 shadow-[0_10px_35px_rgba(16,65,48,.07)] sm:p-7">

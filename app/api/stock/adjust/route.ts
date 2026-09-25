@@ -5,15 +5,23 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { canManageBusiness, getWorkspaceContext } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 import { stockAdjustmentSchema } from "@/lib/validation/stock";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ message: "Sesi Anda sudah berakhir." }, { status: 401 });
-  const membership = await getMembership(session.user.id);
+  const context = await getWorkspaceContext(session.user.id);
+  const membership = context.membership;
   if (!membership) return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
   if (!canManageBusiness(membership.role)) return NextResponse.json({ message: "Anda tidak memiliki akses untuk menyesuaikan stok." }, { status: 403 });
+  if (!hasPlanFeature(context.currentSubscription?.plan, "inventoryStock")) {
+    return NextResponse.json(
+      { message: "Manajemen stok hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
+  }
 
   let payload: unknown;
   try {

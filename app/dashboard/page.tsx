@@ -8,7 +8,7 @@ import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
-import { normalizePlan } from "@/lib/billing/plans";
+import { hasPlanFeature, normalizePlan } from "@/lib/billing/plans";
 
 const dayInMilliseconds = 86_400_000;
 const jakartaDateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -40,6 +40,9 @@ export default async function DashboardPage({
   const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const selectedPlan = normalizePlan(currentSubscription?.plan);
+  const canViewReports = hasPlanFeature(selectedPlan, "onscreenReports");
+  const canManageOutlets = hasPlanFeature(selectedPlan, "multiOutlet");
+  const canManageInventory = hasPlanFeature(selectedPlan, "inventoryStock");
   const selectedPeriod: PeriodKey =
     feedback.period === "today" || feedback.period === "30d" ? feedback.period : "7d";
 
@@ -54,10 +57,11 @@ export default async function DashboardPage({
       .where(eq(outlet.businessId, membership.businessId))
       .orderBy(outlet.name);
 
-  const selectedOutletId =
-    feedback.outlet && outlets.some((item) => item.id === feedback.outlet)
+  const selectedOutletId = canManageOutlets
+    ? feedback.outlet && outlets.some((item) => item.id === feedback.outlet)
       ? feedback.outlet
-      : "all";
+      : "all"
+    : outlets[0]?.id ?? "all";
   const selectedOutlet = outlets.find((item) => item.id === selectedOutletId);
   const now = new Date();
   const periodDays = selectedPeriod === "today" ? 1 : selectedPeriod === "7d" ? 7 : 30;
@@ -328,6 +332,7 @@ export default async function DashboardPage({
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={selectedPlan}
     >
       <div className="mx-auto w-[min(1240px,calc(100%-32px))] py-8 space-y-6 animate-page-enter">
         {/* Executive Merchant Cockpit & Filter Header */}
@@ -341,6 +346,7 @@ export default async function DashboardPage({
           selectedPeriod={selectedPeriod}
           trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
           currentPlan={selectedPlan}
+          showOutletFilter={canManageOutlets}
         />
 
         {/* Cohesive Fintech Metric Cards */}
@@ -354,15 +360,17 @@ export default async function DashboardPage({
           lowStockCount={lowStockCount}
           outOfStockCount={outOfStockCount}
           lowStockHref={lowStockHref}
+          showStock={canManageInventory}
         />
 
-        {/* Sales Insights: Top Products, Peak Hours, Outlet Comparison */}
-        <DashboardInsights
-          periodLabel={periodLabels[selectedPeriod]}
-          topProducts={insightTopProducts}
-          hourPoints={insightHourPoints}
-          outletPerformance={insightOutletPerformance}
-        />
+        {canViewReports && (
+          <DashboardInsights
+            periodLabel={periodLabels[selectedPeriod]}
+            topProducts={insightTopProducts}
+            hourPoints={insightHourPoints}
+            outletPerformance={insightOutletPerformance}
+          />
+        )}
 
         <DashboardOverview
           chartPoints={chartPoints}
@@ -370,10 +378,13 @@ export default async function DashboardPage({
           currentTransactions={currentTransactions}
           selectedOutletId={selectedOutletId}
           selectedOutletSlug={selectedOutlet?.slug}
+          showSalesChart={canViewReports}
+          showReportsAction={canViewReports}
+          showInventoryAction={canManageInventory}
         />
       </div>
 
-      <AppFooter businessName={membership.businessName} />
+      <AppFooter businessName={membership.businessName} plan={selectedPlan} />
     </AppHeader>
   );
 }

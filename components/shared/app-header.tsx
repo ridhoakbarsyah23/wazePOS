@@ -18,12 +18,14 @@ import {
   Shield,
   ShoppingCart,
   Store,
+  Tag,
   User,
   Users,
   X,
 } from "lucide-react";
 import { DashboardAccountFooter } from "@/components/dashboard/dashboard-account-footer";
 import { Button } from "@/components/ui/button";
+import { hasPlanFeature, type PlanFeature } from "@/lib/billing/plans";
 
 export type AppHeaderProps = {
   businessName: string;
@@ -34,6 +36,7 @@ export type AppHeaderProps = {
   role?: "owner" | "admin" | "cashier";
   trialDaysRemaining?: number | null;
   allowDarkMode?: boolean;
+  plan?: string;
   children?: React.ReactNode;
 };
 
@@ -42,6 +45,7 @@ type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: Array<"owner" | "admin" | "cashier">;
+  planFeature?: PlanFeature;
   badge: string | null;
 };
 
@@ -75,10 +79,18 @@ const navItems: NavItem[] = [
     badge: null,
   },
   {
+    href: "/categories",
+    label: "Kategori",
+    icon: Tag,
+    roles: ["owner", "admin"],
+    badge: null,
+  },
+  {
     href: "/inventory",
     label: "Stok",
     icon: Boxes,
     roles: ["owner", "admin"],
+    planFeature: "inventoryStock",
     badge: null,
   },
   {
@@ -86,6 +98,7 @@ const navItems: NavItem[] = [
     label: "Laporan",
     icon: BarChart3,
     roles: ["owner", "admin"],
+    planFeature: "onscreenReports",
     badge: null,
   },
   {
@@ -100,6 +113,7 @@ const navItems: NavItem[] = [
     label: "Karyawan",
     icon: Users,
     roles: ["owner", "admin"],
+    planFeature: "staffManagement",
     badge: null,
   },
   {
@@ -212,6 +226,7 @@ export function AppHeader({
   role = "owner",
   trialDaysRemaining,
   allowDarkMode = false,
+  plan,
   children,
 }: AppHeaderProps) {
   const pathname = usePathname();
@@ -235,7 +250,11 @@ export function AppHeader({
     setNavigatingTo(null);
   }
 
-  const visibleNav = navItems.filter((item) => item.roles.includes(role));
+  const visibleNav = navItems.filter(
+    (item) =>
+      item.roles.includes(role) &&
+      (!item.planFeature || !plan || hasPlanFeature(plan, item.planFeature)),
+  );
   const activeOutletSlug = outlets.find((item) => item.id === activeOutletId)?.slug;
   const cashierHref = activeOutletSlug
     ? `/pos/${encodeURIComponent(activeOutletSlug)}`

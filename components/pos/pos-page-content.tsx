@@ -28,7 +28,12 @@ export async function PosPageContent({
     if (membership.role === "owner") redirect("/subscription?expired=1");
     return (
       <main className="min-h-dvh bg-[#f4faf7] text-[#15211d]">
-        <AppHeader businessName={membership.businessName} userName={session.user.name} role={membership.role} />
+        <AppHeader
+          businessName={membership.businessName}
+          userName={session.user.name}
+          role={membership.role}
+          plan={normalizePlan(currentSubscription?.plan)}
+        />
         <SubscriptionLockout businessName={membership.businessName} role={membership.role} reason={subDetails.message} />
       </main>
     );
@@ -37,6 +42,7 @@ export async function PosPageContent({
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const allowNonCashPayments = hasPlanFeature(selectedPlan, "allPaymentMethods");
   const allowQrisPayments = hasPlanFeature(selectedPlan, "qrisPayments");
+  const canManageInventory = hasPlanFeature(selectedPlan, "inventoryStock");
   const allowDarkMode = hasPlanFeature(selectedPlan, "darkMode");
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
@@ -84,7 +90,8 @@ export async function PosPageContent({
   ]);
 
   return (
-    <AppHeader businessName={membership.businessName} userName={session.user.name} outletName={activeOutlet.name} outlets={outlets} activeOutletId={activeOutlet.id} role={membership.role} trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null} allowDarkMode={allowDarkMode}>
+    <AppHeader businessName={membership.businessName} userName={session.user.name} outletName={activeOutlet.name} outlets={outlets} activeOutletId={activeOutlet.id} role={membership.role} trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null} allowDarkMode={allowDarkMode}
+      plan={selectedPlan}>
       <section className="mx-auto w-[min(1400px,calc(100%-24px))] py-5 animate-page-enter sm:w-[min(1400px,calc(100%-40px))] sm:py-6">
         <header className="relative overflow-hidden rounded-3xl border border-[#d8e8df] bg-gradient-to-br from-white via-[#f8fcfa] to-[#eaf7f0] p-5 shadow-[0_10px_35px_rgba(16,65,48,.07)] sm:p-6">
           <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-emerald-300/20 blur-3xl" />
@@ -100,12 +107,18 @@ export async function PosPageContent({
             </div>
             <p className="m-0 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">
               <CheckCircle2 className="size-3.5 shrink-0" />
-              Stok diperbarui otomatis setelah transaksi tersimpan
+              {canManageInventory
+                 ? "Stok diperbarui otomatis setelah transaksi tersimpan"
+                 : "Transaksi tetap berjalan tanpa fitur manajemen stok"}
             </p>
           </div>
         </header>
         <div className="mt-5">
-          <PosTerminal key={activeOutlet.id} businessName={membership.businessName} products={products.map((item) => ({ ...item, stock: Number(item.stock ?? 0) }))} outlets={[activeOutlet]} initialOutletId={activeOutlet.id} allowCustomerLookup={hasPlanFeature(selectedPlan, "customerLookup")} allowNonCashPayments={allowNonCashPayments} allowQrisPayments={allowQrisPayments} checkoutDisabledReason={null} receiptSettings={normalizeReceiptSettings(businessRow[0]?.receiptSettings)} />
+          <PosTerminal key={activeOutlet.id} businessName={membership.businessName} products={products.map((item) => ({
+             ...item,
+             stock: Number(item.stock ?? 0),
+             trackStock: canManageInventory && item.trackStock,
+           }))} outlets={[activeOutlet]} initialOutletId={activeOutlet.id} allowCustomerLookup={hasPlanFeature(selectedPlan, "customerLookup")} allowNonCashPayments={allowNonCashPayments} allowQrisPayments={allowQrisPayments} allowInventory={canManageInventory} checkoutDisabledReason={null} receiptSettings={normalizeReceiptSettings(businessRow[0]?.receiptSettings)} />
         </div>
         <details className="group mt-4 overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_4px_20px_rgba(16,65,48,.04)]">
           <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-black text-[#15211d] [&::-webkit-details-marker]:hidden">

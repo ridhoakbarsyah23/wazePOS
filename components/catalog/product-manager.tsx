@@ -63,10 +63,12 @@ export function ProductManager({
   products,
   categories,
   outlets,
+  allowInventory = true,
 }: {
   products: Product[];
   categories: Category[];
   outlets: Outlet[];
+  allowInventory?: boolean;
 }) {
   const [items, setItems] = useState<Product[]>(products);
   const [searchQuery, setSearchQuery] = useState("");
@@ -176,6 +178,7 @@ export function ProductManager({
         body: JSON.stringify({
           ...newProduct,
           categoryId: newProduct.categoryId || null,
+          trackStock: allowInventory && newProduct.trackStock,
         }),
       });
 
@@ -202,7 +205,7 @@ export function ProductManager({
           categoryId: newProduct.categoryId || null,
           sellingPrice: newProduct.sellingPrice,
           costPrice: newProduct.costPrice,
-          trackStock: newProduct.trackStock,
+          trackStock: allowInventory && newProduct.trackStock,
           isActive: true,
         },
         ...prev,
@@ -229,6 +232,7 @@ export function ProductManager({
           ...editingItem,
           sku: editingItem.sku?.trim() ?? "",
           categoryId: editingItem.categoryId || null,
+          trackStock: allowInventory && editingItem.trackStock,
         }),
       });
 
@@ -238,7 +242,13 @@ export function ProductManager({
         return;
       }
 
-      setItems((prev) => prev.map((item) => (item.id === editingItem.id ? editingItem : item)));
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === editingItem.id
+            ? { ...editingItem, trackStock: allowInventory && editingItem.trackStock }
+            : item,
+        ),
+      );
       setEditingItem(null);
       showFeedback("success", data.message ?? "Produk berhasil diperbarui!");
     } catch {
@@ -328,6 +338,13 @@ export function ProductManager({
             Kelola menu, varian SKU, harga jual, dan margin keuntungan gerai Anda.
           </p>
         </div>
+
+        {!allowInventory && (
+          <div className="flex items-center gap-2 rounded-xl border border-[#f0dfae] bg-[#fffaf0] px-3 py-2 text-xs text-[#80652a]">
+            <AlertTriangle className="size-4 shrink-0 text-[#9a6a12]" />
+            Manajemen stok dan peringatan stok menipis tersedia pada Paket Bisnis.
+          </div>
+        )}
 
         <Button
           onClick={() => {
@@ -461,49 +478,53 @@ export function ProductManager({
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="create-stock" className="text-xs font-bold">
-                  Stok Awal
-                </Label>
-                <Input
-                  id="create-stock"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={newProduct.initialStock || ""}
-                  onChange={(e) => updateNewProduct({ initialStock: Number(e.target.value) })}
-                  disabled={pending}
-                />
-              </div>
+              {allowInventory && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="create-stock" className="text-xs font-bold">
+                      Stok Awal
+                    </Label>
+                    <Input
+                      id="create-stock"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={newProduct.initialStock || ""}
+                      onChange={(e) => updateNewProduct({ initialStock: Number(e.target.value) })}
+                      disabled={pending}
+                    />
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="create-threshold" className="text-xs font-bold">
-                  Batas Peringatan Stok Minimum
-                </Label>
-                <Input
-                  id="create-threshold"
-                  type="number"
-                  min="0"
-                  placeholder="5"
-                  value={newProduct.lowStockThreshold || ""}
-                  onChange={(e) => updateNewProduct({ lowStockThreshold: Number(e.target.value) })}
-                  disabled={pending}
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="create-threshold" className="text-xs font-bold">
+                      Batas Peringatan Stok Minimum
+                    </Label>
+                    <Input
+                      id="create-threshold"
+                      type="number"
+                      min="0"
+                      placeholder="5"
+                      value={newProduct.lowStockThreshold || ""}
+                      onChange={(e) => updateNewProduct({ lowStockThreshold: Number(e.target.value) })}
+                      disabled={pending}
+                    />
+                  </div>
 
-              <div className="sm:col-span-2 flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="create-track"
-                  checked={newProduct.trackStock}
-                  onChange={(e) => updateNewProduct({ trackStock: e.target.checked })}
-                  className="size-4 rounded text-[#198760] focus:ring-[#198760]"
-                  disabled={pending}
-                />
-                <Label htmlFor="create-track" className="text-xs font-bold cursor-pointer text-[#15211d]">
-                  Pantau stok produk ini secara otomatis di kasir
-                </Label>
-              </div>
+                  <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="create-track"
+                      checked={newProduct.trackStock}
+                      onChange={(e) => updateNewProduct({ trackStock: e.target.checked })}
+                      className="size-4 rounded text-[#198760] focus:ring-[#198760]"
+                      disabled={pending}
+                    />
+                    <Label htmlFor="create-track" className="text-xs font-bold cursor-pointer text-[#15211d]">
+                      Pantau stok produk ini secara otomatis di kasir
+                    </Label>
+                  </div>
+                </>
+              )}
 
               <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t border-[#e2ece6]">
                 <Button
@@ -606,19 +627,21 @@ export function ProductManager({
               </div>
 
               <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="edit-track"
-                    checked={editingItem.trackStock}
-                    onChange={(e) => setEditingItem({ ...editingItem, trackStock: e.target.checked })}
-                    className="size-4 rounded text-[#198760] focus:ring-[#198760]"
-                    disabled={pending}
-                  />
-                  <Label htmlFor="edit-track" className="text-xs font-bold cursor-pointer">
-                    Pantau stok produk ini
-                  </Label>
-                </div>
+                {allowInventory && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="edit-track"
+                      checked={editingItem.trackStock}
+                      onChange={(e) => setEditingItem({ ...editingItem, trackStock: e.target.checked })}
+                      className="size-4 rounded text-[#198760] focus:ring-[#198760]"
+                      disabled={pending}
+                    />
+                    <Label htmlFor="edit-track" className="text-xs font-bold cursor-pointer">
+                      Pantau stok produk ini
+                    </Label>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -723,7 +746,7 @@ export function ProductManager({
                 <TableHead className="font-bold">Kategori</TableHead>
                 <TableHead className="text-right font-bold">Harga Jual</TableHead>
                 <TableHead className="text-right font-bold">Harga Modal</TableHead>
-                <TableHead className="text-center font-bold">Stok</TableHead>
+                {allowInventory && <TableHead className="text-center font-bold">Stok</TableHead>}
                 <TableHead className="text-center font-bold">Status</TableHead>
                 <TableHead className="text-right font-bold">Aksi</TableHead>
               </TableRow>
@@ -778,15 +801,17 @@ export function ProductManager({
                       )}
                     </TableCell>
 
-                    <TableCell className="text-center">
-                      {item.trackStock ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf7f0] px-2 py-0.5 text-[11px] font-bold text-[#198760]">
-                          <Boxes className="size-3" /> Dipantau
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[#95a59e]">Manual</span>
-                      )}
-                    </TableCell>
+                    {allowInventory && (
+                      <TableCell className="text-center">
+                        {item.trackStock ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf7f0] px-2 py-0.5 text-[11px] font-bold text-[#198760]">
+                            <Boxes className="size-3" /> Dipantau
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[#95a59e]">Manual</span>
+                        )}
+                      </TableCell>
+                    )}
 
                     <TableCell className="text-center">
                       <Badge variant={item.isActive ? "default" : "secondary"}>
@@ -844,7 +869,7 @@ export function ProductManager({
 
               {filteredItems.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-[#627069]">
+                  <TableCell colSpan={allowInventory ? 7 : 6} className="py-10 text-center text-[#627069]">
                     <Package className="mx-auto size-8 text-[#95a59e] mb-2" />
                     <p className="font-semibold text-sm">Tidak ada produk ditemukan.</p>
                     <p className="text-xs text-[#82928a] mt-1">

@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { businessMember } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageStaff, getMembership } from "@/lib/auth/auth-session";
+import { canManageStaff, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 
 export async function PATCH(
   request: Request,
@@ -16,6 +17,13 @@ export async function PATCH(
   const membership = await getMembership(session.user.id);
   if (!membership || !canManageStaff(membership.role)) {
     return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
+  }
+  const subscription = await getBusinessSubscription(membership.businessId);
+  if (!hasPlanFeature(subscription?.plan, "staffManagement")) {
+    return NextResponse.json(
+      { message: "Manajemen karyawan hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   const { id: memberId } = await params;
@@ -68,6 +76,13 @@ export async function DELETE(
   const membership = await getMembership(session.user.id);
   if (!membership || !canManageStaff(membership.role)) {
     return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
+  }
+  const subscription = await getBusinessSubscription(membership.businessId);
+  if (!hasPlanFeature(subscription?.plan, "staffManagement")) {
+    return NextResponse.json(
+      { message: "Manajemen karyawan hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   const { id: memberId } = await params;

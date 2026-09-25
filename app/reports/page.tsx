@@ -19,6 +19,7 @@ import Link from "next/link";
 import { db } from "@/db";
 import { outlet, sale, saleItem } from "@/db/schema";
 import { AppHeader } from "@/components/shared/app-header";
+import { PlanFeatureNotice } from "@/components/subscription/plan-feature-notice";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/table";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
 import { REPORTS_PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/shared/pagination";
-import { hasPlanFeature } from "@/lib/billing/plans";
+import { hasPlanFeature, normalizePlan } from "@/lib/billing/plans";
 import { formatReportRange } from "@/lib/pos/reporting";
 import {
   buildSaleFilterConditions,
@@ -57,6 +58,27 @@ export default async function ReportsPage({
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
   const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
+  const selectedPlan = normalizePlan(currentSubscription?.plan);
+
+  if (!hasPlanFeature(selectedPlan, "onscreenReports")) {
+    return (
+      <AppHeader
+        businessName={membership.businessName}
+        userName={session.user.name}
+        role={membership.role}
+        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+        allowDarkMode={allowDarkMode}
+        plan={selectedPlan}
+      >
+        <PlanFeatureNotice
+          businessName={membership.businessName}
+          role={membership.role}
+          featureName="Laporan penjualan di layar"
+          description="Ringkasan omzet, produk terlaris, dan laporan penjualan di layar tersedia di Paket Bisnis."
+        />
+      </AppHeader>
+    );
+  }
 
   const params = await searchParams;
   const saleFilters = parseSaleFilterParams(params);
@@ -195,6 +217,7 @@ export default async function ReportsPage({
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
         <div className="flex flex-col gap-2">

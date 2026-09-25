@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, product } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { canManageBusiness, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 import { isUniqueConstraintViolation } from "@/lib/shared/product-errors";
 import { productDeleteSchema, productUpdateSchema } from "@/lib/validation/catalog";
 
@@ -14,6 +15,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const membership = await getMembership(session.user.id);
   if (!membership) return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
   if (!canManageBusiness(membership.role)) return NextResponse.json({ message: "Anda tidak memiliki akses untuk mengelola produk." }, { status: 403 });
+
+  const subscription = await getBusinessSubscription(membership.businessId);
+  const canManageInventory = hasPlanFeature(subscription?.plan, "inventoryStock");
 
   let payload: unknown;
   try {
@@ -39,7 +43,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       categoryId: parsed.data.categoryId,
       sellingPrice: parsed.data.sellingPrice,
       costPrice: parsed.data.costPrice,
-      trackStock: parsed.data.trackStock,
+      trackStock: canManageInventory && parsed.data.trackStock,
       isActive: parsed.data.isActive,
       updatedAt: new Date(),
     }).where(and(eq(product.id, id), eq(product.businessId, membership.businessId))).returning({ id: product.id });

@@ -69,6 +69,7 @@ export function PosTerminal({
   allowCustomerLookup = false,
   allowNonCashPayments,
   allowQrisPayments,
+  allowInventory = true,
   checkoutDisabledReason,
   businessName = "wazePOS Store",
   receiptSettings,
@@ -79,6 +80,7 @@ export function PosTerminal({
   allowCustomerLookup?: boolean;
   allowNonCashPayments: boolean;
   allowQrisPayments: boolean;
+  allowInventory?: boolean;
   checkoutDisabledReason: string | null;
   businessName?: string;
   receiptSettings?: ReceiptSettings | null;
@@ -642,7 +644,7 @@ export function PosTerminal({
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {filteredProducts.map((product) => {
-              const unavailable = product.trackStock && product.stock < 1;
+              const unavailable = allowInventory && product.trackStock && product.stock < 1;
               const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
               const isJustAdded = addedFeedback?.productId === product.id;
               return (
@@ -668,7 +670,7 @@ export function PosTerminal({
                     <div>
                       <span className="block text-sm font-black text-[#198760]">{money(product.sellingPrice)}</span>
                       <span className={`mt-0.5 block text-xs ${unavailable ? "font-semibold text-rose-600" : "text-[#78857f]"}`}>
-                        {product.trackStock ? (unavailable ? "Stok habis" : `Stok ${product.stock}`) : "Tanpa stok"}
+                        {allowInventory && product.trackStock ? (unavailable ? "Stok habis" : `Stok ${product.stock}`) : "Tanpa stok"}
                       </span>
                     </div>
                     {quantityInCart > 0 && (
@@ -809,7 +811,7 @@ export function PosTerminal({
                     type="button"
                     aria-label={`Tambah ${item.name}`}
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    disabled={isRemoving || (item.trackStock && item.quantity >= item.stock)}
+                    disabled={isRemoving || (allowInventory && item.trackStock && item.quantity >= item.stock)}
                     className={`grid size-8 place-items-center rounded-r-xl text-[#126b4b] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
                   >
                     <Plus className="size-3.5" />

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { customer, outlet, sale, user } from "@/db/schema";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { normalizePlan } from "@/lib/billing/plans";
 import {
   TRANSACTIONS_PAGE_SIZE,
   getPageNumbers,
@@ -53,7 +54,7 @@ export default async function TransactionsPage({
 }) {
   const access = await requireDashboardAccess();
   if (!access.ok) return access.lockout;
-  const { session, membership, subDetails, allowDarkMode } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const params = await searchParams;
   const saleFilters = parseSaleFilterParams(params);
@@ -131,6 +132,7 @@ export default async function TransactionsPage({
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1180px,calc(100%-24px))] py-6 animate-page-enter sm:w-[min(1180px,calc(100%-40px))] sm:py-8">
         <header className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

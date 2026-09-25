@@ -23,6 +23,7 @@ type DashboardMetricsProps = {
   lowStockCount: number;
   outOfStockCount: number;
   lowStockHref: string;
+  showStock?: boolean;
 };
 
 export function DashboardMetrics({
@@ -35,6 +36,7 @@ export function DashboardMetrics({
   lowStockCount,
   outOfStockCount,
   lowStockHref,
+  showStock = true,
 }: DashboardMetricsProps) {
   const money = (val: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -62,7 +64,7 @@ export function DashboardMetrics({
         } struk dari periode lalu`;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 animate-page-enter">
+    <div className={`grid gap-4 sm:grid-cols-2 ${showStock ? "xl:grid-cols-4" : "xl:grid-cols-3"} animate-page-enter`}>
       {/* 1. TOTAL OMZET */}
       <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)]">
         <div className="flex items-start justify-between gap-3">
@@ -152,8 +154,9 @@ export function DashboardMetrics({
       </div>
 
       {/* 4. STATUS STOK INVENTARIS */}
-      <Link
-        href={lowStockHref}
+      {showStock && (
+        <Link
+          href={lowStockHref}
         aria-label={outOfStockCount > 0 ? `Lihat ${outOfStockCount} produk yang stoknya habis` : lowStockCount > 0 ? `Lihat ${lowStockCount} produk dengan stok menipis` : "Buka halaman inventori"}
         className="group relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/40"
       >
@@ -193,7 +196,8 @@ export function DashboardMetrics({
           )}
           <ArrowRight className="ml-auto size-4 text-[#8a9b92] transition-transform group-hover:translate-x-0.5 group-hover:text-[#a35f12]" />
         </div>
-      </Link>
+        </Link>
+      )}
     </div>
   );
 }

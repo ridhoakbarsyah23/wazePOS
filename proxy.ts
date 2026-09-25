@@ -2,7 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const protectedRoutes = ["/admin", "/auth/continue", "/dashboard", "/onboarding", "/products", "/inventory", "/pos", "/reports", "/sales", "/subscription", "/staff", "/transactions", "/customers", "/settings"];
+const protectedRoutes = ["/admin", "/auth/continue", "/dashboard", "/onboarding", "/products", "/categories", "/inventory", "/pos", "/reports", "/sales", "/subscription", "/staff", "/transactions", "/customers", "/settings"];
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -25,6 +25,7 @@ export const config = {
     "/dashboard/:path*",
     "/onboarding/:path*",
     "/products/:path*",
+    "/categories/:path*",
     "/inventory/:path*",
     "/pos/:path*",
     "/reports/:path*",

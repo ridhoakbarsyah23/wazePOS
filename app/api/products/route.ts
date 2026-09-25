@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { canManageBusiness, getWorkspaceContext } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 import { isUniqueConstraintViolation } from "@/lib/shared/product-errors";
 import { productSchema } from "@/lib/validation/catalog";
 
@@ -13,11 +14,13 @@ export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ message: "Sesi Anda sudah berakhir." }, { status: 401 });
 
-  const membership = await getMembership(session.user.id);
+  const context = await getWorkspaceContext(session.user.id);
+  const membership = context.membership;
   if (!membership) return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
   if (!canManageBusiness(membership.role)) {
     return NextResponse.json({ message: "Anda tidak memiliki akses untuk mengelola produk." }, { status: 403 });
   }
+  const canManageInventory = hasPlanFeature(context.currentSubscription?.plan, "inventoryStock");
 
   let payload: unknown;
   try {
@@ -51,7 +54,8 @@ export async function POST(request: Request) {
   }
 
   const productId = randomUUID();
-  const initialStock = parsed.data.trackStock ? parsed.data.initialStock : 0;
+  const trackStock = canManageInventory && parsed.data.trackStock;
+  const initialStock = trackStock ? parsed.data.initialStock : 0;
 
   try {
     await db.transaction(async (tx) => {
@@ -63,30 +67,32 @@ export async function POST(request: Request) {
         sku: parsed.data.sku || null,
         sellingPrice: parsed.data.sellingPrice,
         costPrice: parsed.data.costPrice,
-        trackStock: parsed.data.trackStock,
+        trackStock,
         isActive: true,
       });
 
-      await tx.insert(inventoryStock).values({
-        id: randomUUID(),
-        businessId: membership.businessId,
-        outletId: parsed.data.outletId,
-        productId,
-        quantity: initialStock,
-        lowStockThreshold: parsed.data.lowStockThreshold,
-      });
-
-      if (initialStock > 0) {
-        await tx.insert(stockMovement).values({
+      if (trackStock) {
+        await tx.insert(inventoryStock).values({
           id: randomUUID(),
           businessId: membership.businessId,
           outletId: parsed.data.outletId,
           productId,
-          userId: session.user.id,
-          type: "restock",
           quantity: initialStock,
-          note: "Stok awal produk",
+          lowStockThreshold: parsed.data.lowStockThreshold,
         });
+
+        if (initialStock > 0) {
+          await tx.insert(stockMovement).values({
+            id: randomUUID(),
+            businessId: membership.businessId,
+            outletId: parsed.data.outletId,
+            productId,
+            userId: session.user.id,
+            type: "restock",
+            quantity: initialStock,
+            note: "Stok awal produk",
+          });
+        }
       }
     });
   } catch (error) {

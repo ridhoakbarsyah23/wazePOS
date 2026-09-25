@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryStock, product, sale, saleItem, stockMovement } from "@/db/schema";
 import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { canManageBusiness, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 
 export async function POST(
   request: Request,
@@ -27,6 +28,9 @@ export async function POST(
       { status: 403 }
     );
   }
+
+  const subscription = await getBusinessSubscription(membership.businessId);
+  const canManageInventory = hasPlanFeature(subscription?.plan, "inventoryStock");
 
   const { id } = await params;
 
@@ -98,7 +102,7 @@ export async function POST(
 
       // Kembalikan stok untuk produk yang melacak stok
       for (const item of items) {
-        if (!item.trackStock) continue;
+        if (!canManageInventory || !item.trackStock) continue;
 
         await tx
           .update(inventoryStock)
@@ -133,7 +137,9 @@ export async function POST(
     });
 
     return NextResponse.json({
-      message: `Transaksi ${result.invoiceNumber} berhasil dibatalkan (void). Stok barang telah dikembalikan.`,
+      message: canManageInventory
+        ? `Transaksi ${result.invoiceNumber} berhasil dibatalkan (void). Stok barang telah dikembalikan.`
+        : `Transaksi ${result.invoiceNumber} berhasil dibatalkan (void).`,
       status: result.status,
     });
   } catch (error) {

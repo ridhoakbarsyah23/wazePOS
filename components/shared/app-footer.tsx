@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { hasPlanFeature, type PlanFeature } from "@/lib/billing/plans";
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -13,16 +14,19 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-const quickLinks = [
+const quickLinks: Array<{ href: string; label: string; planFeature?: PlanFeature }> = [
   { href: "/pos", label: "Kasir" },
   { href: "/products", label: "Produk" },
-  { href: "/inventory", label: "Stok" },
-  { href: "/reports", label: "Laporan" },
-  { href: "/staff", label: "Karyawan" },
+  { href: "/inventory", label: "Stok", planFeature: "inventoryStock" },
+  { href: "/reports", label: "Laporan", planFeature: "onscreenReports" },
+  { href: "/staff", label: "Karyawan", planFeature: "staffManagement" },
 ];
 
-export function AppFooter({ businessName }: { businessName?: string }) {
+export function AppFooter({ businessName, plan }: { businessName?: string; plan?: string }) {
   const currentYear = new Date().getFullYear();
+  const visibleQuickLinks = quickLinks.filter(
+    (link) => !link.planFeature || !plan || hasPlanFeature(plan, link.planFeature),
+  );
 
   return (
     <footer className="mt-16 border-t border-[#dfe8e3] bg-white/60 text-[#15211d]">
@@ -47,7 +51,7 @@ export function AppFooter({ businessName }: { businessName?: string }) {
           aria-label="Navigasi footer"
           className="flex items-center gap-1 text-xs font-semibold text-[#556961]"
         >
-          {quickLinks.map((link) => (
+          {visibleQuickLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}

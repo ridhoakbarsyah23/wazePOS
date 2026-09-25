@@ -14,6 +14,7 @@ import Link from "next/link";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, stockMovement } from "@/db/schema";
 import { AppHeader } from "@/components/shared/app-header";
+import { PlanFeatureNotice } from "@/components/subscription/plan-feature-notice";
 import { StockAdjustmentForm } from "@/components/inventory/stock-adjustment-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { hasPlanFeature, normalizePlan } from "@/lib/billing/plans";
 import {
   INVENTORY_PAGE_SIZE,
   getPageNumbers,
@@ -49,7 +51,28 @@ export default async function InventoryPage({
   const filters = await searchParams;
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
-  const { session, membership, subDetails, allowDarkMode } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
+  const selectedPlan = normalizePlan(currentSubscription?.plan);
+
+  if (!hasPlanFeature(selectedPlan, "inventoryStock")) {
+    return (
+      <AppHeader
+        businessName={membership.businessName}
+        userName={session.user.name}
+        role={membership.role}
+        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+        allowDarkMode={allowDarkMode}
+        plan={selectedPlan}
+      >
+        <PlanFeatureNotice
+          businessName={membership.businessName}
+          role={membership.role}
+          featureName="Manajemen stok"
+          description="Pantau stok, atur stok awal, dan terima peringatan stok menipis tersedia di Paket Bisnis."
+        />
+      </AppHeader>
+    );
+  }
 
   const [outlets, products, stocks, movements] = await Promise.all([
     db.select({ id: outlet.id, name: outlet.name, slug: outlet.slug }).from(outlet).where(eq(outlet.businessId, membership.businessId)).orderBy(outlet.name),
@@ -166,6 +189,7 @@ export default async function InventoryPage({
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1240px,calc(100%-24px))] py-6 sm:w-[min(1240px,calc(100%-40px))] sm:py-10 animate-page-enter">
         <div className="flex flex-col gap-2">

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   getMembership: vi.fn(),
+  getBusinessSubscription: vi.fn(),
   transaction: vi.fn(),
 }));
 
@@ -17,6 +18,7 @@ vi.mock("@/lib/auth/auth", () => ({
 vi.mock("@/lib/auth/auth-session", () => ({
   canManageBusiness: (role: string) => role === "owner" || role === "admin",
   getMembership: mocks.getMembership,
+  getBusinessSubscription: mocks.getBusinessSubscription,
 }));
 
 vi.mock("@/db", () => ({
@@ -74,6 +76,7 @@ beforeEach(() => {
     businessId,
     role: "owner",
   });
+  mocks.getBusinessSubscription.mockResolvedValue({ plan: "bisnis" });
 });
 
 describe("POST /api/sales/[id]/void", () => {

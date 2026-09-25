@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { db } from "@/db";
 import { customer, sale } from "@/db/schema";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { normalizePlan } from "@/lib/billing/plans";
 import { getPlanLimits } from "@/lib/billing/plans";
 
 export default async function CustomersPage() {
@@ -52,6 +53,7 @@ export default async function CustomersPage() {
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-24px))] py-6 sm:w-[min(1140px,calc(100%-40px))] sm:py-10 animate-page-enter">
         <div className="relative overflow-hidden rounded-3xl border border-[#d8e8df] bg-gradient-to-br from-white via-[#f8fcfa] to-[#eaf7f0] p-5 shadow-[0_10px_35px_rgba(16,65,48,.07)] sm:p-7">

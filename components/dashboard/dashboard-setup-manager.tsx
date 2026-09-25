@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Building2,
-  Check,
   CheckCircle2,
   Edit2,
-  FolderPlus,
   Loader2,
   MapPin,
   Package,
@@ -21,16 +19,11 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CategoryManager, type CategoryItem } from "@/components/catalog/category-manager";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RupiahInput } from "@/components/ui/rupiah-input";
-
-type CategoryItem = {
-  id: string;
-  name: string;
-  productCount?: number;
-};
 
 type OutletItem = {
   id: string;
@@ -42,19 +35,20 @@ export function DashboardSetupManager({
   initialCategories,
   initialOutlets,
   showQuickProduct = true,
+  showCategories = true,
 }: {
   initialCategories: CategoryItem[];
   initialOutlets: OutletItem[];
   showQuickProduct?: boolean;
+  showCategories?: boolean;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"category" | "outlet" | "product">("category");
+  const [activeTab, setActiveTab] = useState<"category" | "outlet" | "product">(
+    showCategories ? "category" : "outlet",
+  );
 
   // State Categories
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
-  const [editingCategoryName, setEditingCategoryName] = useState("");
 
   // State Outlets
   const [outlets, setOutlets] = useState<OutletItem[]>(initialOutlets);
@@ -86,74 +80,6 @@ export function DashboardSetupManager({
     setTimeout(() => {
       setNotification((curr) => (curr?.message === message ? null : curr));
     }, 5000);
-  }
-
-  // --- CATEGORY ACTIONS ---
-  async function handleAddCategory(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCategoryName.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Gagal membuat kategori.");
-
-      setCategories((prev) => [...prev, data.category].sort((a, b) => a.name.localeCompare(b.name)));
-      setNewCategoryName("");
-      notify("success", data.message || "Kategori berhasil ditambahkan!");
-      router.refresh();
-    } catch (err) {
-      notify("error", err instanceof Error ? err.message : "Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSaveCategory(id: string) {
-    if (!editingCategoryName.trim()) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/categories/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editingCategoryName.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Gagal mengubah kategori.");
-
-      setCategories((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, name: editingCategoryName.trim() } : c))
-      );
-      setEditingCategoryId(null);
-      notify("success", "Nama kategori berhasil diperbarui.");
-      router.refresh();
-    } catch (err) {
-      notify("error", err instanceof Error ? err.message : "Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleDeleteCategory(item: CategoryItem) {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/categories/${item.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Gagal menghapus kategori.");
-
-      setCategories((prev) => prev.filter((c) => c.id !== item.id));
-      notify("success", data.message || "Kategori berhasil dihapus.");
-      router.refresh();
-    } catch (err) {
-      notify("error", err instanceof Error ? err.message : "Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
-    }
   }
 
   // --- OUTLET ACTIONS ---
@@ -303,34 +229,38 @@ export function DashboardSetupManager({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-black tracking-tight text-[#15211d]">
-                Kelola Master Data Usaha
+                {showCategories ? "Kelola Master Data Usaha" : "Kelola Gerai"}
               </h2>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-200">
                 <Sparkles className="size-3" /> Cepat &amp; Praktis
               </span>
             </div>
             <p className="mt-0.5 text-xs text-[#627069]">
-              {showQuickProduct
-                ? "Tambah, perbarui, dan hapus kategori, gerai cabang, serta produk dari satu tempat."
-                : "Tambah, perbarui, dan hapus kategori serta gerai cabang dari satu tempat."}
+              {showCategories
+                ? showQuickProduct
+                  ? "Tambah, perbarui, dan hapus kategori, gerai cabang, serta produk dari satu tempat."
+                  : "Tambah, perbarui, dan hapus kategori serta gerai cabang dari satu tempat."
+                : "Kelola data gerai cabang dari satu tempat."}
             </p>
           </div>
         </div>
 
         {/* Tab Pills */}
         <div className="flex w-full max-w-full overflow-x-auto rounded-2xl border border-[#dbe5df] bg-[#f7faf8] p-1 shadow-2xs lg:w-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab("category")}
-            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
-              activeTab === "category"
-                ? "bg-white text-[#198760] shadow-sm border border-[#cce4d7]"
-                : "text-[#627069] hover:text-[#15211d]"
-            }`}
-          >
-            <Tag className="size-3.5" />
-            <span>Kategori ({categories.length})</span>
-          </button>
+          {showCategories && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("category")}
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all ${
+                activeTab === "category"
+                  ? "bg-white text-[#198760] shadow-sm border border-[#cce4d7]"
+                  : "text-[#627069] hover:text-[#15211d]"
+              }`}
+            >
+              <Tag className="size-3.5" />
+              <span>Kategori ({categories.length})</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -390,143 +320,13 @@ export function DashboardSetupManager({
       )}
 
       {/* TAB CONTENT: KATEGORI */}
-      {activeTab === "category" && (
-        <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
-          {/* Add Category Form */}
-          <div className="rounded-2xl border border-[#dfe8e3] bg-[#fafcfb] p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="grid size-7 place-items-center rounded-lg bg-emerald-100/80 text-emerald-800">
-                <Plus className="size-4" />
-              </span>
-              <h3 className="text-sm font-extrabold text-[#15211d]">Tambah Kategori Baru</h3>
-            </div>
-            <form onSubmit={handleAddCategory} className="space-y-3">
-              <div className="space-y-1">
-                <Label htmlFor="cat-name-input" className="text-xs font-bold text-[#627069]">
-                  Nama Kategori
-                </Label>
-                <Input
-                  id="cat-name-input"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Contoh: Minuman, Makanan, Snack..."
-                  required
-                  maxLength={80}
-                  className="h-10 text-xs rounded-xl border-[#dbe5df] bg-white"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={loading || !newCategoryName.trim()}
-                className="w-full h-10 rounded-xl bg-[#198760] text-xs font-bold text-white hover:bg-[#14714f]"
-              >
-                {loading ? <Loader2 className="size-4 animate-spin" /> : <FolderPlus className="size-4" />}
-                <span>Simpan Kategori</span>
-              </Button>
-            </form>
-          </div>
-
-          {/* Category List */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#627069]">
-                Daftar Kategori Terdaftar ({categories.length})
-              </h3>
-              <span className="text-[11px] text-[#627069]">Klik pensil untuk ubah nama</span>
-            </div>
-
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              {categories.map((item) => {
-                const isEditing = editingCategoryId === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-2 rounded-2xl border border-[#e5ede8] bg-[#fbfdfc] p-3.5 transition hover:border-[#b8d6c7] hover:shadow-xs"
-                  >
-                    {isEditing ? (
-                      <div className="flex flex-1 items-center gap-1.5">
-                        <Input
-                          autoFocus
-                          value={editingCategoryName}
-                          onChange={(e) => setEditingCategoryName(e.target.value)}
-                          className="h-8 text-xs rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleSaveCategory(item.id)}
-                          disabled={loading}
-                          className="grid size-8 place-items-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shrink-0"
-                          title="Simpan"
-                        >
-                          <Check className="size-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingCategoryId(null)}
-                          className="grid size-8 place-items-center rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 shrink-0"
-                          title="Batal"
-                        >
-                          <X className="size-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="grid size-8 place-items-center rounded-xl bg-emerald-50 text-[#198760] shrink-0 border border-emerald-100">
-                            <Tag className="size-3.5" />
-                          </span>
-                          <div className="min-w-0">
-                            <strong className="block truncate text-xs font-bold text-[#15211d]">
-                              {item.name}
-                            </strong>
-                            <span className="text-[10px] text-[#627069]">
-                              {item.productCount !== undefined ? `${item.productCount} produk terkait` : "Kategori aktif"}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingCategoryId(item.id);
-                              setEditingCategoryName(item.name);
-                            }}
-                            className="grid size-7 place-items-center rounded-lg border border-[#dbe5df] bg-white text-[#627069] hover:text-[#198760] hover:border-[#198760] transition"
-                            title="Ubah nama kategori"
-                          >
-                            <Edit2 className="size-3" />
-                          </button>
-                          <ConfirmationDialog
-                            title={`Hapus kategori “${item.name}”?`}
-                            description="Produk dalam kategori ini akan otomatis dialihkan ke kategori Umum. Tindakan ini tidak dapat dibatalkan."
-                            confirmLabel="Hapus kategori"
-                            disabled={loading}
-                            onConfirm={() => void handleDeleteCategory(item)}
-                            trigger={
-                              <button
-                                type="button"
-                                className="grid size-7 place-items-center rounded-lg border border-[#fed7d7] bg-white text-rose-600 hover:bg-rose-50 transition"
-                                title="Hapus kategori"
-                              >
-                                <Trash2 className="size-3" />
-                              </button>
-                            }
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-
-              {categories.length === 0 && (
-                <div className="col-span-2 rounded-2xl border border-dashed border-[#dfe8e3] p-8 text-center text-xs text-[#627069]">
-                  Belum ada kategori kustom. Tambahkan kategori pertama Anda di formulir sebelah kiri.
-                </div>
-              )}
-            </div>
-          </div>
+      {showCategories && activeTab === "category" && (
+        <div className="mt-6">
+          <CategoryManager
+            compact
+            initialCategories={categories}
+            onChange={setCategories}
+          />
         </div>
       )}
 

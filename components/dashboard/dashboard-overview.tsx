@@ -59,12 +59,18 @@ export function DashboardOverview({
   currentTransactions,
   selectedOutletId,
   selectedOutletSlug,
+  showSalesChart = true,
+  showReportsAction = true,
+  showInventoryAction = true,
 }: {
   chartPoints: SalesPoint[];
   periodLabel: string;
   currentTransactions: number;
   selectedOutletId: string;
   selectedOutletSlug?: string;
+  showSalesChart?: boolean;
+  showReportsAction?: boolean;
+  showInventoryAction?: boolean;
 }) {
   const cashierHref =
     selectedOutletSlug
@@ -73,9 +79,16 @@ export function DashboardOverview({
         ? "/pos"
         : `/pos?outlet=${encodeURIComponent(selectedOutletId)}`;
 
+  const visibleActions = actions.filter(
+    (action) =>
+      (showReportsAction || action.href !== "/reports") &&
+      (showInventoryAction || action.href !== "/inventory"),
+  );
+
   return (
-    <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.75fr)]">
-      <div className="min-w-0 rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-6">
+    <section className={`grid min-w-0 gap-4 ${showSalesChart ? "xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.75fr)]" : "grid-cols-1"}`}>
+      {showSalesChart && (
+        <div className="min-w-0 rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-6">
         <div className="flex flex-col gap-3 border-b border-[#edf2ee] pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-base font-black text-[#15211d]">
@@ -94,7 +107,8 @@ export function DashboardOverview({
         <div className="pt-4">
           <DashboardSalesChart points={chartPoints} />
         </div>
-      </div>
+        </div>
+      )}
 
       <aside className="rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-5">
         <div className="mb-4 flex items-start gap-2.5">
@@ -121,7 +135,7 @@ export function DashboardOverview({
             </span>
           </Link>
 
-          {actions.map((action) => {
+          {visibleActions.map((action) => {
             const Icon = action.icon;
             return (
               <Link

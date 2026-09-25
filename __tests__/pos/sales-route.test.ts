@@ -257,6 +257,34 @@ describe("POST /api/sales", () => {
     );
   });
 
+  it("tidak mengelola atau mengurangi stok pada Paket Tumbuh", async () => {
+    const queryResults = [
+      [{ id: outletId }],
+      [{
+        id: productId,
+        name: "Kopi Susu",
+        sellingPrice: 10_000,
+        costPrice: 6_000,
+        trackStock: true,
+        stockId: "stock-1",
+        quantity: 0,
+      }],
+    ];
+    const insertedValues: unknown[] = [];
+    const tx = {
+      select: vi.fn(() => selectBuilder(queryResults.shift() ?? [])),
+      update: vi.fn(),
+      insert: makeTxInsert(insertedValues),
+    };
+    mocks.transaction.mockImplementation(async (callback) => callback(tx));
+
+    const response = await POST(saleRequest());
+
+    expect(response.status).toBe(201);
+    expect(tx.update).not.toHaveBeenCalled();
+    expect(insertedValues).toHaveLength(3);
+  });
+
   it("mengembalikan transaksi lama tanpa mengurangi stok lagi ketika request diulang", async () => {
     const existingSale = {
       saleId: "sale-existing",

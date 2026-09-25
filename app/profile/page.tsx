@@ -5,6 +5,7 @@ import { ProfileManager } from "@/components/account/profile-manager";
 import { db } from "@/db";
 import { account } from "@/db/schema";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { normalizePlan } from "@/lib/billing/plans";
 
 const roleLabels = {
   owner: "Pemilik Usaha",
@@ -18,7 +19,7 @@ export default async function ProfilePage() {
     enforceSubscription: false,
   });
   if (!access.ok) return access.lockout;
-  const { session, membership, subDetails, allowDarkMode } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const credentialAccount = await db
     .select({ id: account.id })
@@ -42,6 +43,7 @@ export default async function ProfilePage() {
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1080px,calc(100%-24px))] py-6 sm:w-[min(1080px,calc(100%-40px))] sm:py-10 animate-page-enter">
         <header className="flex items-start gap-3">

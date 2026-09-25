@@ -25,6 +25,7 @@ export function DashboardHeader({
   selectedPeriod,
   trialDaysRemaining,
   currentPlan = "tumbuh",
+  showOutletFilter = true,
 }: {
   userName: string;
   businessName: string;
@@ -35,6 +36,7 @@ export function DashboardHeader({
   selectedPeriod: PeriodKey;
   trialDaysRemaining?: number | null;
   currentPlan?: string;
+  showOutletFilter?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -189,29 +191,33 @@ export function DashboardHeader({
           </button>
         </div>
 
-        {/* Outlet Switcher (Immediate on-change) */}
-        <div className="flex w-full items-center gap-2 md:w-auto">
-          <span className="text-xs font-bold text-[#627069] hidden md:inline">
-            Pilih Gerai:
-          </span>
-          <div className="relative min-w-0 flex-1 md:flex-none">
-            <select
-              value={selectedOutletId}
-              disabled={isPending}
-              onChange={(e) => navigateFilter(selectedPeriod, e.target.value)}
-              className="h-10 w-full appearance-none rounded-xl border border-[#dbe5df] bg-[#f8faf9] pl-9 pr-8 text-xs font-bold text-[#15211d] transition hover:border-[#198760] focus:border-[#198760] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198760]/20 cursor-pointer disabled:opacity-60 md:w-auto"
-            >
-              <option value="all">Semua Gerai Usaha</option>
-              {outlets.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
-            <Store className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[#198760]" />
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-[#8b9991]" />
-          </div>
-        </div>
+        {showOutletFilter && (
+          <>
+            {/* Outlet Switcher (Immediate on-change) */}
+            <div className="flex w-full items-center gap-2 md:w-auto">
+              <span className="text-xs font-bold text-[#627069] hidden md:inline">
+                Pilih Gerai:
+              </span>
+              <div className="relative min-w-0 flex-1 md:flex-none">
+                <select
+                  value={selectedOutletId}
+                  disabled={isPending}
+                  onChange={(e) => navigateFilter(selectedPeriod, e.target.value)}
+                  className="h-10 w-full appearance-none rounded-xl border border-[#dbe5df] bg-[#f8faf9] pl-9 pr-8 text-xs font-bold text-[#15211d] transition hover:border-[#198760] focus:border-[#198760] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#198760]/20 cursor-pointer disabled:opacity-60 md:w-auto"
+                >
+                  <option value="all">Semua Gerai Usaha</option>
+                  {outlets.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+                <Store className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[#198760]" />
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-[#8b9991]" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

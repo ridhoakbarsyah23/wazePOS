@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { category, inventoryStock, outlet, product, stockMovement } from "@/db/schema";
-import { canManageBusiness, getMembership, requireSession } from "@/lib/auth/auth-session";
+import { canManageBusiness, getBusinessSubscription, getMembership, requireSession } from "@/lib/auth/auth-session";
+import { hasPlanFeature } from "@/lib/billing/plans";
 import { createUniqueOutletSlug } from "@/lib/shared/outlet-slug";
 import { categorySchema, outletSchema, productSchema } from "@/lib/validation/catalog";
 
@@ -22,7 +23,13 @@ async function getBusinessContext() {
     redirect("/dashboard");
   }
 
-  return { membership, userId: session.user.id };
+  const subscription = await getBusinessSubscription(membership.businessId);
+  return {
+    membership,
+    userId: session.user.id,
+    canManageOutlets: hasPlanFeature(subscription?.plan, "multiOutlet"),
+    canManageInventory: hasPlanFeature(subscription?.plan, "inventoryStock"),
+  };
 }
 
 function redirectToDashboard(status: "success" | "error", message: string): never {
@@ -57,7 +64,10 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function createOutlet(formData: FormData) {
-  const { membership } = await getBusinessContext();
+  const { membership, canManageOutlets } = await getBusinessContext();
+  if (!canManageOutlets) {
+    redirectToDashboard("error", "Multi-gerai hanya tersedia pada Paket Bisnis.");
+  }
   const nameValue = formData.get("name");
   const addressValue = formData.get("address");
 
@@ -90,7 +100,7 @@ export async function createOutlet(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
-  const { membership, userId } = await getBusinessContext();
+  const { membership, userId, canManageInventory } = await getBusinessContext();
   const payload = {
     name: formData.get("name"),
     sku: formData.get("sku"),
@@ -127,6 +137,7 @@ export async function createProduct(formData: FormData) {
   }
 
   const productId = randomUUID();
+  const trackStock = canManageInventory && result.data.trackStock;
 
   try {
     await db.transaction(async (tx) => {
@@ -138,31 +149,33 @@ export async function createProduct(formData: FormData) {
         sku: result.data.sku || null,
         sellingPrice: result.data.sellingPrice,
         costPrice: result.data.costPrice,
-        trackStock: result.data.trackStock,
+        trackStock,
         isActive: true,
       });
 
-      const initialStock = result.data.trackStock ? result.data.initialStock : 0;
-      await tx.insert(inventoryStock).values({
-        id: randomUUID(),
-        businessId: membership.businessId,
-        outletId: result.data.outletId,
-        productId,
-        quantity: initialStock,
-        lowStockThreshold: result.data.lowStockThreshold,
-      });
-
-      if (initialStock > 0) {
-        await tx.insert(stockMovement).values({
+      const initialStock = trackStock ? result.data.initialStock : 0;
+      if (trackStock) {
+        await tx.insert(inventoryStock).values({
           id: randomUUID(),
           businessId: membership.businessId,
           outletId: result.data.outletId,
           productId,
-          userId,
-          type: "restock",
           quantity: initialStock,
-          note: "Stok awal produk",
+          lowStockThreshold: result.data.lowStockThreshold,
         });
+
+        if (initialStock > 0) {
+          await tx.insert(stockMovement).values({
+            id: randomUUID(),
+            businessId: membership.businessId,
+            outletId: result.data.outletId,
+            productId,
+            userId,
+            type: "restock",
+            quantity: initialStock,
+            note: "Stok awal produk",
+          });
+        }
       }
     });
   } catch (error) {
@@ -177,5 +190,8 @@ export async function createProduct(formData: FormData) {
   revalidatePath("/products");
   revalidatePath("/inventory");
   revalidatePath("/pos");
-  redirectToDashboard("success", "Produk dan stok awal berhasil ditambahkan.");
+  redirectToDashboard(
+    "success",
+    trackStock ? "Produk dan stok awal berhasil ditambahkan." : "Produk berhasil ditambahkan.",
+  );
 }

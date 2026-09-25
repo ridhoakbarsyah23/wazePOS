@@ -25,6 +25,7 @@ export type PlanFeature =
   | "unlimitedStaff"
   | "unlimitedProducts"
   | "multiOutlet"
+  | "receiptSettings"
   | "darkMode";
 
 export type PlanConfig = {
@@ -49,12 +50,12 @@ export const plans: Record<PlanId, PlanConfig> = {
     features: {
       cashSales: true,
       productCatalog: true,
-      inventoryStock: true,
+      inventoryStock: false,
       salesHistory: true,
       receiptPrinting: true,
-      onscreenReports: true,
-      staffManagement: true,
-      roleBasedAccess: true,
+      onscreenReports: false,
+      staffManagement: false,
+      roleBasedAccess: false,
       qrisPayments: false,
       allPaymentMethods: false,
       customerLookup: false,
@@ -62,6 +63,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       unlimitedStaff: false,
       unlimitedProducts: false,
       multiOutlet: false,
+      receiptSettings: false,
       darkMode: false,
     },
   },
@@ -91,6 +93,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       unlimitedStaff: true,
       unlimitedProducts: true,
       multiOutlet: true,
+      receiptSettings: true,
       darkMode: true,
     },
   },
@@ -182,8 +185,10 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
               : "Pembayaran tunai, kartu debit & kredit EDC",
           ]
         : []),
+      ...(config.features.inventoryStock ? ["Manajemen stok & peringatan stok menipis"] : []),
       ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
       ...(config.features.customerLookup ? ["Pencarian member pelanggan saat transaksi kasir"] : []),
+      ...(config.features.receiptSettings ? ["Kustomisasi pengaturan struk"] : []),
       ...(config.features.darkMode ? ["Mode gelap untuk dashboard"] : []),
       formatOutletLimit(plan),
       formatStaffLimit(plan),
@@ -198,7 +203,7 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
     ...(config.features.cashSales ? ["Pembayaran kasir tunai"] : []),
     ...(config.features.inventoryStock ? ["Stok otomatis & peringatan stok menipis"] : []),
     ...(config.features.onscreenReports ? ["Laporan penjualan harian di layar"] : []),
-    ...(config.features.receiptPrinting ? ["Cetak struk kasir 58 mm / 80 mm"] : []),
+    ...(config.features.receiptPrinting ? ["Cetak struk kasir standar 58 mm / 80 mm"] : []),
   ];
 }
 
@@ -267,6 +272,7 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
       category: "Tampilan & kenyamanan",
       items: [
         { name: "Mode gelap dashboard", detail: "Mengurangi silau saat menggunakan aplikasi di lingkungan minim cahaya.", availability: businessOnlyAvailability("darkMode") },
+        { name: "Pengaturan struk kustom", detail: "Atur catatan, logo, dan bagian yang tampil pada struk bisnis.", availability: businessOnlyAvailability("receiptSettings") },
       ],
     },
   ];

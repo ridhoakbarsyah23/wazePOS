@@ -6,11 +6,12 @@ import { AppHeader } from "@/components/shared/app-header";
 import { ProductManager } from "@/components/catalog/product-manager";
 import { Badge } from "@/components/ui/badge";
 import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { hasPlanFeature, normalizePlan } from "@/lib/billing/plans";
 
 export default async function ProductsPage() {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
-  const { session, membership, subDetails, allowDarkMode } = access;
+  const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 
   const [products, categories, outlets] = await Promise.all([
     db.select({
@@ -26,6 +27,7 @@ export default async function ProductsPage() {
     db.select({ id: category.id, name: category.name }).from(category).where(eq(category.businessId, membership.businessId)).orderBy(category.name),
     db.select({ id: outlet.id, name: outlet.name }).from(outlet).where(eq(outlet.businessId, membership.businessId)).orderBy(outlet.name),
   ]);
+  const allowInventory = hasPlanFeature(currentSubscription?.plan, "inventoryStock");
 
   return (
     <AppHeader
@@ -34,6 +36,7 @@ export default async function ProductsPage() {
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
+      plan={normalizePlan(currentSubscription?.plan)}
     >
       <section className="mx-auto w-[min(1140px,calc(100%-32px))] py-8 sm:py-10 animate-page-enter">
         <div className="flex flex-col gap-2">
@@ -49,7 +52,12 @@ export default async function ProductsPage() {
         </div>
 
         <div className="mt-7">
-          <ProductManager products={products} categories={categories} outlets={outlets} />
+          <ProductManager
+            products={products}
+            categories={categories}
+            outlets={outlets}
+            allowInventory={allowInventory}
+          />
         </div>
       </section>
     </AppHeader>

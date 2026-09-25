@@ -8,7 +8,7 @@ Landing page marketing dan lead generation untuk wazePOS, dibuat berdasarkan `PR
 - Navigasi sticky serta hamburger menu pada perangkat mobile.
 - CTA trial dan WhatsApp dengan pesan berbeda untuk konteks trial, harga, dan konsultasi umum.
 - Tab fitur, tab pratinjau produk, dan FAQ accordion.
-- Tiga paket harga: Mulai, Tumbuh, dan Bisnis dengan pilihan pembayaran bulanan atau tahunan.
+- Dua paket harga: Tumbuh dan Bisnis dengan penagihan tahunan.
 - Sticky mobile CTA dan floating WhatsApp.
 - Lead form dengan validasi client/server, honeypot anti-bot, dan endpoint `POST /api/leads`.
 - Hook event analytics melalui `window.dataLayer` dan custom event `wazepos:analytics`.
@@ -113,15 +113,16 @@ Struktur folder dipisahkan berdasarkan domain agar lebih mudah dipelihara. Rute 
 
 ## Fondasi operasional POS
 
-- Dashboard pemilik menyediakan kategori, gerai, produk, harga jual, harga modal, SKU, dan stok awal.
+- Dashboard pemilik menyediakan kategori, gerai, produk, harga jual, harga modal, dan SKU; stok awal tersedia pada Paket Bisnis.
 - Halaman `/products` digunakan untuk memperbarui produk tanpa menghapus histori transaksi.
-- Halaman `/inventory` menyimpan stok per gerai dan riwayat perubahan dalam bentuk selisih stok.
-- Paket Tumbuh mendukung transaksi tunai, sedangkan Paket Bisnis menambahkan pembayaran kartu debit dan kredit EDC.
-- Setiap transaksi baru menyimpan snapshot nama, harga jual, dan harga modal produk serta mengurangi stok secara atomik.
+- Halaman `/inventory` menyimpan stok per gerai dan riwayat perubahan dalam bentuk selisih stok; akses ini hanya tersedia pada Paket Bisnis.
+- Paket Tumbuh mendukung transaksi tunai dengan maksimal 1 gerai, sedangkan Paket Bisnis mendukung hingga 5 gerai serta pembayaran kartu debit dan kredit EDC.
+- Pengaturan struk kustom hanya tersedia pada Paket Bisnis; Paket Tumbuh menggunakan struk kasir standar.
+- Setiap transaksi baru menyimpan snapshot nama, harga jual, dan harga modal produk; produk yang dilacak pada Paket Bisnis akan mengurangi stok secara atomik.
 - Void transaksi mewajibkan alasan serta menyimpan waktu dan pengguna yang membatalkan untuk kebutuhan audit.
 - Pembayaran QRIS POS dinonaktifkan sampai integrasi penyedia pembayaran resmi, verifikasi status, dan webhook tersedia. QRIS tidak boleh dikonfirmasi lunas secara manual.
 - Halaman `/reports` menampilkan ringkasan penjualan harian, produk terlaris, dan distribusi metode pembayaran.
-- Pengelolaan produk, stok, dan laporan dibatasi untuk role `owner` atau `admin`; role `cashier` diarahkan ke kasir.
+- Pengelolaan produk, stok, dan laporan dibatasi untuk role `owner` atau `admin`; role `cashier` diarahkan ke kasir. Fitur stok dan laporan lanjutan hanya tersedia pada Paket Bisnis.
 - Entitlement paket didefinisikan terpusat di `lib/billing/plans.ts` dan diverifikasi kembali oleh API untuk fitur khusus Paket Bisnis.
 - Pemilik usaha dapat membandingkan dan mengganti paket selama trial melalui `/subscription`; perubahan subscription aktif tetap dikunci sampai alur pembayaran tersedia.
 

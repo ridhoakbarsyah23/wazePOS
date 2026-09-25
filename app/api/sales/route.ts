@@ -120,6 +120,7 @@ export async function POST(request: Request) {
 
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
   const allowsQrisPayments = hasPlanFeature(currentSubscription?.plan, "qrisPayments");
+  const canManageInventory = hasPlanFeature(currentSubscription?.plan, "inventoryStock");
 
   if ((parsed.data.paymentMethod === "debit" || parsed.data.paymentMethod === "credit") && !allowsAllPayments) {
     return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
@@ -184,7 +185,7 @@ export async function POST(request: Request) {
       const lineItems = items.map((item) => {
         const catalogItem = byId.get(item.productId);
         if (!catalogItem) throw new Error("PRODUCT_NOT_FOUND");
-        if (catalogItem.trackStock && (catalogItem.quantity ?? 0) < item.quantity) {
+        if (canManageInventory && catalogItem.trackStock && (catalogItem.quantity ?? 0) < item.quantity) {
           throw new Error(`INSUFFICIENT_STOCK:${catalogItem.name}`);
         }
         return {
@@ -193,7 +194,7 @@ export async function POST(request: Request) {
           unitPrice: catalogItem.sellingPrice,
           unitCost: catalogItem.costPrice,
           subtotal: catalogItem.sellingPrice * item.quantity,
-          trackStock: catalogItem.trackStock,
+          trackStock: canManageInventory && catalogItem.trackStock,
           stockId: catalogItem.stockId,
         };
       });
