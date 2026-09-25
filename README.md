@@ -22,6 +22,7 @@ Persyaratan: Node.js 20.9 atau lebih baru dan npm.
 ```bash
 npm install
 copy .env.example .env.local
+docker compose up -d postgres
 npm run db:migrate
 npm run dev
 ```
@@ -155,7 +156,7 @@ LEAD_WEBHOOK_SECRET=secret-opsional
 - `MIDTRANS_SERVER_KEY`: Server Key Midtrans yang hanya boleh tersedia di server.
 - `MIDTRANS_IS_PRODUCTION`: gunakan `false` untuk sandbox dan ubah ke `true` hanya setelah pengujian serta konfigurasi production selesai.
 - `MIDTRANS_NOTIFICATION_URL`: URL publik `POST /api/payments/midtrans/webhook` untuk notifikasi pembayaran.
-- `PLATFORM_ADMIN_EMAILS`: allowlist email akun internal yang boleh membuka `/admin`; pisahkan beberapa email dengan koma dan jangan gunakan awalan `NEXT_PUBLIC_`.
+- `PLATFORM_ADMIN_EMAILS`: allowlist email akun internal yang sudah terverifikasi dan boleh membuka `/admin`; pisahkan beberapa email dengan koma dan jangan menggunakan awalan `NEXT_PUBLIC_`. Akun dibuat melalui signup publik belum otomatis mendapat akses.
 - `PLATFORM_ADMIN_NAME`: nama akun yang dibuat oleh seeder Platform Admin lokal.
 - `PLATFORM_ADMIN_SEED_PASSWORD`: password sementara untuk seeder; simpan hanya di environment lokal/secret store dan hapus setelah akun selesai dibuat.
 - `LEAD_WEBHOOK_URL`: endpoint backend/CRM yang menerima JSON lead. Wajib untuk form di production.
@@ -172,7 +173,7 @@ docker compose up -d
 npm.cmd run admin:seed
 ```
 
-Seeder memakai email pertama dari `PLATFORM_ADMIN_EMAILS`. Seeder membuat akun credential bila email belum terdaftar, atau menambahkan login password ke akun Google yang belum memiliki credential. Jika `PLATFORM_ADMIN_SEED_PASSWORD` dikosongkan, password kuat akan dibuat dan ditampilkan sekali di terminal.
+Seeder memakai email pertama dari `PLATFORM_ADMIN_EMAILS`. Seeder membuat akun credential bila email belum terdaftar, atau menambahkan login password ke akun Google yang belum memiliki credential. Akun yang dibuat seeder ditandai `email_verified=true`; signup publik tidak otomatis mendapat status tersebut. Jika `PLATFORM_ADMIN_SEED_PASSWORD` dikosongkan, password kuat akan dibuat dan ditampilkan sekali di terminal.
 
 Seeder tidak mengganti password akun yang sudah ada. Untuk akun lama yang passwordnya tidak diketahui, jalankan:
 
@@ -194,7 +195,7 @@ Halaman `/admin` adalah dashboard internal read-only untuk memantau data pelangg
 - Export CSV untuk seluruh hasil filter, bukan hanya halaman yang sedang terlihat.
 - Audit log untuk akses detail usaha dan export daftar usaha.
 
-Jalankan `npm run db:migrate` setelah pulling perubahan yang menambah tabel audit Platform Admin. Endpoint admin memverifikasi allowlist `PLATFORM_ADMIN_EMAILS` di server dan response detail/export menggunakan `private, no-store`.
+Jalankan `npm run db:migrate` setelah pulling perubahan yang menambah tabel audit Platform Admin. `/admin` dilindungi dua lapis: `proxy.ts` melakukan redirect cepat ke `/login` bila cookie session tidak ada, lalu `app/admin/layout.tsx` memvalidasi session Better Auth, email terverifikasi, dan allowlist `PLATFORM_ADMIN_EMAILS` di server sebelum halaman dirender. Halaman dan endpoint admin juga memakai `Cache-Control: private, no-store`; endpoint detail/export memverifikasi allowlist di server. Pastikan `PLATFORM_ADMIN_EMAILS` berisi hanya email akun internal yang sudah diprovisioning dan terverifikasi.
 
 ## Pembayaran subscription
 
