@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
-import { getCurrentSession } from "@/lib/auth-session";
+import { getCurrentSession } from "@/lib/auth/auth-session";
 
 export default async function ResetPasswordPage({
   searchParams,

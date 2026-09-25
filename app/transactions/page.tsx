@@ -14,23 +14,23 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { AppHeader } from "@/components/app-header";
+import { AppHeader } from "@/components/shared/app-header";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { customer, outlet, sale, user } from "@/db/schema";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
 import {
   TRANSACTIONS_PAGE_SIZE,
   getPageNumbers,
   pageDisabledClass,
   pageLinkClass,
-} from "@/lib/pagination";
-import { formatReportRange, paymentLabel } from "@/lib/reporting";
+} from "@/lib/shared/pagination";
+import { formatReportRange, paymentLabel } from "@/lib/pos/reporting";
 import {
   buildSaleFilterConditions,
   buildSaleFilterQuery,
   parseSaleFilterParams,
-} from "@/lib/sale-filters";
+} from "@/lib/pos/sale-filters";
 
 function paymentIcon(method: string) {
   if (method === "cash") return <Banknote className="size-3.5" />;

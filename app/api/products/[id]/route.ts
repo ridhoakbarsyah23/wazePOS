@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, product } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth-session";
-import { isUniqueConstraintViolation } from "@/lib/product-errors";
+import { auth } from "@/lib/auth/auth";
+import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
+import { isUniqueConstraintViolation } from "@/lib/shared/product-errors";
 import { productDeleteSchema, productUpdateSchema } from "@/lib/validation/catalog";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -4,9 +4,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { customer, sale } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
-import { getMaxCustomers } from "@/lib/plans";
+import { auth } from "@/lib/auth/auth";
+import { getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { getMaxCustomers } from "@/lib/billing/plans";
 import { customerSchema } from "@/lib/validation/customer";
 
 export async function GET(request: Request) {

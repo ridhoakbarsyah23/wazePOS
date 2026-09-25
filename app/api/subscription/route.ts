@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { subscription } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
-import { plans } from "@/lib/plans";
+import { auth } from "@/lib/auth/auth";
+import { getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { plans } from "@/lib/billing/plans";
 import { changeTrialPlanSchema } from "@/lib/validation/subscription";
 
 export async function PATCH(request: Request) {

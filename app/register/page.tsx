@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { RegisterForm } from "@/components/auth/register-form";
-import { getCurrentSession } from "@/lib/auth-session";
-import { normalizePlan, plans } from "@/lib/plans";
+import { getCurrentSession } from "@/lib/auth/auth-session";
+import { normalizePlan, plans } from "@/lib/billing/plans";
 
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   if (await getCurrentSession()) redirect("/dashboard");

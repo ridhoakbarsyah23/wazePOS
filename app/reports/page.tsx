@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { db } from "@/db";
 import { outlet, sale, saleItem } from "@/db/schema";
-import { AppHeader } from "@/components/app-header";
+import { AppHeader } from "@/components/shared/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,15 +30,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { REPORTS_PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
-import { hasPlanFeature } from "@/lib/plans";
-import { formatReportRange } from "@/lib/reporting";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { REPORTS_PAGE_SIZE, getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/shared/pagination";
+import { hasPlanFeature } from "@/lib/billing/plans";
+import { formatReportRange } from "@/lib/pos/reporting";
 import {
   buildSaleFilterConditions,
   buildSaleFilterQuery,
   parseSaleFilterParams,
-} from "@/lib/sale-filters";
+} from "@/lib/pos/sale-filters";
 
 export default async function ReportsPage({
   searchParams,

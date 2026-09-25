@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { OnboardingForm } from "@/components/onboarding-form";
-import { getMembership, requireSession } from "@/lib/auth-session";
-import { normalizePlan, plans } from "@/lib/plans";
+import { OnboardingForm } from "@/components/onboarding/onboarding-form";
+import { getMembership, requireSession } from "@/lib/auth/auth-session";
+import { normalizePlan, plans } from "@/lib/billing/plans";
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const session = await requireSession();

@@ -9,8 +9,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { AppHeader } from "@/components/app-header";
-import { SubscriptionPlanManager } from "@/components/subscription-plan-manager";
+import { AppHeader } from "@/components/shared/app-header";
+import { SubscriptionPlanManager } from "@/components/subscription/subscription-plan-manager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,9 +24,9 @@ import {
 } from "@/components/ui/table";
 import { db } from "@/db";
 import { subscriptionPayment } from "@/db/schema";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { isMidtransConfigured } from "@/lib/midtrans";
-import { normalizePlan, plans } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { isMidtransConfigured } from "@/lib/billing/midtrans";
+import { normalizePlan, plans } from "@/lib/billing/plans";
 
 const statusLabels = {
   trialing: "Masa trial",

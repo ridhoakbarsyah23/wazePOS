@@ -4,12 +4,12 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { customer, inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { getBusinessSubscription, getMembership } from "@/lib/auth-session";
-import { nextInvoiceNumber } from "@/lib/invoice-number";
-import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/plans";
+import { auth } from "@/lib/auth/auth";
+import { getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { nextInvoiceNumber } from "@/lib/pos/invoice-number";
+import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/billing/plans";
 import { saleSchema } from "@/lib/validation/sale";
-import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/shared/rate-limit";
 
 const IDEMPOTENCY_HINTS = [
   "sale_business_client_request_idx",

@@ -5,16 +5,16 @@ import { ArrowLeft, Ban } from "lucide-react";
 import { IBM_Plex_Mono } from "next/font/google";
 import { db } from "@/db";
 import { business, customer, outlet, sale, saleItem, user } from "@/db/schema";
-import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
-import { paymentLabel } from "@/lib/payment";
+import { canManageBusiness, getMembership, requireSession } from "@/lib/auth/auth-session";
+import { paymentLabel } from "@/lib/billing/payment";
 import {
   DEFAULT_RECEIPT_DISCLAIMER,
   DEFAULT_RECEIPT_FOOTER,
   normalizeReceiptSettings,
 } from "@/lib/validation/receipt-settings";
-import { PrintButton } from "@/components/print-button";
-import { VoidSaleButton } from "@/components/void-sale-button";
-import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
+import { PrintButton } from "@/components/pos/print-button";
+import { VoidSaleButton } from "@/components/pos/void-sale-button";
+import { WhatsAppShareButton } from "@/components/marketing/whatsapp-share-button";
 
 // Font struk self-hosted via next/font: tajam, angka sejajar, dan tetap
 // tersedia offline saat print (sesuai CSP font-src 'self').

@@ -1,10 +1,10 @@
 import { and, eq, isNotNull } from "drizzle-orm";
 import { UserRound } from "lucide-react";
-import { AppHeader } from "@/components/app-header";
-import { ProfileManager } from "@/components/profile-manager";
+import { AppHeader } from "@/components/shared/app-header";
+import { ProfileManager } from "@/components/account/profile-manager";
 import { db } from "@/db";
 import { account } from "@/db/schema";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
 
 const roleLabels = {
   owner: "Pemilik Usaha",

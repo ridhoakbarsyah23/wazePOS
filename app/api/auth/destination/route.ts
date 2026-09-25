@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getPostLoginDestination } from "@/lib/platform-admin-access";
+import { auth } from "@/lib/auth/auth";
+import { getPostLoginDestination } from "@/lib/admin/platform-admin-access";
 
 export async function GET() {
   const requestHeaders = await headers();

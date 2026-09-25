@@ -16,7 +16,7 @@ import { PlatformAdminInsights } from "@/components/admin/platform-admin-insight
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getPlatformAdminDashboardData } from "@/lib/platform-admin-dashboard";
+import { getPlatformAdminDashboardData } from "@/lib/admin/platform-admin-dashboard";
 
 export const metadata: Metadata = {
   title: "Platform Admin | wazePOS",

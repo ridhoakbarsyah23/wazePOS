@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, stockMovement } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth-session";
+import { auth } from "@/lib/auth/auth";
+import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
 import { stockAdjustmentSchema } from "@/lib/validation/stock";
 
 export async function POST(request: Request) {

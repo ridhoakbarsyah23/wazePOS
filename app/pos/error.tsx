@@ -1,6 +1,6 @@
 "use client";
 
-import { RouteError } from "@/components/route-error";
+import { RouteError } from "@/components/shared/route-error";
 
 export default function PosError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   return (

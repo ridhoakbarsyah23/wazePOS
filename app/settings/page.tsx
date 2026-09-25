@@ -1,12 +1,12 @@
 import { and, eq, sql } from "drizzle-orm";
 import { Settings } from "lucide-react";
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/app-header";
-import { DashboardSetupManager } from "@/components/dashboard-setup-manager";
-import { SettingsManager } from "@/components/settings-manager";
+import { AppHeader } from "@/components/shared/app-header";
+import { DashboardSetupManager } from "@/components/dashboard/dashboard-setup-manager";
+import { SettingsManager } from "@/components/settings/settings-manager";
 import { db } from "@/db";
 import { business, category, outlet, product } from "@/db/schema";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
 import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
 
 export default async function SettingsPage() {

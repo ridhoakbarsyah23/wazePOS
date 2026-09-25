@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { business } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth-session";
+import { auth } from "@/lib/auth/auth";
+import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
 import { businessSettingsSchema } from "@/lib/validation/settings";
 
 export async function PATCH(request: Request) {

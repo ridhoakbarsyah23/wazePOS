@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { requirePlatformAdmin } from "@/lib/platform-admin";
+import { requirePlatformAdmin } from "@/lib/admin/platform-admin";
 
 /**
  * Guard route-level untuk seluruh segment /admin.

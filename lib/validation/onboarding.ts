@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { planIds } from "@/lib/plans";
+import { planIds } from "@/lib/billing/plans";
 
 export const businessTypes = ["Toko", "Warung", "Kedai Kopi", "Restoran", "Laundry", "Ritel", "Lainnya"] as const;
 

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getPlatformAdminBusinessExportRows } from "@/lib/platform-admin-dashboard";
-import { getPlatformAdminRequestSession } from "@/lib/platform-admin-api";
-import { recordPlatformAdminAudit } from "@/lib/platform-admin-audit";
-import { platformAdminStateMeta } from "@/lib/platform-admin-ui";
+import { getPlatformAdminBusinessExportRows } from "@/lib/admin/platform-admin-dashboard";
+import { getPlatformAdminRequestSession } from "@/lib/admin/platform-admin-api";
+import { recordPlatformAdminAudit } from "@/lib/admin/platform-admin-audit";
+import { platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
 
 export const runtime = "nodejs";
 

@@ -2,11 +2,11 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { businessMember, user } from "@/db/schema";
 import { Users } from "lucide-react";
-import { AppHeader } from "@/components/app-header";
-import { StaffManager } from "@/components/staff-manager";
+import { AppHeader } from "@/components/shared/app-header";
+import { StaffManager } from "@/components/staff/staff-manager";
 import { Badge } from "@/components/ui/badge";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { getPlanLimits, normalizePlan, plans } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { getPlanLimits, normalizePlan, plans } from "@/lib/billing/plans";
 
 export default async function StaffPage() {
   const access = await requireDashboardAccess({ rule: "manageStaff" });

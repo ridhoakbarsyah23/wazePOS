@@ -2,9 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { getGoogleAuthRedirects, type SocialAuthFlow } from "@/lib/social-auth";
-import type { PlanId } from "@/lib/plans";
+import { authClient } from "@/lib/auth/auth-client";
+import { getGoogleAuthRedirects, type SocialAuthFlow } from "@/lib/auth/social-auth";
+import type { PlanId } from "@/lib/billing/plans";
 
 export function GoogleSsoButton({
   flow,

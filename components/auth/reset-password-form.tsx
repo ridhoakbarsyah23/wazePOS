@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 import { PasswordField } from "@/components/auth/password-field";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 import { resetPasswordSchema } from "@/lib/validation/auth";
 
 export function ResetPasswordForm({ token }: { token: string }) {

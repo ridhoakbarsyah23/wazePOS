@@ -1,4 +1,4 @@
-import { PosPageContent } from "@/components/pos-page-content";
+import { PosPageContent } from "@/components/pos/pos-page-content";
 
 export default async function OutletPosPage({
   params,

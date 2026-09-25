@@ -1,12 +1,12 @@
 import { and, eq, sql } from "drizzle-orm";
 import { Users } from "lucide-react";
-import { AppHeader } from "@/components/app-header";
-import { CustomerManager, type CustomerListItem } from "@/components/customer-manager";
+import { AppHeader } from "@/components/shared/app-header";
+import { CustomerManager, type CustomerListItem } from "@/components/customers/customer-manager";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/db";
 import { customer, sale } from "@/db/schema";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { getPlanLimits } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { getPlanLimits } from "@/lib/billing/plans";
 
 export default async function CustomersPage() {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });

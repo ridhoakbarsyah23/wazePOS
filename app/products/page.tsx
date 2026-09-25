@@ -2,10 +2,10 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { category, outlet, product } from "@/db/schema";
 import { Package } from "lucide-react";
-import { AppHeader } from "@/components/app-header";
-import { ProductManager } from "@/components/product-manager";
+import { AppHeader } from "@/components/shared/app-header";
+import { ProductManager } from "@/components/catalog/product-manager";
 import { Badge } from "@/components/ui/badge";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
 
 export default async function ProductsPage() {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });

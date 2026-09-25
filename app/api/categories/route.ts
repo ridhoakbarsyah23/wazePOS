@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, product } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth-session";
+import { auth } from "@/lib/auth/auth";
+import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
 import { categorySchema } from "@/lib/validation/catalog";
 
 export async function GET() {

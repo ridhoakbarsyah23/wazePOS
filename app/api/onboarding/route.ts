@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { business, businessMember, outlet, subscription } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { getMembership } from "@/lib/auth-session";
-import { slugifyOutletName } from "@/lib/outlet-slug";
+import { auth } from "@/lib/auth/auth";
+import { getMembership } from "@/lib/auth/auth-session";
+import { slugifyOutletName } from "@/lib/shared/outlet-slug";
 import { onboardingSchema } from "@/lib/validation/onboarding";
 
 export async function POST(request: Request) {

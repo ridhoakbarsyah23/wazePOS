@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { authInputClass, PasswordField } from "@/components/auth/password-field";
 import { GoogleSsoButton } from "@/components/auth/google-sso-button";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 import { registerSchema } from "@/lib/validation/auth";
-import { plans, type PlanId } from "@/lib/plans";
+import { plans, type PlanId } from "@/lib/billing/plans";
 
 type FieldName = "name" | "email" | "password" | "confirmPassword";
 type FieldErrors = Partial<Record<FieldName, string>>;

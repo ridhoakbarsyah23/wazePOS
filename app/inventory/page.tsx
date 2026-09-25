@@ -13,8 +13,8 @@ import {
 import Link from "next/link";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, stockMovement } from "@/db/schema";
-import { AppHeader } from "@/components/app-header";
-import { StockAdjustmentForm } from "@/components/stock-adjustment-form";
+import { AppHeader } from "@/components/shared/app-header";
+import { StockAdjustmentForm } from "@/components/inventory/stock-adjustment-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,14 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
 import {
   INVENTORY_PAGE_SIZE,
   getPageNumbers,
   pageDisabledClass,
   pageLinkClass,
-} from "@/lib/pagination";
-import { parsePageParam } from "@/lib/sale-filters";
+} from "@/lib/shared/pagination";
+import { parsePageParam } from "@/lib/pos/sale-filters";
 
 const movementTypeLabels: Record<string, string> = {
   adjustment: "Penyesuaian",

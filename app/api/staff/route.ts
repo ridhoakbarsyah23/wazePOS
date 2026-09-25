@@ -5,10 +5,10 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "@/db";
 import { account, businessMember, user } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { canManageStaff, getBusinessSubscription, getMembership } from "@/lib/auth-session";
-import { getPlanLimits, normalizePlan, plans } from "@/lib/plans";
-import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { auth } from "@/lib/auth/auth";
+import { canManageStaff, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
+import { getPlanLimits, normalizePlan, plans } from "@/lib/billing/plans";
+import { checkRateLimit, rateLimitResponse } from "@/lib/shared/rate-limit";
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });

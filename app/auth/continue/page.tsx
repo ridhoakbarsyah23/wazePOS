@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getCurrentSession } from "@/lib/auth-session";
-import { getPostLoginDestination } from "@/lib/platform-admin-access";
+import { getCurrentSession } from "@/lib/auth/auth-session";
+import { getPostLoginDestination } from "@/lib/admin/platform-admin-access";
 
 export default async function AuthContinuePage() {
   const session = await getCurrentSession();

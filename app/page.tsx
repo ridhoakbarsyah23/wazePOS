@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { MarketingPage } from "@/components/marketing-page";
-import { getMarketingStructuredData, serializeJsonLd } from "@/lib/marketing-seo";
-import { getWhatsAppUrl, siteConfig } from "@/lib/site";
+import { MarketingPage } from "@/components/marketing/marketing-page";
+import { getMarketingStructuredData, serializeJsonLd } from "@/lib/marketing/marketing-seo";
+import { getWhatsAppUrl, siteConfig } from "@/lib/config/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },

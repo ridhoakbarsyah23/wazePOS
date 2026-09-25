@@ -6,7 +6,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { PlatformAdminAnalytics } from "@/lib/platform-admin-types";
+import type { PlatformAdminAnalytics } from "@/lib/admin/platform-admin-types";
 
 function formatRupiah(value: number) {
   return new Intl.NumberFormat("id-ID", {

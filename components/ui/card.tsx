@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="card" className={cn("flex flex-col rounded-2xl border border-[#dfe8e3] bg-white text-[#15211d] shadow-[0_8px_24px_rgba(16,65,48,.06)]", className)} {...props} />;

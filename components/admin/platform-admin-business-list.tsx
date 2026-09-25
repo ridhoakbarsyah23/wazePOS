@@ -18,10 +18,10 @@ import { PlatformAdminBusinessDetail } from "@/components/admin/platform-admin-b
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
-import type { PlatformAdminBusiness } from "@/lib/platform-admin-types";
-import { platformAdminStateMeta } from "@/lib/platform-admin-ui";
-import { cn } from "@/lib/utils";
+import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/shared/pagination";
+import type { PlatformAdminBusiness } from "@/lib/admin/platform-admin-types";
+import { platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
+import { cn } from "@/lib/shared/utils";
 
 type PlatformAdminListFilters = {
   query: string;

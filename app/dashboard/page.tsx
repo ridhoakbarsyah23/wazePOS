@@ -1,14 +1,14 @@
 import { and, eq, gte, lt, or, sql } from "drizzle-orm";
-import { AppFooter } from "@/components/app-footer";
-import { AppHeader } from "@/components/app-header";
-import { DashboardHeader, PeriodKey } from "@/components/dashboard-header";
-import { DashboardMetrics } from "@/components/dashboard-metrics";
-import { DashboardInsights } from "@/components/dashboard-insights";
-import { DashboardOverview } from "@/components/dashboard-overview";
+import { AppFooter } from "@/components/shared/app-footer";
+import { AppHeader } from "@/components/shared/app-header";
+import { DashboardHeader, PeriodKey } from "@/components/dashboard/dashboard-header";
+import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
+import { DashboardInsights } from "@/components/dashboard/dashboard-insights";
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { db } from "@/db";
 import { inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
-import { requireDashboardAccess } from "@/lib/dashboard-access";
-import { normalizePlan } from "@/lib/plans";
+import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { normalizePlan } from "@/lib/billing/plans";
 
 const dayInMilliseconds = 86_400_000;
 const jakartaDateFormatter = new Intl.DateTimeFormat("en-US", {

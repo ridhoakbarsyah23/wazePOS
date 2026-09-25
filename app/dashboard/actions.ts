@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { category, inventoryStock, outlet, product, stockMovement } from "@/db/schema";
-import { canManageBusiness, getMembership, requireSession } from "@/lib/auth-session";
-import { createUniqueOutletSlug } from "@/lib/outlet-slug";
+import { canManageBusiness, getMembership, requireSession } from "@/lib/auth/auth-session";
+import { createUniqueOutletSlug } from "@/lib/shared/outlet-slug";
 import { categorySchema, outletSchema, productSchema } from "@/lib/validation/catalog";
 
 async function getBusinessContext() {

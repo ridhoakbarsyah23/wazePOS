@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { businessMember } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { canManageStaff, getMembership } from "@/lib/auth-session";
+import { auth } from "@/lib/auth/auth";
+import { canManageStaff, getMembership } from "@/lib/auth/auth-session";
 
 export async function PATCH(
   request: Request,
