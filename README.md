@@ -98,6 +98,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 Salin hasil perintah kedua ke `BETTER_AUTH_SECRET` di `.env.local`. Database Docker bawaan tersedia di port `5434` agar tidak mudah berbenturan dengan instalasi PostgreSQL lain.
 
+## Struktur dan arsitektur
+
+Struktur folder dipisahkan berdasarkan domain agar lebih mudah dipelihara. Rute Next.js tetap berada di `app/`, komponen di `components/<domain>/`, logic domain di `lib/<domain>/`, dan test di `__tests__/<domain>/`. Panduan lengkap tersedia di [`docs/architecture.md`](docs/architecture.md).
+
 ## Autentikasi dan onboarding
 
 - Better Auth menangani register, login, logout, password hashing, session cookie, dan rate limiting dasar.
@@ -118,7 +122,7 @@ Salin hasil perintah kedua ke `BETTER_AUTH_SECRET` di `.env.local`. Database Doc
 - Pembayaran QRIS POS dinonaktifkan sampai integrasi penyedia pembayaran resmi, verifikasi status, dan webhook tersedia. QRIS tidak boleh dikonfirmasi lunas secara manual.
 - Halaman `/reports` menampilkan ringkasan penjualan harian, produk terlaris, dan distribusi metode pembayaran.
 - Pengelolaan produk, stok, dan laporan dibatasi untuk role `owner` atau `admin`; role `cashier` diarahkan ke kasir.
-- Entitlement paket didefinisikan terpusat di `lib/plans.ts` dan diverifikasi kembali oleh API untuk fitur khusus Paket Bisnis.
+- Entitlement paket didefinisikan terpusat di `lib/billing/plans.ts` dan diverifikasi kembali oleh API untuk fitur khusus Paket Bisnis.
 - Pemilik usaha dapat membandingkan dan mengganti paket selama trial melalui `/subscription`; perubahan subscription aktif tetap dikunci sampai alur pembayaran tersedia.
 
 Perintah database:
@@ -199,7 +203,7 @@ Jalankan `npm run db:migrate` setelah pulling perubahan yang menambah tabel audi
 
 ## Pembayaran subscription
 
-- Checkout paket dibuat oleh server melalui Midtrans Snap menggunakan harga di `lib/plans.ts`; nominal dari browser tidak digunakan.
+- Checkout paket dibuat oleh server melalui Midtrans Snap menggunakan harga di `lib/billing/plans.ts`; nominal dari browser tidak digunakan.
 - Midtrans mengarahkan pelanggan ke halaman pembayaran yang di-host Midtrans.
 - Paket baru aktif hanya setelah webhook memiliki signature SHA-512, nominal, mata uang, status transaksi, dan fraud status yang valid.
 - `provider_order_id` unik dan pembaruan pembayaran bersifat idempotent untuk mencegah aktivasi ganda.
