@@ -246,7 +246,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container problem-grid">
             {[{n:"01",t:"Transaksi masih manual",d:"Pencatatan mudah tercecer dan proses pembayaran menjadi lebih lambat."},{n:"02",t:"Stok sulit dipantau",d:"Jumlah barang tercatat tidak selalu sesuai dengan kondisi aktual."},{n:"03",t:"Penyusunan laporan memerlukan waktu",d:"Rekapitulasi penjualan berulang mengurangi waktu untuk mengembangkan bisnis."},{n:"04",t:"Data bisnis tersebar",d:"Informasi produk, pelanggan, dan transaksi tersimpan di berbagai tempat."}].map((item) => <article className="problem-card" key={item.n} data-reveal><span>{item.n}</span><h3>{item.t}</h3><p>{item.d}</p></article>)}
           </div>
-          <div className="container bridge-copy" data-reveal><span><Icon name="arrow" size={20}/></span><p>Saatnya beralih dari pencatatan manual dan mengelola bisnis secara lebih praktis bersama <b>wazePOS.</b></p></div>
+          <div className="container bridge-copy" data-reveal><span className="bridge-copy-icon" aria-hidden="true"><Icon name="arrow" size={20}/></span><p>Saatnya beralih dari pencatatan manual dan mengelola bisnis secara lebih praktis bersama <b>wazePOS.</b></p></div>
         </section>
 
         <section className="section benefits-section">
