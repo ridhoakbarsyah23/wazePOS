@@ -57,6 +57,7 @@ describe("hak fitur paket", () => {
     expect(cards.tumbuh.features).toContain("Cetak struk kasir standar 58 mm / 80 mm");
     expect(cards.tumbuh.features).not.toContain("Laporan penjualan harian di layar");
     expect(cards.bisnis.features).toContain("Kustomisasi pengaturan struk");
+    expect(cards.tumbuh.features).not.toContain("Stok otomatis & peringatan stok menipis");
     expect(cards.tumbuh.features).not.toContain("Manajemen stok & peringatan stok menipis");
     expect(cards.bisnis.features).toContain("Manajemen stok & peringatan stok menipis");
   });
