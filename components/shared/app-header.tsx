@@ -106,6 +106,7 @@ const navItems: NavItem[] = [
     label: "Pelanggan",
     icon: Contact,
     roles: ["owner", "admin"],
+    planFeature: "customerLookup",
     badge: null,
   },
   {
