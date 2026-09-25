@@ -2,6 +2,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlatformAdminBusinessList } from "@/components/admin/platform-admin-business-list";
 
+const mocks = vi.hoisted(() => ({
+  replace: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mocks.replace }),
+}));
+
 const businesses = [
   {
     id: "business-1",
@@ -36,6 +44,7 @@ const detailResponse = {
 };
 
 beforeEach(() => {
+  mocks.replace.mockClear();
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
     ok: true,
     json: async () => ({ detail: detailResponse }),
@@ -126,16 +135,41 @@ describe("PlatformAdminBusinessList", () => {
     );
   });
 
-  it("menampilkan reset ketika filter aktif", () => {
+  it("menampilkan tombol reset yang mengembalikan filter ke kondisi awal", () => {
     render(
       <PlatformAdminBusinessList
         businesses={businesses}
-        filters={{ query: "Nest", status: "trial_active" }}
+        filters={{ query: "", status: "all" }}
         overview={{ expiredSubscriptions: 0, pastDue: 0, cancelled: 0 }}
         directory={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Reset filter" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Reset filter" })).toBeDefined();
+  });
+
+  it("mengembalikan perubahan input ke default saat reset", () => {
+    render(
+      <PlatformAdminBusinessList
+        businesses={businesses}
+        filters={{ query: "", status: "all" }}
+        overview={{ expiredSubscriptions: 0, pastDue: 0, cancelled: 0 }}
+        directory={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    const searchInput = screen.getByPlaceholderText("Cari usaha, owner, atau email") as HTMLInputElement;
+    const businessTypeInput = screen.getByLabelText("Filter jenis usaha") as HTMLInputElement;
+    const statusSelect = screen.getByLabelText("Filter status subscription") as HTMLSelectElement;
+
+    fireEvent.change(searchInput, { target: { value: "Nest" } });
+    fireEvent.change(businessTypeInput, { target: { value: "Kedai Kopi" } });
+    fireEvent.change(statusSelect, { target: { value: "trial_active" } });
+    fireEvent.click(screen.getByRole("button", { name: "Reset filter" }));
+
+    expect(searchInput.value).toBe("");
+    expect(businessTypeInput.value).toBe("");
+    expect(statusSelect.value).toBe("all");
+    expect(mocks.replace).toHaveBeenCalledWith("/admin");
   });
 });

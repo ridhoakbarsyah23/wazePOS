@@ -8,7 +8,6 @@ import {
   ListFilter,
   MapPin,
   Package,
-  RotateCcw,
   Search,
   UserRound,
   UsersRound,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PlatformAdminBusinessDetail } from "@/components/admin/platform-admin-business-detail";
+import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/pagination";
@@ -170,17 +170,11 @@ export function PlatformAdminBusinessList({
                 Export CSV
               </a>
             </Button>
-            {hasFilters && (
-              <Link
-                href="/admin"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#198760] underline-offset-4 hover:underline"
-              >
-                <RotateCcw className="size-3.5" aria-hidden="true" />
-                Reset filter
-              </Link>
-            )}
+            <PlatformAdminFilterResetButton formId="platform-admin-business-filters" />
           </div>
           <form
+            id="platform-admin-business-filters"
+            key={JSON.stringify(filters)}
             className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:items-center"
             action="/admin"
             method="get"
