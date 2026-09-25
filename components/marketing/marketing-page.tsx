@@ -280,7 +280,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
         <section className="section pricing-section" id="harga">
           <div className="container pricing-heading" data-reveal>
-            <div><span className="section-kicker light">Paket wazePOS</span><h2>Dua pilihan paket untuk <span>mendukung pertumbuhan bisnis.</span></h2><p>Pilih Paket Tumbuh untuk operasional harian satu gerai, atau Paket Bisnis untuk multi-gerai, manajemen stok, kustomisasi struk, dan alur usaha yang lebih lengkap.</p></div>
+            <div><span className="section-kicker light">Paket wazePOS</span><h2>Dua pilihan paket untuk <span>mendukung pertumbuhan bisnis.</span></h2><p>Pilih Paket Tumbuh untuk operasional harian satu gerai lengkap dengan pengelolaan pelanggan dan member kasir, atau Paket Bisnis untuk multi-gerai, manajemen stok, kustomisasi struk, dan alur usaha yang lebih lengkap.</p></div>
           </div>
           <div className="container pricing-grid">
             {pricingPlans.map((plan) => {
@@ -301,7 +301,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container mt-12 rounded-3xl border border-white/15 bg-[#032d22]/30 p-[30px] max-[820px]:mt-8 max-[820px]:rounded-[19px] max-[820px]:px-3.5 max-[820px]:py-5" data-reveal>
             <div className="mb-[22px] flex items-end justify-between gap-6 max-[820px]:mb-4 max-[820px]:block">
               <div><span className="section-kicker light">Bandingkan paket</span><h3 className="mt-2.5 mb-0 text-[25px] tracking-[-0.8px] text-white max-[820px]:text-[21px]">Pilih paket yang paling sesuai.</h3></div>
-              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Paket Tumbuh dapat digunakan untuk operasional satu gerai tanpa manajemen stok. Paket Bisnis menambahkan manajemen stok, multi-gerai, pengaturan struk kustom, dan fitur untuk tim yang lebih kompleks.</p>
+              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Paket Tumbuh mencakup operasional satu gerai, pengelolaan hingga 200 pelanggan, dan member di kasir tanpa manajemen stok. Paket Bisnis menambahkan kapasitas pelanggan tanpa batas, manajemen stok, multi-gerai, pengaturan struk kustom, dan fitur untuk tim yang lebih kompleks.</p>
             </div>
             <button
               type="button"

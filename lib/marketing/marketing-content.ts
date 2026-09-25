@@ -12,7 +12,7 @@ export const marketingFaqs = [
   {
     question: "Apa perbedaan Paket Tumbuh dan Paket Bisnis?",
     answer:
-      "Paket Tumbuh mendukung operasional satu gerai dengan fitur kasir, produk, riwayat transaksi, dan cetak struk. Paket Bisnis menambahkan manajemen stok, hingga lima gerai, metode pembayaran tambahan, export laporan, pengaturan struk kustom, dan fitur lanjutan untuk tim.",
+      "Paket Tumbuh mendukung operasional satu gerai dengan fitur kasir, produk, pelanggan dan member kasir, riwayat transaksi, serta cetak struk. Paket Bisnis menambahkan manajemen stok, hingga lima gerai, metode pembayaran tambahan, ekspor laporan, pengaturan struk kustom, dan fitur lanjutan untuk tim.",
   },
   {
     question: "Apakah wazePOS dapat dicoba secara gratis?",

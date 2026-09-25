@@ -58,7 +58,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       roleBasedAccess: false,
       qrisPayments: false,
       allPaymentMethods: false,
-      customerLookup: false,
+      customerLookup: true,
       exportReports: false,
       unlimitedStaff: false,
       unlimitedProducts: false,
@@ -172,6 +172,12 @@ function formatProductLimit(plan: PlanId): string {
   return `Hingga ${config.limits.maxProducts} produk aktif`;
 }
 
+function formatCustomerLimit(plan: PlanId): string {
+  const maxCustomers = plans[plan].limits.maxCustomers;
+  if (maxCustomers >= 9999) return "Daftar pelanggan tanpa batas";
+  return `Kelola hingga ${maxCustomers} pelanggan`;
+}
+
 export function getMarketingPlanFeatures(plan: PlanId): string[] {
   const config = plans[plan];
 
@@ -187,12 +193,12 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
         : []),
       ...(config.features.inventoryStock ? ["Manajemen stok & peringatan stok menipis"] : []),
       ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
-      ...(config.features.customerLookup ? ["Pencarian member pelanggan saat transaksi kasir"] : []),
       ...(config.features.receiptSettings ? ["Kustomisasi pengaturan struk"] : []),
       ...(config.features.darkMode ? ["Mode gelap untuk dashboard"] : []),
       formatOutletLimit(plan),
       formatStaffLimit(plan),
       formatProductLimit(plan),
+      formatCustomerLimit(plan),
     ];
   }
 
@@ -204,6 +210,7 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
     ...(config.features.inventoryStock ? ["Stok otomatis & peringatan stok menipis"] : []),
     ...(config.features.onscreenReports ? ["Laporan penjualan harian di layar"] : []),
     ...(config.features.receiptPrinting ? ["Cetak struk kasir standar 58 mm / 80 mm"] : []),
+    ...(config.features.customerLookup ? [formatCustomerLimit(plan), "Pencarian & pendaftaran member di kasir"] : []),
   ];
 }
 
@@ -239,6 +246,11 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
       items: [
         { name: "Kasir transaksi tunai", detail: "Melayani transaksi kasir harian dan menghitung kembalian.", availability: availability("cashSales") },
         { name: "Katalog produk, SKU, & varian", detail: `Hingga ${plans.tumbuh.limits.maxProducts} produk di Paket Tumbuh, tanpa batas di Paket Bisnis.`, availability: availability("productCatalog") },
+        {
+          name: "Pelanggan & member kasir",
+          detail: `Kelola hingga ${plans.tumbuh.limits.maxCustomers} pelanggan di Paket Tumbuh, tanpa batas di Paket Bisnis, termasuk pencarian dan pendaftaran member saat transaksi.`,
+          availability: availability("customerLookup"),
+        },
         { name: "Stok otomatis & peringatan stok", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", availability: availability("inventoryStock") },
         {
           name: "Riwayat transaksi & cetak struk",
@@ -256,7 +268,6 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
         { name: "Pembayaran QRIS", detail: "Terima pembayaran QRIS dari seluruh e-wallet dan mobile banking.", availability: businessOnlyAvailability("qrisPayments") },
         { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: businessOnlyAvailability("allPaymentMethods") },
         { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: businessOnlyAvailability("exportReports") },
-        { name: "Pencarian member di kasir", detail: "Melampirkan member pelanggan pada transaksi kasir tanpa mencatat ulang data.", availability: businessOnlyAvailability("customerLookup") },
         { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: businessOnlyAvailability("onscreenReports") },
       ],
     },

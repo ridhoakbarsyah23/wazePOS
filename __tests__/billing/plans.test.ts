@@ -46,6 +46,18 @@ describe("hak fitur paket", () => {
     expect(hasPlanFeature("bisnis", "allPaymentMethods")).toBe(true);
   });
 
+  it("menyediakan pelanggan dan member kasir untuk Paket Tumbuh", () => {
+    expect(plans.tumbuh.limits.maxCustomers).toBe(200);
+    expect(hasPlanFeature("tumbuh", "customerLookup")).toBe(true);
+    expect(hasPlanFeature("bisnis", "customerLookup")).toBe(true);
+
+    const customerFeature = getPlanFeatureComparison()
+      .flatMap((group) => group.items)
+      .find((item) => item.name === "Pelanggan & member kasir");
+
+    expect(customerFeature?.availability).toEqual({ tumbuh: true, bisnis: true });
+  });
+
   it("membentuk harga dan kapasitas pemasaran dari konfigurasi paket", () => {
     const cards = Object.fromEntries(getMarketingPlanCards().map((plan) => [plan.id, plan]));
 
@@ -55,6 +67,8 @@ describe("hak fitur paket", () => {
     expect(cards.tumbuh.features).toContain(`Hingga ${plans.tumbuh.limits.maxProducts} produk aktif`);
     expect(cards.bisnis.features).toContain(`Hingga ${plans.bisnis.limits.maxOutlets} gerai / multi-cabang`);
     expect(cards.tumbuh.features).toContain("Cetak struk kasir standar 58 mm / 80 mm");
+    expect(cards.tumbuh.features).toContain(`Kelola hingga ${plans.tumbuh.limits.maxCustomers} pelanggan`);
+    expect(cards.tumbuh.features).toContain("Pencarian & pendaftaran member di kasir");
     expect(cards.tumbuh.features).not.toContain("Laporan penjualan harian di layar");
     expect(cards.bisnis.features).toContain("Kustomisasi pengaturan struk");
     expect(cards.tumbuh.features).not.toContain("Stok otomatis & peringatan stok menipis");
