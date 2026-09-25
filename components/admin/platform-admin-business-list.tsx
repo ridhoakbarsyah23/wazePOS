@@ -50,6 +50,7 @@ type PlatformAdminBusinessListProps = {
     from: number;
     to: number;
   };
+  basePath?: string;
 };
 
 function getDate(value: Date | string | null) {
@@ -89,11 +90,11 @@ function addFilterParams(params: URLSearchParams, filters: PlatformAdminListFilt
   if (filters.sort && filters.sort !== "newest") params.set("sort", filters.sort);
 }
 
-function buildDirectoryHref(page: number, filters: PlatformAdminListFilters) {
+function buildDirectoryHref(page: number, filters: PlatformAdminListFilters, basePath: string) {
   const params = new URLSearchParams();
   addFilterParams(params, filters);
   params.set("page", String(page));
-  return `/admin?${params.toString()}`;
+  return `${basePath}?${params.toString()}`;
 }
 
 function buildExportHref(filters: PlatformAdminListFilters) {
@@ -132,6 +133,7 @@ export function PlatformAdminBusinessList({
   filters,
   overview,
   directory,
+  basePath = "/admin/businesses",
 }: PlatformAdminBusinessListProps) {
   const hasFilters = Boolean(
     filters.query ||
@@ -170,13 +172,13 @@ export function PlatformAdminBusinessList({
                 Export CSV
               </a>
             </Button>
-            <PlatformAdminFilterResetButton formId="platform-admin-business-filters" />
+            <PlatformAdminFilterResetButton formId="platform-admin-business-filters" basePath={basePath} />
           </div>
           <form
             id="platform-admin-business-filters"
             key={JSON.stringify(filters)}
             className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:items-center"
-            action="/admin"
+            action={basePath}
             method="get"
             role="search"
             aria-label="Filter daftar usaha"
@@ -419,7 +421,7 @@ export function PlatformAdminBusinessList({
       {directory.totalPages > 1 && (
         <nav className="flex flex-wrap items-center gap-1.5 border-t border-[#e8efeb] px-4 py-3 sm:px-5" aria-label="Navigasi halaman usaha">
           {directory.page > 1 ? (
-            <Link href={buildDirectoryHref(directory.page - 1, filters)} className={cn(pageLinkClass, "gap-1.5")}>
+            <Link href={buildDirectoryHref(directory.page - 1, filters, basePath)} className={cn(pageLinkClass, "gap-1.5")}>
               <ChevronLeft className="size-3.5" aria-hidden="true" />
               Sebelumnya
             </Link>
@@ -432,7 +434,7 @@ export function PlatformAdminBusinessList({
             ) : (
               <Link
                 key={item}
-                href={buildDirectoryHref(item, filters)}
+                href={buildDirectoryHref(item, filters, basePath)}
                 className={cn(
                   pageLinkClass,
                   item === directory.page && "border-[#198760] bg-[#198760] text-white hover:bg-[#147554] hover:text-white",
@@ -444,7 +446,7 @@ export function PlatformAdminBusinessList({
             ),
           )}
           {directory.page < directory.totalPages ? (
-            <Link href={buildDirectoryHref(directory.page + 1, filters)} className={cn(pageLinkClass, "gap-1.5")}>
+            <Link href={buildDirectoryHref(directory.page + 1, filters, basePath)} className={cn(pageLinkClass, "gap-1.5")}>
               Berikutnya
               <ChevronRight className="size-3.5" aria-hidden="true" />
             </Link>

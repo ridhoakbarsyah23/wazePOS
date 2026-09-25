@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
+import { PlatformAdminShell } from "@/components/admin/platform-admin-shell";
 import { PlatformAdminThemeProvider } from "@/components/admin/platform-admin-theme";
 import { requirePlatformAdmin } from "@/lib/admin/platform-admin";
 import {
@@ -18,14 +19,14 @@ import {
  * Endpoint API admin tetap memakai guard session terpisah.
  */
 export default async function PlatformAdminLayout({ children }: { children: ReactNode }) {
-  await requirePlatformAdmin();
+  const session = await requirePlatformAdmin();
   const cookieStore = await cookies();
   const initialTheme: PlatformAdminTheme =
     cookieStore.get(platformAdminThemeCookie)?.value === "dark" ? "dark" : "light";
 
   return (
     <PlatformAdminThemeProvider initialTheme={initialTheme}>
-      {children}
+      <PlatformAdminShell adminEmail={session.user.email}>{children}</PlatformAdminShell>
     </PlatformAdminThemeProvider>
   );
 }

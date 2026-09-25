@@ -193,8 +193,17 @@ export const platformAdminAuditLog = pgTable(
     actorUserId: text("actor_user_id").references(() => user.id, { onDelete: "set null" }),
     actorEmail: text("actor_email").notNull(),
     actorName: text("actor_name"),
-    action: text("action").$type<"business_detail_view" | "business_export">().notNull(),
-    entityType: text("entity_type").$type<"business" | "business_directory">().notNull(),
+    action: text("action")
+      .$type<
+        | "business_detail_view"
+        | "business_export"
+        | "subscription_export"
+        | "payment_export"
+      >()
+      .notNull(),
+    entityType: text("entity_type")
+      .$type<"business" | "business_directory" | "subscription_directory" | "payment_directory">()
+      .notNull(),
     entityId: text("entity_id"),
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

@@ -397,20 +397,11 @@ export async function getPlatformAdminBusinessExportRows(
   };
 }
 
-export async function getPlatformAdminDashboardData(input: PlatformAdminDirectoryInput & { page?: SearchParam }) {
-  const adminSession = await requirePlatformAdmin();
-  const now = new Date();
+export async function getPlatformAdminStats(now: Date = new Date()) {
   const nowParam = now.toISOString();
   const trialWindowEnd = new Date(now);
   trialWindowEnd.setDate(trialWindowEnd.getDate() + TRIAL_ENDING_WINDOW_DAYS);
   const trialWindowEndParam = trialWindowEnd.toISOString();
-  const filters = normalizePlatformAdminDirectoryFilters(input);
-  const requestedPage = normalizePageNumber(getFirstSearchParam(input.page));
-  const { businesses, directory } = await getPlatformAdminDirectoryRows(filters, {
-    page: requestedPage,
-    pageSize: PLATFORM_ADMIN_PAGE_SIZE,
-    now,
-  });
 
   const [overviewRows, paymentRows, analyticsRows] = await Promise.all([
     db
@@ -481,8 +472,6 @@ export async function getPlatformAdminDashboardData(input: PlatformAdminDirector
   };
 
   return {
-    admin: adminSession.user,
-    filters,
     overview: {
       ...overview,
       totalUsers: Number(overview.totalUsers),
@@ -500,7 +489,54 @@ export async function getPlatformAdminDashboardData(input: PlatformAdminDirector
       paidRevenue: Number(payments.paidRevenue),
     },
     analytics,
-    directory,
+  };
+}
+
+export async function getPlatformAdminOverviewData() {
+  const adminSession = await requirePlatformAdmin();
+  const stats = await getPlatformAdminStats(new Date());
+
+  return {
+    admin: adminSession.user,
+    ...stats,
+  };
+}
+
+export async function getPlatformAdminDirectoryData(
+  input: PlatformAdminDirectoryInput & { page?: SearchParam },
+) {
+  await requirePlatformAdmin();
+  const now = new Date();
+  const filters = normalizePlatformAdminDirectoryFilters(input);
+  const requestedPage = normalizePageNumber(getFirstSearchParam(input.page));
+  const [{ businesses, directory }, stats] = await Promise.all([
+    getPlatformAdminDirectoryRows(filters, {
+      page: requestedPage,
+      pageSize: PLATFORM_ADMIN_PAGE_SIZE,
+      now,
+    }),
+    getPlatformAdminStats(now),
+  ]);
+
+  return {
+    filters,
     businesses,
+    directory,
+    overview: {
+      expiredSubscriptions: stats.overview.expiredSubscriptions,
+      pastDue: stats.overview.pastDue,
+      cancelled: stats.overview.cancelled,
+    },
+  };
+}
+
+export async function getPlatformAdminDashboardData(input: PlatformAdminDirectoryInput & { page?: SearchParam }) {
+  const overviewData = await getPlatformAdminOverviewData();
+  const directoryData = await getPlatformAdminDirectoryData(input);
+
+  return {
+    ...overviewData,
+    ...directoryData,
+    overview: overviewData.overview,
   };
 }

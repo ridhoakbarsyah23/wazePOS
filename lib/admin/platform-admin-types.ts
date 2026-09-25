@@ -54,6 +54,70 @@ export type PlatformAdminAnalytics = {
   cancelled: number;
 };
 
+export type PlatformAdminSubscriptionItem = {
+  id: string;
+  businessId: string;
+  businessName: string;
+  businessType: string;
+  ownerName: string | null;
+  ownerEmail: string | null;
+  plan: "tumbuh" | "bisnis";
+  status: "trialing" | "active" | "past_due" | "cancelled";
+  trialEndsAt: Date | string;
+  currentPeriodStart: Date | string | null;
+  currentPeriodEnd: Date | string | null;
+  createdAt: Date | string;
+  state: PlatformSubscriptionState;
+};
+
+export type PlatformAdminSubscriptionSummary = {
+  total: number;
+  trialActive: number;
+  trialExpired: number;
+  active: number;
+  expired: number;
+  pastDue: number;
+  cancelled: number;
+  trialEndingSoon: number;
+};
+
+export type PlatformAdminPaymentItem = {
+  id: string;
+  businessId: string;
+  businessName: string;
+  ownerEmail: string | null;
+  plan: "tumbuh" | "bisnis";
+  amount: number;
+  currency: string;
+  provider: string;
+  providerOrderId: string;
+  providerPaymentType: string | null;
+  status: "pending" | "paid" | "failed" | "expired" | "refunded";
+  createdAt: Date | string;
+  paidAt: Date | string | null;
+};
+
+export type PlatformAdminPaymentSummary = {
+  pendingPayments: number;
+  paidPayments: number;
+  paidRevenue: number;
+  failedPayments: number;
+  expiredPayments: number;
+};
+
+export type PlatformAdminAuditLogItem = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  businessId: string | null;
+  businessName: string | null;
+  actorName: string | null;
+  actorEmail: string;
+  createdAt: Date | string;
+  metadata: Record<string, unknown> | null;
+};
+
 export type PlatformAdminOutletDetail = {
   id: string;
   name: string;

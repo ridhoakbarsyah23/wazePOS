@@ -105,7 +105,7 @@ describe("PlatformAdminBusinessList", () => {
     );
 
     expect(screen.getByRole("link", { name: "2" }).getAttribute("href")).toBe(
-      "/admin?q=Nest&status=trial_active&page=2",
+      "/admin/businesses?q=Nest&status=trial_active&page=2",
     );
   });
 
@@ -129,7 +129,7 @@ describe("PlatformAdminBusinessList", () => {
     );
 
     expect(screen.getByRole("link", { name: "2" }).getAttribute("href")).toBe(
-      "/admin?q=Nest&status=trial_active&businessType=Kedai&plan=tumbuh&onboarding=completed&registeredFrom=2026-01-01&registeredTo=2026-12-31&sort=activity&page=2",
+      "/admin/businesses?q=Nest&status=trial_active&businessType=Kedai&plan=tumbuh&onboarding=completed&registeredFrom=2026-01-01&registeredTo=2026-12-31&sort=activity&page=2",
     );
     expect(screen.getByRole("link", { name: "Export CSV" }).getAttribute("href")).toBe(
       "/api/admin/businesses/export?q=Nest&status=trial_active&businessType=Kedai&plan=tumbuh&onboarding=completed&registeredFrom=2026-01-01&registeredTo=2026-12-31&sort=activity",
@@ -171,6 +171,6 @@ describe("PlatformAdminBusinessList", () => {
     expect(searchInput.value).toBe("");
     expect(businessTypeInput.value).toBe("");
     expect(statusSelect.value).toBe("all");
-    expect(mocks.replace).toHaveBeenCalledWith("/admin");
+    expect(mocks.replace).toHaveBeenCalledWith("/admin/businesses");
   });
 });

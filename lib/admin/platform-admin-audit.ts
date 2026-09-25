@@ -4,7 +4,11 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/db";
 import { platformAdminAuditLog } from "@/db/schema";
 
-type PlatformAdminAuditAction = "business_detail_view" | "business_export";
+type PlatformAdminAuditAction =
+  | "business_detail_view"
+  | "business_export"
+  | "subscription_export"
+  | "payment_export";
 
 export async function recordPlatformAdminAudit(input: {
   action: PlatformAdminAuditAction;
@@ -12,7 +16,7 @@ export async function recordPlatformAdminAudit(input: {
   actorEmail: string;
   actorName?: string | null;
   businessId?: string | null;
-  entityType: "business" | "business_directory";
+  entityType: "business" | "business_directory" | "subscription_directory" | "payment_directory";
   entityId?: string | null;
   metadata?: Record<string, unknown>;
 }) {

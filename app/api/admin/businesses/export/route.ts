@@ -2,21 +2,10 @@ import { NextResponse } from "next/server";
 import { getPlatformAdminBusinessExportRows } from "@/lib/admin/platform-admin-dashboard";
 import { getPlatformAdminRequestSession } from "@/lib/admin/platform-admin-api";
 import { recordPlatformAdminAudit } from "@/lib/admin/platform-admin-audit";
+import { buildCsvResponse, formatCsvDate } from "@/lib/admin/platform-admin-csv";
 import { formatBusinessReference, platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
 
 export const runtime = "nodejs";
-
-function escapeCsv(value: string | number | null | undefined) {
-  const raw = value == null ? "" : String(value);
-  const normalized = /^[=+\-@]/.test(raw.trimStart()) ? `'${raw}` : raw;
-  return /[",\n\r]/.test(normalized) ? `"${normalized.replaceAll('"', '""')}"` : normalized;
-}
-
-function formatDate(value: Date | string | null | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
-}
 
 export async function GET(request: Request) {
   const { session, allowed } = await getPlatformAdminRequestSession();
@@ -75,28 +64,16 @@ export async function GET(request: Request) {
     business.ownerEmail,
     business.plan,
     platformAdminStateMeta[business.state].label,
-    formatDate(business.state.startsWith("trial") ? business.trialEndsAt : business.currentPeriodEnd),
-    formatDate(business.createdAt),
+    formatCsvDate(business.state.startsWith("trial") ? business.trialEndsAt : business.currentPeriodEnd),
+    formatCsvDate(business.createdAt),
     business.outletCount,
     business.memberCount,
     business.saleCount ?? 0,
     business.grossRevenue ?? 0,
-    formatDate(business.lastActivityAt),
+    formatCsvDate(business.lastActivityAt),
     business.onboardingCompleted ? "Selesai" : "Belum selesai",
   ]);
-  const csv = [header, ...rows]
-    .map((row) => row.map((value) => escapeCsv(value)).join(","))
-    .join("\r\n");
   const filename = `daftar-usaha-platform-${new Date().toISOString().slice(0, 10)}.csv`;
 
-  return new Response(`\uFEFF${csv}\r\n`, {
-    status: 200,
-    headers: {
-      "Cache-Control": "private, no-store",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      "Content-Type": "text/csv; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-      ...(result.truncated ? { "X-Export-Truncated": "true" } : {}),
-    },
-  });
+  return buildCsvResponse(header, rows, filename, result.truncated);
 }

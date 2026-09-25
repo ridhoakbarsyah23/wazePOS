@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function PlatformAdminFilterResetButton({ formId }: { formId: string }) {
+export function PlatformAdminFilterResetButton({ formId, basePath = "/admin/businesses" }: { formId: string; basePath?: string }) {
   const router = useRouter();
 
   function handleReset() {
@@ -12,7 +12,7 @@ export function PlatformAdminFilterResetButton({ formId }: { formId: string }) {
     if (form instanceof HTMLFormElement) {
       form.reset();
     }
-    router.replace("/admin");
+    router.replace(basePath);
   }
 
   return (

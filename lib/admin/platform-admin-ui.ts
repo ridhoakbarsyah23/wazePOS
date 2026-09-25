@@ -16,6 +16,18 @@ export const platformAdminStateMeta: Record<PlatformSubscriptionState, PlatformA
 };
 
 /**
+ * Batas waktu langganan yang relevan untuk operasional admin:
+ * masa trial untuk trial, akhir periode untuk langganan berbayar.
+ */
+export function getSubscriptionBoundary(item: {
+  state: PlatformSubscriptionState;
+  trialEndsAt: Date | string | null;
+  currentPeriodEnd: Date | string | null;
+}) {
+  return item.state.startsWith("trial") ? item.trialEndsAt : item.currentPeriodEnd;
+}
+
+/**
  * Kode ramah-baca untuk operasional admin. UUID tetap menjadi primary key
  * internal agar relasi database dan endpoint tidak berubah.
  */
