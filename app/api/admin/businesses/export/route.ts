@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getPlatformAdminBusinessExportRows } from "@/lib/admin/platform-admin-dashboard";
 import { getPlatformAdminRequestSession } from "@/lib/admin/platform-admin-api";
 import { recordPlatformAdminAudit } from "@/lib/admin/platform-admin-audit";
-import { platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
+import { formatBusinessReference, platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
 
 export const runtime = "nodejs";
 
@@ -49,7 +49,8 @@ export async function GET(request: Request) {
   });
 
   const header = [
-    "ID usaha",
+    "Kode usaha",
+    "ID internal",
     "Nama usaha",
     "Jenis usaha",
     "Owner",
@@ -66,6 +67,7 @@ export async function GET(request: Request) {
     "Onboarding",
   ];
   const rows = result.businesses.map((business) => [
+    formatBusinessReference(business.id, business.createdAt),
     business.id,
     business.name,
     business.type,

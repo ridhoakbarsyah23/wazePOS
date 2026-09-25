@@ -14,3 +14,24 @@ export const platformAdminStateMeta: Record<PlatformSubscriptionState, PlatformA
   cancelled: { label: "Dibatalkan", variant: "destructive" },
   missing: { label: "Tanpa subscription", variant: "secondary" },
 };
+
+/**
+ * Kode ramah-baca untuk operasional admin. UUID tetap menjadi primary key
+ * internal agar relasi database dan endpoint tidak berubah.
+ */
+export function formatBusinessReference(
+  id: string,
+  createdAt: Date | string,
+): string {
+  const createdDate = new Date(createdAt);
+  const datePart = Number.isNaN(createdDate.getTime())
+    ? "00000000"
+    : [
+        createdDate.getUTCFullYear(),
+        String(createdDate.getUTCMonth() + 1).padStart(2, "0"),
+        String(createdDate.getUTCDate()).padStart(2, "0"),
+      ].join("");
+  const idPart = id.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase() || "UNKNOWN";
+
+  return `BIZ-${datePart}-${idPart}`;
+}

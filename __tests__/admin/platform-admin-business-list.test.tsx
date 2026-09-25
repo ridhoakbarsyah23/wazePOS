@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 
 const businesses = [
   {
-    id: "business-1",
+    id: "b9458848-23e9-4edd-86c2-07f10ad4170e",
     name: "Nest Coffee",
     type: "Kedai Kopi",
     onboardingCompleted: true,
@@ -90,7 +90,8 @@ describe("PlatformAdminBusinessList", () => {
 
     expect(screen.getByRole("alertdialog")).toBeDefined();
     expect(screen.getByText("Detail usaha")).toBeDefined();
-    expect(await screen.findByText("ID usaha")).toBeDefined();
+    expect(await screen.findByText("Kode usaha")).toBeDefined();
+    expect(screen.getAllByText("BIZ-20260924-B9458848").length).toBeGreaterThan(0);
   });
 
   it("menampilkan navigasi pagination dengan filter yang dipertahankan", () => {

@@ -42,7 +42,7 @@ describe("GET /api/admin/businesses/export", () => {
       filters: { status: "trial_active", query: "", businessType: "", plan: "all", onboarding: "all", registeredFrom: "", registeredTo: "", sort: "newest" },
       businesses: [
         {
-          id: "business-1",
+          id: "b9458848-23e9-4edd-86c2-07f10ad4170e",
           name: "=Formula",
           type: "Kedai Kopi",
           ownerName: "Owner",
@@ -86,6 +86,7 @@ describe("GET /api/admin/businesses/export", () => {
     expect(response.headers.get("content-disposition")).toContain("daftar-usaha-platform-");
     expect(csv).toContain("'=Formula");
     expect(csv).toContain("Kedai Kopi");
+    expect(csv).toContain("BIZ-20260924-B9458848");
     expect(mocks.getExportRows).toHaveBeenCalledWith(expect.objectContaining({ businessType: "Kedai" }));
     expect(mocks.recordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "business_export" }));
   });

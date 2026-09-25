@@ -33,7 +33,7 @@ import type {
   PlatformAdminBusinessDetailData,
   PlatformAdminPaymentDetail,
 } from "@/lib/admin/platform-admin-types";
-import { platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
+import { formatBusinessReference, platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
 
 type DetailTrigger = "icon" | "full";
 
@@ -242,6 +242,7 @@ export function PlatformAdminBusinessDetail({
 
   const currentBusiness = detail?.business ?? business;
   const currentMeta = platformAdminStateMeta[currentBusiness.state];
+  const businessReference = formatBusinessReference(currentBusiness.id, currentBusiness.createdAt);
 
   function openDetail() {
     setError("");
@@ -308,7 +309,7 @@ export function PlatformAdminBusinessDetail({
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-6">
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Badge className="w-fit" variant={currentMeta.variant}>{currentMeta.label}</Badge>
-                <span className="min-w-0 break-all text-right text-[11px] font-semibold leading-5 text-[#718078] sm:max-w-[58%]">ID: {currentBusiness.id}</span>
+                <span className="min-w-0 break-all text-right text-[11px] font-semibold leading-5 text-[#718078] sm:max-w-[58%]">Kode: {businessReference}</span>
               </div>
 
               {isLoading && !detail ? <LoadingDetail /> : error && !detail ? (
@@ -350,7 +351,7 @@ export function PlatformAdminBusinessDetail({
                       <DetailItem icon={CalendarDays} label="Terdaftar" value={formatDate(currentBusiness.createdAt)} />
                       <DetailItem icon={MapPin} label="Outlet" value={`${currentBusiness.outletCount} lokasi`} />
                       <DetailItem icon={UsersRound} label="Anggota" value={`${currentBusiness.memberCount} anggota`} />
-                      <DetailItem icon={Building2} label="ID usaha" value={currentBusiness.id} mono full />
+                      <DetailItem icon={Building2} label="Kode usaha" value={businessReference} mono full />
                     </dl>
                   </TabsContent>
 
