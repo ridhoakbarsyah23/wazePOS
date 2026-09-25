@@ -6,15 +6,14 @@ import {
   Building2,
   Clock3,
   CreditCard,
-  LayoutDashboard,
   ShieldCheck,
   Users,
 } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PlatformAdminBusinessList } from "@/components/admin/platform-admin-business-list";
 import { PlatformAdminInsights } from "@/components/admin/platform-admin-insights";
+import { PlatformAdminThemeToggle } from "@/components/admin/platform-admin-theme";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlatformAdminDashboardData } from "@/lib/admin/platform-admin-dashboard";
 
@@ -84,12 +83,7 @@ export default async function PlatformAdminPage({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Button asChild variant="ghost" size="sm" className="h-10 px-2 sm:h-9 sm:px-3" aria-label="Buka dashboard usaha">
-              <Link href="/dashboard">
-                <LayoutDashboard />
-                <span className="hidden sm:inline">Dashboard usaha</span>
-              </Link>
-            </Button>
+            <PlatformAdminThemeToggle />
             <LogoutButton
               compact
               className="h-10 gap-2 rounded-xl px-2 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 sm:h-9 sm:px-3"

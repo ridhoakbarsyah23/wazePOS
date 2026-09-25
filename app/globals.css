@@ -11,6 +11,255 @@
   display: none;
 }
 
+/* Platform Admin theme is independent from tenant subscription features. */
+[data-admin-shell][data-admin-theme="dark"] {
+  color-scheme: dark;
+  background: #050505;
+  color: #f5f5f5;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="bg-white"],
+  [class~="bg-white/95"]
+) {
+  background-color: #0d0d0d !important;
+}
+
+[data-admin-shell][data-admin-theme="dark"] [class~="bg-[#f3f7f5]"] {
+  background-color: #050505 !important;
+}
+
+html[data-admin-theme="dark"] [data-admin-portal] {
+  background-color: rgb(0 0 0 / 72%) !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="bg-[#f7faf8]"],
+  [class~="bg-[#f9fcfa]"],
+  [class~="bg-[#fbfdfc]"],
+  [class~="bg-[#fafbfa]"]
+) {
+  background-color: #151515 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="bg-[#e7f0eb]"],
+  [class~="bg-[#eaf7f0]"],
+  [class~="bg-[#dfe8e3]"],
+  [class~="bg-[#edf3ef]"],
+  [class~="bg-[#eef2f0]"],
+  [class~="bg-[#eef6f2]"],
+  [class~="bg-[#f0f4f2]"],
+  [class~="bg-[#feeceb]"]
+) {
+  background-color: #1a1a1a !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="bg-sky-50"],
+  [class~="bg-violet-50"],
+  [class~="bg-amber-50"],
+  [class~="bg-rose-50"],
+  [class~="bg-emerald-50"],
+  [class~="bg-orange-50"],
+  [class~="bg-[#fff0e5]"]
+) {
+  background-color: #202020 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="text-[#15211d]"],
+  [class~="text-[#496058]"],
+  [class~="text-[#4d5e57]"],
+  [class~="text-[#527066]"]
+) {
+  color: #f5f5f5 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="text-[#627069]"],
+  [class~="text-[#718078]"],
+  [class~="text-[#82928a]"]
+) {
+  color: #a3a3a3 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class~="text-[#106348]"],
+  [class~="text-[#198760]"]
+) {
+  color: #62d6a5 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is([class~="text-sky-700"], [class~="text-sky-800"]) {
+  color: #7dd3fc !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is([class~="text-violet-700"], [class~="text-violet-800"]) {
+  color: #c4b5fd !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is([class~="text-amber-700"], [class~="text-amber-800"], [class~="text-amber-900"]) {
+  color: #fcd34d !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is([class~="text-rose-600"], [class~="text-rose-700"], [class~="text-rose-800"]) {
+  color: #fda4af !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is([class~="text-emerald-700"], [class~="text-emerald-800"], [class~="text-emerald-900"]) {
+  color: #6ee7b7 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is([class~="text-orange-700"], [class~="text-orange-800"]) {
+  color: #fdba74 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="text-[#a35f12]"] {
+  color: #fcd34d !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="text-[#b42318]"] {
+  color: #fda4af !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [data-slot="tabs-list"] {
+  background-color: #1a1a1a !important;
+  color: #a3a3a3 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [role="tab"][aria-selected="true"] {
+  background-color: #050505 !important;
+  color: #6ee7b7 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [role="tab"][aria-selected="false"] {
+  background-color: transparent !important;
+  color: #a3a3a3 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(
+  [class*="border-emerald-"],
+  [class*="border-amber-"],
+  [class*="border-rose-"],
+  [class*="border-orange-"]
+) {
+  border-color: #3a3a3a !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="border-[#d"],
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="border-[#e"],
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="border-[#b"] {
+  border-color: #303030 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(input, select, textarea) {
+  color-scheme: dark;
+  background-color: #101010 !important;
+  color: #f5f5f5 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(input, select, textarea)::placeholder {
+  color: #737373 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="hover:bg-[#f"]:hover,
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="hover:bg-[#e"]:hover {
+  background-color: #242424 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="hover:bg-[#d"]:hover {
+  background-color: #242424 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="hover:bg-rose-50"]:hover {
+  background-color: #2a1215 !important;
+}
+
 /* Dashboard-only dark theme. Access is gated by the active subscription plan. */
 html[data-dashboard-theme="dark"] [data-dashboard-shell] {
   color-scheme: dark;

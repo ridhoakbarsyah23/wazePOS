@@ -276,6 +276,7 @@ export function PlatformAdminBusinessDetail({
 
       {isOpen && typeof document !== "undefined" && createPortal(
         <div
+          data-admin-portal
           className="fixed inset-0 z-[250] flex items-end justify-center bg-[#09271d]/60 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-[3px] sm:items-center sm:p-6"
           role="alertdialog"
           aria-modal="true"

@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
+import { PlatformAdminThemeProvider } from "@/components/admin/platform-admin-theme";
 import { requirePlatformAdmin } from "@/lib/admin/platform-admin";
+import {
+  platformAdminThemeCookie,
+  type PlatformAdminTheme,
+} from "@/lib/admin/platform-admin-theme";
 
 /**
  * Guard route-level untuk seluruh segment /admin.
@@ -13,6 +19,13 @@ import { requirePlatformAdmin } from "@/lib/admin/platform-admin";
  */
 export default async function PlatformAdminLayout({ children }: { children: ReactNode }) {
   await requirePlatformAdmin();
+  const cookieStore = await cookies();
+  const initialTheme: PlatformAdminTheme =
+    cookieStore.get(platformAdminThemeCookie)?.value === "dark" ? "dark" : "light";
 
-  return children;
+  return (
+    <PlatformAdminThemeProvider initialTheme={initialTheme}>
+      {children}
+    </PlatformAdminThemeProvider>
+  );
 }
