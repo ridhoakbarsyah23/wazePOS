@@ -67,7 +67,7 @@ export const requireDashboardAccess = cache(
 
     if (rule === "manageBusiness" && !canManageBusiness(membership.role)) redirect("/pos");
     if (rule === "manageStaff" && !canManageStaff(membership.role)) redirect("/pos");
-    if (rule === "ownerOnly" && membership.role !== "owner") redirect("/dashboard");
+    if (rule === "ownerOnly" && membership.role !== "owner") redirect("/pos");
 
     const subDetails = getSubscriptionStatusDetails(currentSubscription);
 
