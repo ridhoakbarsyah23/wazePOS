@@ -13,7 +13,7 @@ const databaseUrl = process.env.DATABASE_URL ?? "postgresql://wazepos:wazepos@12
 // menyentuh database remote. Mencegah migrasi lokal tidak sengaja mengubah produksi.
 const allowRemote =
   process.argv.includes("--remote") || process.env.MIGRATE_ALLOW_REMOTE === "1";
-const isRemote = !/@(127\.0\.0\.1|localhost|\[::1\])[:/]/.test(databaseUrl);
+const isRemote = !/@(127\.0\.0\.1|localhost|\[::1\]|postgres|db|host\.docker\.internal)[:/]/.test(databaseUrl);
 
 if (isRemote && !allowRemote) {
   console.error(

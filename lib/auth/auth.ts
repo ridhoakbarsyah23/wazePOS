@@ -6,7 +6,8 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { sendPasswordResetEmail } from "@/lib/email/password-reset-email";
 
-const configuredOrigin = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+const configuredOrigin =
+  process.env.BETTER_AUTH_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim();
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
