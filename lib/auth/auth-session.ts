@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { getSessionCookie } from "better-auth/cookies";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -12,15 +13,19 @@ import { getSubscriptionStatusDetails } from "@/lib/billing/plans";
 export const getCurrentSession = cache(async () => {
   const requestHeaders = await headers();
 
+  // Tanpa cookie session, lewati query database/adapter agar halaman publik
+  // seperti /register tidak memicu lookup DB yang gagal (database mati,
+  // session basi) dan memunculkan overlay dev "Failed to get session".
+  if (!getSessionCookie(requestHeaders)) return null;
+
   try {
     return await auth.api.getSession({ headers: requestHeaders });
-  } catch (error) {
-    // Kegagalan database/auth sementara harus gagal tertutup, bukan memunculkan
-    // Runtime APIError atau overlay dev pada halaman yang sedang dilindungi.
-    console.error(
-      "[AUTH_SESSION_LOOKUP_FAILED]",
-      error instanceof Error ? error.message : "Unknown session lookup error",
-    );
+  } catch {
+    // Gagal tertutup menjadi null (dianggap belum login). Sengaja TANPA
+    // console.error: Next.js dev meneruskan console.error server ke overlay
+    // error di browser, sehingga halaman publik seperti /register ikut
+    // menampilkan overlay "Failed to get session" saat database mati atau
+    // cookie session basi. Kesehatan database dipantau lewat /api/health.
     return null;
   }
 });
