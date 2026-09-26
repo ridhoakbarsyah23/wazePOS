@@ -1,0 +1,4 @@
+# Normalisasi line-ending agar build Docker reproducible di Windows/Linux.
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf

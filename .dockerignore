@@ -1,0 +1,28 @@
+# Konteks build Docker untuk wazePOS.
+# Menjaga image kecil dan build cepat; secret tidak boleh masuk image.
+
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.log
+
+.git/
+.github/
+.gitignore
+.vercel/
+.opencode/
+design-system/
+backups/
+data/*.ndjson
+.tmp/
+*.tsbuildinfo
+.dev-server.log
+
+.env
+.env.local
+.env.*
+!.env.example
+
+npm-debug.log*
