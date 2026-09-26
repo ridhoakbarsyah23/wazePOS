@@ -50,9 +50,37 @@ export function PlatformAdminShell({
         </div>
       </header>
 
-      <div className="mx-auto w-full min-w-0 max-w-[1440px] px-3 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:px-5 sm:pt-8 sm:pb-[calc(2rem+env(safe-area-inset-bottom))] lg:px-6 lg:pt-10 lg:pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto w-full min-w-0 max-w-[1440px] px-3 pt-5 pb-6 sm:px-5 sm:pt-8 lg:px-6 lg:pt-10">
         {children}
       </div>
+
+      <footer className="border-t border-[#dfe8e3] bg-white/60">
+        <div className="mx-auto flex w-full min-w-0 max-w-[1440px] flex-col items-center justify-between gap-1.5 px-3 py-4 text-xs text-[#75857e] sm:flex-row sm:px-5 lg:px-6">
+          <p className="m-0 flex flex-wrap items-center justify-center gap-1.5">
+            <span className="font-black tracking-tight text-[#15211d]">
+              waze<span className="text-[#198760]">POS</span>
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>Platform Admin</span>
+            <span aria-hidden="true">·</span>
+            <span>© {new Date().getFullYear()}</span>
+          </p>
+          <nav aria-label="Navigasi footer admin" className="flex flex-wrap items-center justify-center gap-1 font-semibold">
+            <Link
+              href="/admin"
+              className="rounded-lg px-2 py-1 text-[#556961] transition-colors hover:bg-[#eaf7f0] hover:text-[#198760]"
+            >
+              Ringkasan
+            </Link>
+            <Link
+              href="/privacy"
+              className="rounded-lg px-2 py-1 text-[#556961] transition-colors hover:bg-[#eaf7f0] hover:text-[#198760]"
+            >
+              Privasi
+            </Link>
+          </nav>
+        </div>
+      </footer>
     </main>
   );
 }

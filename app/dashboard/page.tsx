@@ -384,7 +384,7 @@ export default async function DashboardPage({
         />
       </div>
 
-      <AppFooter businessName={membership.businessName} plan={selectedPlan} />
+      <AppFooter businessName={membership.businessName} />
     </AppHeader>
   );
 }

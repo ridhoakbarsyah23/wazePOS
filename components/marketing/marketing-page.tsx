@@ -396,7 +396,25 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
         <section className="final-cta"><div className="container final-cta-inner" data-reveal><div><span className="section-kicker light">Mulai hari ini</span><h2>Siap mengelola bisnis dengan lebih mudah?</h2><p>Tinggalkan pencatatan manual dan kelola transaksi, stok, serta laporan bisnis secara lebih praktis bersama wazePOS.</p></div><div><TrackedLink href={trialUrl} event="click_try_free" className="button button-light button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink><TrackedLink href={whatsappTrialUrl} event="click_whatsapp" className="button button-outline-light button-large" external><Icon name="whatsapp" size={20}/> Konsultasi via WhatsApp</TrackedLink></div></div></section>
       </main>
 
-      <footer className="site-footer"><div className="container footer-main"><div className="footer-brand"><Brand/><p>Aplikasi kasir praktis untuk membantu bisnis melayani transaksi, memantau operasional, dan terus berkembang.</p><span>Jual. Pantau. Tumbuh.</span></div><div><h3>Navigasi</h3><a href="#fitur">Fitur</a><a href="#cara-kerja">Cara Kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><Link href="/login">Masuk</Link></div><div><h3>Jenis Usaha</h3><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Toko dan Warung</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Kedai Kopi</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Restoran</TrackedLink><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>Usaha Ritel</TrackedLink></div><div><h3>Hubungi Kami</h3><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="footer-contact" external><Icon name="whatsapp" size={18}/> WhatsApp</TrackedLink></div></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} wazePOS. Hak cipta dilindungi.</span><span>Mendukung pertumbuhan bisnis di Indonesia.</span></div></footer>
+      <footer className="site-footer">
+        <div className="container footer-simple">
+          <div className="footer-simple-top">
+            <div className="min-w-0">
+              <Brand />
+              <p className="footer-tagline">Aplikasi kasir praktis untuk transaksi, operasional, dan pertumbuhan bisnis. Jual. Pantau. Tumbuh.</p>
+            </div>
+            <nav aria-label="Navigasi footer" className="footer-links">
+              <a href="#fitur">Fitur</a>
+              <a href="#harga">Harga</a>
+              <a href="#faq">FAQ</a>
+              <Link href="/privacy">Privasi</Link>
+              <Link href="/login">Masuk</Link>
+              <TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="" external>WhatsApp</TrackedLink>
+            </nav>
+          </div>
+        </div>
+        <div className="container footer-bottom"><span>© {new Date().getFullYear()} wazePOS. Hak cipta dilindungi.</span><span>Mendukung pertumbuhan bisnis di Indonesia.</span></div>
+      </footer>
 
       <TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="floating-whatsapp" external><Icon name="whatsapp" size={25}/><span>Hubungi kami</span></TrackedLink>
     </>
