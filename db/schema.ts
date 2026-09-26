@@ -413,6 +413,12 @@ export const saleItem = pgTable(
     unitPrice: integer("unit_price").notNull(),
     unitCost: integer("unit_cost"),
     subtotal: integer("subtotal").notNull(),
+    /**
+     * Snapshot apakah stok gerai benar-benar dikurangi saat penjualan ini dibuat.
+     * NULL = baris lama (sebelum kolom ini ada) sehingga void memakai heuristik
+     * lama (produk melacak stok + paket saat ini).
+     */
+    stockDeducted: boolean("stock_deducted"),
     ...timestamps,
   },
   (table) => [
