@@ -16,3 +16,7 @@ npm-debug.log*
 *.tsbuildinfo
 backups/
 .dev-server.log
+
+# Local-only working docs and agent skills (not part of deployable app).
+.opencode/
+design-system/
