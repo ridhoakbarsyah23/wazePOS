@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download, Search, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, ListFilter, Search, ShieldCheck } from "lucide-react";
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -104,9 +104,9 @@ export function PlatformAdminSubscriptionList({
 
         <div className="flex min-w-0 flex-col gap-2 lg:w-[620px] lg:items-end">
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <Button asChild variant="outline" size="sm" className="h-9 gap-2 text-xs">
+            <Button asChild variant="outline" size="sm" className="h-9 gap-2 px-3 text-xs [&_svg]:size-3.5">
               <a href={buildExportHref(filters)} download>
-                <Download className="size-3.5" aria-hidden="true" />
+                <Download aria-hidden="true" />
                 Export CSV
               </a>
             </Button>
@@ -155,7 +155,8 @@ export function PlatformAdminSubscriptionList({
               <option value="tumbuh">Tumbuh</option>
               <option value="bisnis">Bisnis</option>
             </select>
-            <Button type="submit" size="sm" className="col-span-2 h-11 w-full sm:col-span-4 sm:h-10">
+            <Button type="submit" size="sm" className="col-span-2 h-11 w-full gap-2 px-3 text-xs sm:h-10 sm:col-span-4 [&_svg]:size-3.5">
+              <ListFilter aria-hidden="true" />
               Terapkan
             </Button>
           </form>
@@ -256,7 +257,10 @@ export function PlatformAdminSubscriptionList({
               Sebelumnya
             </Link>
           ) : (
-            <span className={pageDisabledClass}>Sebelumnya</span>
+            <span className={pageDisabledClass}>
+              <ChevronLeft className="size-3.5" aria-hidden="true" />
+              Sebelumnya
+            </span>
           )}
           {getPageNumbers(pagination.page, pagination.totalPages).map((item, index) =>
             item === "ellipsis" ? (
@@ -281,7 +285,10 @@ export function PlatformAdminSubscriptionList({
               <ChevronRight className="size-3.5" aria-hidden="true" />
             </Link>
           ) : (
-            <span className={pageDisabledClass}>Berikutnya</span>
+            <span className={pageDisabledClass}>
+              Berikutnya
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+            </span>
           )}
         </nav>
       )}

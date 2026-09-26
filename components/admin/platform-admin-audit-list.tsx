@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, History, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, ListFilter, Search } from "lucide-react";
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,8 @@ export function PlatformAdminAuditList({
               <option value="subscription_export">Langganan diekspor</option>
               <option value="payment_export">Pembayaran diekspor</option>
             </select>
-            <Button type="submit" size="sm" className="h-11 w-full sm:h-10">
+            <Button type="submit" size="sm" className="h-11 w-full gap-2 px-3 text-xs sm:h-10 [&_svg]:size-3.5">
+              <ListFilter aria-hidden="true" />
               Terapkan
             </Button>
           </form>
@@ -220,7 +221,10 @@ export function PlatformAdminAuditList({
               Sebelumnya
             </Link>
           ) : (
-            <span className={pageDisabledClass}>Sebelumnya</span>
+            <span className={pageDisabledClass}>
+              <ChevronLeft className="size-3.5" aria-hidden="true" />
+              Sebelumnya
+            </span>
           )}
           {getPageNumbers(pagination.page, pagination.totalPages).map((item, index) =>
             item === "ellipsis" ? (
@@ -245,7 +249,10 @@ export function PlatformAdminAuditList({
               <ChevronRight className="size-3.5" aria-hidden="true" />
             </Link>
           ) : (
-            <span className={pageDisabledClass}>Berikutnya</span>
+            <span className={pageDisabledClass}>
+              Berikutnya
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+            </span>
           )}
         </nav>
       )}

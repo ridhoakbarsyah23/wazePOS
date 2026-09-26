@@ -22,9 +22,9 @@ export function PlatformAdminFilterResetButton({ formId, basePath = "/admin/busi
       size="sm"
       onClick={handleReset}
       aria-label="Reset filter"
-      className="h-9 gap-2 text-xs"
+      className="h-9 gap-2 px-3 text-xs [&_svg]:size-3.5"
     >
-      <RotateCcw className="size-3.5" aria-hidden="true" />
+      <RotateCcw aria-hidden="true" />
       Reset
     </Button>
   );

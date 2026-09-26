@@ -166,9 +166,9 @@ export function PlatformAdminBusinessList({
 
         <div className="flex min-w-0 flex-col gap-2 lg:w-[820px] xl:w-[900px] lg:items-end">
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <Button asChild variant="outline" size="sm" className="h-9 gap-2 text-xs">
+            <Button asChild variant="outline" size="sm" className="h-9 gap-2 px-3 text-xs [&_svg]:size-3.5">
               <a href={buildExportHref(filters)} download>
-                <Download className="size-3.5" aria-hidden="true" />
+                <Download aria-hidden="true" />
                 Export CSV
               </a>
             </Button>
@@ -286,7 +286,8 @@ export function PlatformAdminBusinessList({
                 <option value="activity">Aktivitas terakhir</option>
               </select>
             </label>
-            <Button type="submit" size="sm" className="col-span-2 h-11 w-full sm:col-span-2 sm:h-10 lg:col-span-1">
+            <Button type="submit" size="sm" className="col-span-2 h-11 w-full gap-2 px-3 text-xs sm:col-span-2 sm:h-10 lg:col-span-1 [&_svg]:size-3.5">
+              <ListFilter aria-hidden="true" />
               Terapkan
             </Button>
           </form>
@@ -426,7 +427,10 @@ export function PlatformAdminBusinessList({
               Sebelumnya
             </Link>
           ) : (
-            <span className={pageDisabledClass}>Sebelumnya</span>
+            <span className={pageDisabledClass}>
+              <ChevronLeft className="size-3.5" aria-hidden="true" />
+              Sebelumnya
+            </span>
           )}
           {getPageNumbers(directory.page, directory.totalPages).map((item, index) =>
             item === "ellipsis" ? (
@@ -451,7 +455,10 @@ export function PlatformAdminBusinessList({
               <ChevronRight className="size-3.5" aria-hidden="true" />
             </Link>
           ) : (
-            <span className={pageDisabledClass}>Berikutnya</span>
+            <span className={pageDisabledClass}>
+              Berikutnya
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+            </span>
           )}
         </nav>
       )}

@@ -5,9 +5,9 @@ export const TRANSACTIONS_PAGE_SIZE = 10;
 export const REPORTS_PAGE_SIZE = 10;
 
 export const pageLinkClass =
-  "inline-flex h-8 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] transition hover:border-[#187c59] hover:text-[#187c59]";
+  "inline-flex h-9 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] transition hover:border-[#187c59] hover:text-[#187c59] [&_svg]:size-3.5";
 export const pageDisabledClass =
-  "inline-flex h-8 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] opacity-40";
+  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] opacity-40 [&_svg]:size-3.5";
 
 /**
  * Menghasilkan daftar nomor halaman untuk navigasi pagination.
