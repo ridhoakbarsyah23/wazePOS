@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getReceiptPrintPage } from "@/lib/pos/receipt-print";
+import { getReceiptPrintPage } from "@/shared/pos/receipt-print";
 
 describe("ukuran halaman cetak struk", () => {
   it("menggunakan lebar printer yang dipilih", () => {

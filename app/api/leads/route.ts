@@ -1,7 +1,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/shared/rate-limit";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/server/rate-limit";
 
 export const runtime = "nodejs";
 

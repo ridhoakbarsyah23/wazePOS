@@ -3,12 +3,12 @@ import { ChevronLeft, ChevronRight, CreditCard, Download, ListFilter, Search } f
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/shared/pagination";
+import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/shared/pagination";
 import type {
   PlatformAdminPaymentItem,
   PlatformAdminPaymentSummary,
-} from "@/lib/admin/platform-admin-types";
-import { cn } from "@/lib/shared/utils";
+} from "@/shared/admin/platform-admin-types";
+import { cn } from "@/shared/utils";
 
 export type PlatformAdminPaymentListFilters = {
   query: string;

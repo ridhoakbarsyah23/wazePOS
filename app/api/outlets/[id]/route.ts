@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryStock, outlet, sale, stockMovement } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
-import { outletSchema } from "@/lib/validation/catalog";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getMembership } from "@/server/auth/auth-session";
+import { outletSchema } from "@/shared/validation/catalog";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -65,6 +65,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   const { id } = await params;
 
+  // 0. Pastikan gerai memang milik usaha pemanggil sebelum menyentuh data apa pun.
+  // Tanpa cek ini, id gerai usaha lain bisa lolos ke penghapusan stok di bawah.
+  const [ownedOutlet] = await db
+    .select({ id: outlet.id })
+    .from(outlet)
+    .where(and(eq(outlet.id, id), eq(outlet.businessId, membership.businessId)))
+    .limit(1);
+
+  if (!ownedOutlet) {
+    return NextResponse.json({ message: "Gerai tidak ditemukan." }, { status: 404 });
+  }
+
   // 1. Check total outlets - business must keep at least 1 outlet
   const totalOutlets = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -96,9 +108,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   try {
     await db.transaction(async (tx) => {
-      // Clean up stock movement and inventory stock for this unused outlet
-      await tx.delete(stockMovement).where(eq(stockMovement.outletId, id));
-      await tx.delete(inventoryStock).where(eq(inventoryStock.outletId, id));
+      // Clean up stock movement and inventory stock for this unused outlet.
+      // Semua delete dibatasi businessId agar tidak menghapus data tenant lain.
+      await tx
+        .delete(stockMovement)
+        .where(and(eq(stockMovement.outletId, id), eq(stockMovement.businessId, membership.businessId)));
+      await tx
+        .delete(inventoryStock)
+        .where(and(eq(inventoryStock.outletId, id), eq(inventoryStock.businessId, membership.businessId)));
       await tx.delete(outlet).where(and(eq(outlet.id, id), eq(outlet.businessId, membership.businessId)));
     });
 

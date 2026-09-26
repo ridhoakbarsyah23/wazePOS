@@ -44,7 +44,7 @@ services:
       # entrypoint agar `docker compose up -d postgres` tetap bisa jalan
       # tanpa secret (alur dev lokal sesuai README).
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
-      # Kosong = ikut NEXT_PUBLIC_SITE_URL (fallback di lib/auth/auth.ts).
+      # Kosong = ikut NEXT_PUBLIC_SITE_URL (fallback di server/auth/auth.ts).
       # Samakan dengan NEXT_PUBLIC_SITE_URL saat deploy agar cookie/auth tidak mismatch.
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}

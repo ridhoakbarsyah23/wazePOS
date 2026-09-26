@@ -5,11 +5,11 @@ const mocks = vi.hoisted(() => ({
   requireDashboardAccess: vi.fn(),
 }));
 
-vi.mock("@/lib/access/dashboard-access", () => ({
+vi.mock("@/server/access/dashboard-access", () => ({
   requireDashboardAccess: mocks.requireDashboardAccess,
 }));
 
-import DashboardPage from "@/app/dashboard/page";
+import DashboardPage from "@/app/(app)/dashboard/page";
 
 beforeEach(() => {
   mocks.requireDashboardAccess.mockReset();

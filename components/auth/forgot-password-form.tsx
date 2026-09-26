@@ -4,8 +4,8 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { CheckCircle2, Info, LoaderCircle, Mail } from "lucide-react";
 import { authInputClass } from "@/components/auth/password-field";
-import { authClient } from "@/lib/auth/auth-client";
-import { forgotPasswordSchema } from "@/lib/validation/auth";
+import { authClient } from "@/shared/auth/auth-client";
+import { forgotPasswordSchema } from "@/shared/validation/auth";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");

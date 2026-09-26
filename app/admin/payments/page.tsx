@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CreditCard } from "lucide-react";
 import { PlatformAdminPaymentList } from "@/components/admin/platform-admin-payment-list";
-import { getPlatformAdminPaymentsData } from "@/lib/admin/platform-admin-payments";
+import { getPlatformAdminPaymentsData } from "@/server/admin/platform-admin-payments";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {

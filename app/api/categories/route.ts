@@ -4,9 +4,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, product } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
-import { categorySchema } from "@/lib/validation/catalog";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getMembership } from "@/server/auth/auth-session";
+import { categorySchema } from "@/shared/validation/catalog";
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });

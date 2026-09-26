@@ -5,7 +5,7 @@ import {
   isPlatformAdminEmail,
   isPlatformAdminUser,
   parsePlatformAdminEmails,
-} from "@/lib/admin/platform-admin-access";
+} from "@/shared/admin/platform-admin-access";
 
 describe("akses Platform Admin", () => {
   it("menormalkan allowlist email tanpa menerima pencocokan parsial", () => {

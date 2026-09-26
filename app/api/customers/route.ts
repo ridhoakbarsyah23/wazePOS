@@ -4,10 +4,10 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { customer, sale } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { getMaxCustomers } from "@/lib/billing/plans";
-import { customerSchema } from "@/lib/validation/customer";
+import { auth } from "@/server/auth/auth";
+import { getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { getMaxCustomers } from "@/shared/billing/plans";
+import { customerSchema } from "@/shared/validation/customer";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       email: customer.email,
       note: customer.note,
       createdAt: customer.createdAt,
-      transactionCount: sql<number>`count(${sale.id})::int`,
+      transactionCount: sql<number>`count(*) filter (where ${sale.status} = 'completed')::int`,
       totalSpent: sql<number>`coalesce(sum(case when ${sale.status} = 'completed' then ${sale.total} else 0 end), 0)::int`,
       lastVisitAt: sql<Date | null>`max(${sale.createdAt})`,
     })

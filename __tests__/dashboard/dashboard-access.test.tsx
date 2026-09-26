@@ -10,19 +10,19 @@ vi.mock("next/navigation", () => ({
   redirect: mocks.redirect,
 }));
 
-vi.mock("@/lib/auth/auth-session", () => ({
+vi.mock("@/server/auth/auth-session", () => ({
   requireSession: mocks.requireSession,
   getWorkspaceContext: mocks.getWorkspaceContext,
   canManageBusiness: (role: string) => role === "owner" || role === "admin",
   canManageStaff: (role: string) => role === "owner" || role === "admin",
 }));
 
-vi.mock("@/lib/billing/plans", () => ({
+vi.mock("@/shared/billing/plans", () => ({
   getSubscriptionStatusDetails: () => ({ isValid: true, isTrialing: false, daysRemaining: 0 }),
   hasPlanFeature: () => false,
 }));
 
-import { requireDashboardAccess } from "@/lib/access/dashboard-access";
+import { requireDashboardAccess } from "@/server/access/dashboard-access";
 
 beforeEach(() => {
   mocks.redirect.mockReset();

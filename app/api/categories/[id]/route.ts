@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, product } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
-import { categorySchema } from "@/lib/validation/catalog";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getMembership } from "@/server/auth/auth-session";
+import { categorySchema } from "@/shared/validation/catalog";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -64,21 +64,32 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   const { id } = await params;
 
-  // Unlink products in this category (set to null) so products remain safe
-  await db
-    .update(product)
-    .set({ categoryId: null, updatedAt: new Date() })
-    .where(and(eq(product.categoryId, id), eq(product.businessId, membership.businessId)));
+  try {
+    // Hapus kategori dan lepas kaitannya dari produk dalam satu transaksi agar
+    // kegagalan di tengah tidak meninggalkan produk tanpa kategori.
+    const deleted = await db.transaction(async (tx) => {
+      const [removed] = await tx
+        .delete(category)
+        .where(and(eq(category.id, id), eq(category.businessId, membership.businessId)))
+        .returning({ id: category.id, name: category.name });
 
-  // Delete category
-  const [deleted] = await db
-    .delete(category)
-    .where(and(eq(category.id, id), eq(category.businessId, membership.businessId)))
-    .returning({ id: category.id, name: category.name });
+      if (!removed) throw new Error("CATEGORY_NOT_FOUND");
 
-  if (!deleted) {
-    return NextResponse.json({ message: "Kategori tidak ditemukan." }, { status: 404 });
+      // Unlink products in this category (set to null) so products remain safe
+      await tx
+        .update(product)
+        .set({ categoryId: null, updatedAt: new Date() })
+        .where(and(eq(product.categoryId, id), eq(product.businessId, membership.businessId)));
+
+      return removed;
+    });
+
+    return NextResponse.json({ message: `Kategori "${deleted.name}" berhasil dihapus.` });
+  } catch (error) {
+    if (error instanceof Error && error.message === "CATEGORY_NOT_FOUND") {
+      return NextResponse.json({ message: "Kategori tidak ditemukan." }, { status: 404 });
+    }
+    console.error("Failed to delete category", error);
+    return NextResponse.json({ message: "Gagal menghapus kategori." }, { status: 500 });
   }
-
-  return NextResponse.json({ message: `Kategori "${deleted.name}" berhasil dihapus.` });
 }

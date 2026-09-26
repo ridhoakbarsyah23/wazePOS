@@ -11,11 +11,11 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers()),
 }));
 
-vi.mock("@/lib/auth/auth", () => ({
+vi.mock("@/server/auth/auth", () => ({
   auth: { api: { getSession: mocks.getSession } },
 }));
 
-vi.mock("@/lib/auth/auth-session", () => ({
+vi.mock("@/server/auth/auth-session", () => ({
   canManageBusiness: (role: string) => role === "owner" || role === "admin",
   getMembership: mocks.getMembership,
   getBusinessSubscription: mocks.getBusinessSubscription,
@@ -170,5 +170,84 @@ describe("POST /api/sales/[id]/void", () => {
         note: "Void INV-001: Pelanggan membatalkan pesanan",
       }),
     ]);
+  });
+
+  it("tidak mengembalikan stok untuk item yang stoknya tidak dikurangi saat penjualan", async () => {
+    const queryResults = [
+      [saleRecord()],
+      [
+        {
+          productId: "product-1",
+          productName: "Kopi",
+          quantity: 2,
+          trackStock: true,
+          stockDeducted: false,
+        },
+      ],
+    ];
+    const saleUpdate = {
+      set: vi.fn(),
+      where: vi.fn(),
+      returning: vi.fn(async () => [{ id: saleId }]),
+    };
+    saleUpdate.set.mockReturnValue(saleUpdate);
+    saleUpdate.where.mockReturnValue(saleUpdate);
+    const tx = {
+      select: vi.fn(() => queryBuilder(queryResults.shift() ?? [])),
+      update: vi.fn().mockReturnValue(saleUpdate),
+      insert: vi.fn(),
+    };
+    mocks.transaction.mockImplementation(async (callback) => callback(tx));
+
+    const response = await POST(voidRequest("Pelanggan membatalkan pesanan"), {
+      params: Promise.resolve({ id: saleId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    // Hanya update sale; tanpa update stok dan tanpa pergerakan stok.
+    expect(tx.update).toHaveBeenCalledTimes(1);
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(body.message).not.toContain("Stok barang telah dikembalikan");
+  });
+
+  it("tetap mengembalikan stok walau paket saat ini tanpa fitur inventori", async () => {
+    mocks.getBusinessSubscription.mockResolvedValue({ plan: "tumbuh" });
+    const queryResults = [
+      [saleRecord()],
+      [
+        {
+          productId: "product-1",
+          productName: "Kopi",
+          quantity: 2,
+          trackStock: false,
+          stockDeducted: true,
+        },
+      ],
+    ];
+    const saleUpdate = {
+      set: vi.fn(),
+      where: vi.fn(),
+      returning: vi.fn(async () => [{ id: saleId }]),
+    };
+    saleUpdate.set.mockReturnValue(saleUpdate);
+    saleUpdate.where.mockReturnValue(saleUpdate);
+    const stockUpdate = { set: vi.fn(), where: vi.fn(async () => undefined) };
+    stockUpdate.set.mockReturnValue(stockUpdate);
+    const tx = {
+      select: vi.fn(() => queryBuilder(queryResults.shift() ?? [])),
+      update: vi.fn().mockReturnValueOnce(saleUpdate).mockReturnValueOnce(stockUpdate),
+      insert: vi.fn(() => ({ values: vi.fn(async () => undefined) })),
+    };
+    mocks.transaction.mockImplementation(async (callback) => callback(tx));
+
+    const response = await POST(voidRequest("Pelanggan membatalkan pesanan"), {
+      params: Promise.resolve({ id: saleId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(tx.update).toHaveBeenCalledTimes(2);
+    expect(body.message).toContain("Stok barang telah dikembalikan");
   });
 });

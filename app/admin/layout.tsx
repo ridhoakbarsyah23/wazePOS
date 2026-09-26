@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { PlatformAdminShell } from "@/components/admin/platform-admin-shell";
 import { PlatformAdminThemeProvider } from "@/components/admin/platform-admin-theme";
-import { requirePlatformAdmin } from "@/lib/admin/platform-admin";
+import { requirePlatformAdmin } from "@/server/admin/platform-admin";
 import {
   platformAdminThemeCookie,
   type PlatformAdminTheme,
-} from "@/lib/admin/platform-admin-theme";
+} from "@/shared/admin/platform-admin-theme";
 
 /**
  * Guard route-level untuk seluruh segment /admin.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createMidtransSignature, verifyMidtransSignatureValue } from "@/lib/billing/midtrans-signature";
+import { createMidtransSignature, verifyMidtransSignatureValue } from "@/server/billing/midtrans-signature";
 
 describe("signature Midtrans", () => {
   it("menerima SHA-512 yang dibentuk dari order, status, nominal, dan Server Key", () => {

@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-vi.mock("@/lib/auth/auth-client", () => ({
+vi.mock("@/shared/auth/auth-client", () => ({
   authClient: {
     signIn: {
       email: mocks.signInEmail,

@@ -4,7 +4,7 @@ import {
   buildSaleFilterQuery,
   parsePageParam,
   parseSaleFilterParams,
-} from "@/lib/pos/sale-filters";
+} from "@/server/pos/sale-filters";
 
 describe("parsePageParam", () => {
   it("mengembalikan 1 untuk input tidak valid atau negatif", () => {

@@ -10,7 +10,7 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({ get: mocks.getCookie })),
 }));
 
-vi.mock("@/lib/admin/platform-admin", () => ({
+vi.mock("@/server/admin/platform-admin", () => ({
   requirePlatformAdmin: mocks.requirePlatformAdmin,
 }));
 

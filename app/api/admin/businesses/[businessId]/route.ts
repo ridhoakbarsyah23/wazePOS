@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getPlatformAdminBusinessDetail } from "@/lib/admin/platform-admin-business-detail";
-import { getPlatformAdminRequestSession } from "@/lib/admin/platform-admin-api";
-import { recordPlatformAdminAudit } from "@/lib/admin/platform-admin-audit";
+import { getPlatformAdminBusinessDetail } from "@/server/admin/platform-admin-business-detail";
+import { getPlatformAdminRequestSession } from "@/server/admin/platform-admin-api";
+import { recordPlatformAdminAudit } from "@/server/admin/platform-admin-audit";
 
 export const runtime = "nodejs";
 

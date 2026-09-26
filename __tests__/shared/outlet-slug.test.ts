@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createUniqueOutletSlug, slugifyOutletName } from "@/lib/shared/outlet-slug";
+import { createUniqueOutletSlug, slugifyOutletName } from "@/shared/outlet-slug";
 
 describe("slug URL gerai", () => {
   it("mengubah nama gerai menjadi slug yang mudah dibaca", () => {

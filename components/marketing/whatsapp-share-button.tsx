@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MessageSquareShare, Send, X } from "lucide-react";
-import { paymentLabel } from "@/lib/billing/payment";
+import { paymentLabel } from "@/shared/billing/payment";
 
 export type ReceiptShareData = {
   businessName: string;

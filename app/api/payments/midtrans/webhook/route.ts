@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { subscription, subscriptionPayment } from "@/db/schema";
-import { isMidtransConfigured, verifyMidtransSignature } from "@/lib/billing/midtrans";
+import { isMidtransConfigured, verifyMidtransSignature } from "@/server/billing/midtrans";
 
 const notificationSchema = z.object({
   order_id: z.string().min(1).max(50),

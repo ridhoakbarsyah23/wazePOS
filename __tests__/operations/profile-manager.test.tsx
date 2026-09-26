@@ -8,7 +8,7 @@ const authMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-client", () => ({
+vi.mock("@/shared/auth/auth-client", () => ({
   authClient: {
     updateUser: authMocks.updateUser,
     changePassword: authMocks.changePassword,

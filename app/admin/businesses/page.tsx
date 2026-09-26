@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Building2, ListFilter } from "lucide-react";
 import { PlatformAdminBusinessList } from "@/components/admin/platform-admin-business-list";
-import { getPlatformAdminDirectoryData } from "@/lib/admin/platform-admin-dashboard";
+import { getPlatformAdminDirectoryData } from "@/server/admin/platform-admin-dashboard";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {

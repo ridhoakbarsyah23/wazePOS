@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { marketingFaqs } from "@/lib/marketing/marketing-content";
-import { getMarketingStructuredData, serializeJsonLd } from "@/lib/marketing/marketing-seo";
-import { plans } from "@/lib/billing/plans";
+import { marketingFaqs } from "@/shared/marketing/marketing-content";
+import { getMarketingStructuredData, serializeJsonLd } from "@/shared/marketing/marketing-seo";
+import { plans } from "@/shared/billing/plans";
 
 describe("SEO landing page", () => {
   it("membentuk harga aplikasi dan FAQ dari sumber data internal", () => {

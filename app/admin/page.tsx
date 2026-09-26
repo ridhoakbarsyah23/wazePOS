@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { PlatformAdminInsights } from "@/components/admin/platform-admin-insights";
 import { Card, CardContent } from "@/components/ui/card";
-import { getPlatformAdminOverviewData } from "@/lib/admin/platform-admin-dashboard";
+import { getPlatformAdminOverviewData } from "@/server/admin/platform-admin-dashboard";
 
 export const metadata: Metadata = {
   title: "Platform Admin | wazePOS",

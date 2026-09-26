@@ -3,13 +3,13 @@ import { ChevronLeft, ChevronRight, Download, ListFilter, Search, ShieldCheck } 
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/shared/pagination";
+import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/shared/pagination";
 import type {
   PlatformAdminSubscriptionItem,
   PlatformAdminSubscriptionSummary,
-} from "@/lib/admin/platform-admin-types";
-import { getSubscriptionBoundary, platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
-import { cn } from "@/lib/shared/utils";
+} from "@/shared/admin/platform-admin-types";
+import { getSubscriptionBoundary, platformAdminStateMeta } from "@/shared/admin/platform-admin-ui";
+import { cn } from "@/shared/utils";
 
 export type PlatformAdminSubscriptionListFilters = {
   query: string;

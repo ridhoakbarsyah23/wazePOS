@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isUniqueConstraintViolation } from "@/lib/shared/product-errors";
-import { productSchema, productUpdateSchema } from "@/lib/validation/catalog";
+import { isUniqueConstraintViolation } from "@/shared/product-errors";
+import { productSchema, productUpdateSchema } from "@/shared/validation/catalog";
 
 const validProduct = {
   name: "Kopi Susu",

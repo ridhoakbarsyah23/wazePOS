@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RECEIPT_SETTINGS, normalizeReceiptSettings, receiptSettingsSchema } from "@/lib/validation/receipt-settings";
+import { DEFAULT_RECEIPT_SETTINGS, normalizeReceiptSettings, receiptSettingsSchema } from "@/shared/validation/receipt-settings";
 
 describe("receiptSettingsSchema", () => {
   it("menghasilkan default untuk objek kosong", () => {

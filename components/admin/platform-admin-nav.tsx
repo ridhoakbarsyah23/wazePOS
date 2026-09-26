@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Building2, CreditCard, History, LayoutDashboard, Repeat2 } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 
 const links = [
   { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, exact: true },

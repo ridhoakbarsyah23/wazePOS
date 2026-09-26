@@ -4,9 +4,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryStock, product, sale, saleItem, stockMovement } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { hasPlanFeature } from "@/lib/billing/plans";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
 
 export async function POST(
   request: Request,
@@ -95,14 +95,19 @@ export async function POST(
           productName: saleItem.productName,
           quantity: saleItem.quantity,
           trackStock: product.trackStock,
+          stockDeducted: saleItem.stockDeducted,
         })
         .from(saleItem)
         .innerJoin(product, eq(product.id, saleItem.productId))
         .where(eq(saleItem.saleId, saleRecord.id));
 
-      // Kembalikan stok untuk produk yang melacak stok
+      // Kembalikan stok hanya untuk item yang stoknya benar-benar dikurangi saat
+      // penjualan. Baris lama (stockDeducted NULL) memakai heuristik sebelumnya.
+      let restoredStock = false;
       for (const item of items) {
-        if (!canManageInventory || !item.trackStock) continue;
+        const wasDeducted = item.stockDeducted ?? (canManageInventory && item.trackStock);
+        if (!wasDeducted) continue;
+        restoredStock = true;
 
         await tx
           .update(inventoryStock)
@@ -133,11 +138,12 @@ export async function POST(
       return {
         invoiceNumber: saleRecord.invoiceNumber,
         status: "voided",
+        restoredStock,
       };
     });
 
     return NextResponse.json({
-      message: canManageInventory
+      message: result.restoredStock
         ? `Transaksi ${result.invoiceNumber} berhasil dibatalkan (void). Stok barang telah dikembalikan.`
         : `Transaksi ${result.invoiceNumber} berhasil dibatalkan (void).`,
       status: result.status,

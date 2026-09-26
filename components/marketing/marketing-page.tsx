@@ -3,9 +3,9 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { trackEvent } from "@/lib/marketing/analytics";
-import { marketingFaqs } from "@/lib/marketing/marketing-content";
-import { formatPlanAnnualPrice, getMarketingPlanCards, getPlanFeatureComparison } from "@/lib/billing/plans";
+import { trackEvent } from "@/shared/marketing/analytics";
+import { marketingFaqs } from "@/shared/marketing/marketing-content";
+import { formatPlanAnnualPrice, getMarketingPlanCards, getPlanFeatureComparison } from "@/shared/billing/plans";
 
 const BUSINESS_TYPES = ["Toko", "Warung", "Kedai Kopi", "Restoran", "Usaha Laundry", "Ritel"];
 

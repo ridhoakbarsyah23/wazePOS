@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/lib/pos/pos-calculations";
-import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/lib/pos/pos-product-search";
+import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/shared/pos/pos-calculations";
+import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/shared/pos/pos-product-search";
 import {
   clearSaleRequestId,
   createSaleRequestFingerprint,
   getOrCreateSaleRequestId,
-} from "@/lib/pos/sale-idempotency";
+} from "@/shared/pos/sale-idempotency";
 import {
   AlertCircle,
   ArrowRight,
@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { RupiahInput } from "@/components/ui/rupiah-input";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import type { ReceiptSettings } from "@/lib/validation/receipt-settings";
+import type { ReceiptSettings } from "@/shared/validation/receipt-settings";
 import type { ReceiptShareData } from "@/components/marketing/whatsapp-share-button";
 import styles from "./pos-terminal.module.css";
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Printer } from "lucide-react";
-import { getReceiptPrintPage, type ReceiptPaperSize } from "@/lib/pos/receipt-print";
+import { getReceiptPrintPage, type ReceiptPaperSize } from "@/shared/pos/receipt-print";
 
 export type PaperSize = ReceiptPaperSize;
 

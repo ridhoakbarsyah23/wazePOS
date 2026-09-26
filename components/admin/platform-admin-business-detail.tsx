@@ -33,8 +33,8 @@ import type {
   PlatformAdminBusiness,
   PlatformAdminBusinessDetailData,
   PlatformAdminPaymentDetail,
-} from "@/lib/admin/platform-admin-types";
-import { formatBusinessReference, platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
+} from "@/shared/admin/platform-admin-types";
+import { formatBusinessReference, platformAdminStateMeta } from "@/shared/admin/platform-admin-ui";
 
 type DetailTrigger = "icon" | "full";
 

@@ -12,11 +12,11 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers()),
 }));
 
-vi.mock("@/lib/auth/auth", () => ({
+vi.mock("@/server/auth/auth", () => ({
   auth: { api: { getSession: mocks.getSession } },
 }));
 
-vi.mock("@/lib/auth/auth-session", () => ({
+vi.mock("@/server/auth/auth-session", () => ({
   getMembership: mocks.getMembership,
   getBusinessSubscription: mocks.getBusinessSubscription,
 }));

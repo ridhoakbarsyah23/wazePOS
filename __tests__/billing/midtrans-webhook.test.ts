@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   transaction: vi.fn(),
 }));
 
-vi.mock("@/lib/billing/midtrans", () => ({
+vi.mock("@/server/billing/midtrans", () => ({
   isMidtransConfigured: mocks.isConfigured,
   verifyMidtransSignature: mocks.verifySignature,
 }));

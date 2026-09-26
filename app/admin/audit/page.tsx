@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { History } from "lucide-react";
 import { PlatformAdminAuditList } from "@/components/admin/platform-admin-audit-list";
-import { getPlatformAdminAuditData } from "@/lib/admin/platform-admin-audit-log";
+import { getPlatformAdminAuditData } from "@/server/admin/platform-admin-audit-log";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {

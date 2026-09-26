@@ -5,7 +5,7 @@ import {
   PRODUCTS_PAGE_SIZE,
   TRANSACTIONS_PAGE_SIZE,
   getPageNumbers,
-} from "@/lib/shared/pagination";
+} from "@/shared/pagination";
 
 describe("getPageNumbers", () => {
   it("menampilkan seluruh halaman tanpa ellipsis saat jumlah halaman sedikit", () => {

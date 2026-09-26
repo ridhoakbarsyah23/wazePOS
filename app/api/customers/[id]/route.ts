@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { customer } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership } from "@/lib/auth/auth-session";
-import { customerSchema } from "@/lib/validation/customer";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getMembership } from "@/server/auth/auth-session";
+import { customerSchema } from "@/shared/validation/customer";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });

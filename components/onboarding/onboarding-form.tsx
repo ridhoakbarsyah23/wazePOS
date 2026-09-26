@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { businessTypes, onboardingSchema } from "@/lib/validation/onboarding";
-import { plans, type PlanId } from "@/lib/billing/plans";
+import { businessTypes, onboardingSchema } from "@/shared/validation/onboarding";
+import { plans, type PlanId } from "@/shared/billing/plans";
 
 export function OnboardingForm({ selectedPlan }: { selectedPlan: PlanId }) {
   const router = useRouter();

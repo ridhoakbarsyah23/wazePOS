@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountProfileSchema, changePasswordSchema } from "@/lib/validation/profile";
+import { accountProfileSchema, changePasswordSchema } from "@/shared/validation/profile";
 
 describe("profile validation", () => {
   it("trims and accepts a valid account name", () => {

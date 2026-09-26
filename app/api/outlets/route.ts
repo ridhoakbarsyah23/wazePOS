@@ -4,11 +4,11 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { outlet } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getMembership, getWorkspaceContext } from "@/lib/auth/auth-session";
-import { getPlanConfig, hasPlanFeature } from "@/lib/billing/plans";
-import { createUniqueOutletSlug } from "@/lib/shared/outlet-slug";
-import { outletSchema } from "@/lib/validation/catalog";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getMembership, getWorkspaceContext } from "@/server/auth/auth-session";
+import { getPlanConfig, hasPlanFeature } from "@/shared/billing/plans";
+import { createUniqueOutletSlug } from "@/shared/outlet-slug";
+import { outletSchema } from "@/shared/validation/catalog";
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });

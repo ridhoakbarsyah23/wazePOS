@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, CheckCircle2, Loader2, ReceiptText } from "lucide-react";
-import { businessTypes } from "@/lib/validation/onboarding";
-import { DEFAULT_RECEIPT_SETTINGS, type ReceiptSettings } from "@/lib/validation/receipt-settings";
+import { businessTypes } from "@/shared/validation/onboarding";
+import { DEFAULT_RECEIPT_SETTINGS, type ReceiptSettings } from "@/shared/validation/receipt-settings";
 
 type Notice = { type: "success" | "error"; text: string } | null;
 

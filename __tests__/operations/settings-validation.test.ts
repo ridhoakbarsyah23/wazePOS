@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { businessSettingsSchema } from "@/lib/validation/settings";
+import { businessSettingsSchema } from "@/shared/validation/settings";
 
 describe("business settings validation", () => {
   it("normalizes a valid business profile", () => {

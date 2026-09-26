@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import { PwaRegister } from "@/components/shared/pwa-register";
-import { siteConfig } from "@/lib/config/site";
+import { siteConfig } from "@/shared/config/site";
 
 const manrope = Manrope({
   subsets: ["latin"],

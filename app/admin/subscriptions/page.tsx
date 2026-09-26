@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Repeat2 } from "lucide-react";
 import { PlatformAdminSubscriptionList } from "@/components/admin/platform-admin-subscription-list";
-import { getPlatformAdminSubscriptionsData } from "@/lib/admin/platform-admin-subscriptions";
+import { getPlatformAdminSubscriptionsData } from "@/server/admin/platform-admin-subscriptions";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {

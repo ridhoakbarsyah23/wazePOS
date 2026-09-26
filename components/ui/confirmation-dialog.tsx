@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 
 type ConfirmationDialogProps = {
   trigger: ReactNode;

@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PRODUCTS_PAGE_SIZE, getPageNumbers } from "@/lib/shared/pagination";
+import { PRODUCTS_PAGE_SIZE, getPageNumbers } from "@/shared/pagination";
 
 export type Product = {
   id: string;

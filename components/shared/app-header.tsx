@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { DashboardAccountFooter } from "@/components/dashboard/dashboard-account-footer";
 import { Button } from "@/components/ui/button";
-import { hasPlanFeature, type PlanFeature } from "@/lib/billing/plans";
+import { hasPlanFeature, type PlanFeature } from "@/shared/billing/plans";
 
 export type AppHeaderProps = {
   businessName: string;

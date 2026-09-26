@@ -3,10 +3,10 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { business } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getWorkspaceContext } from "@/lib/auth/auth-session";
-import { hasPlanFeature } from "@/lib/billing/plans";
-import { normalizeReceiptSettings, receiptSettingsSchema } from "@/lib/validation/receipt-settings";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getWorkspaceContext } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
+import { normalizeReceiptSettings, receiptSettingsSchema } from "@/shared/validation/receipt-settings";
 
 export async function PATCH(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

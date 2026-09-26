@@ -4,11 +4,11 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { category, inventoryStock, outlet, product, stockMovement } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getWorkspaceContext } from "@/lib/auth/auth-session";
-import { hasPlanFeature } from "@/lib/billing/plans";
-import { isUniqueConstraintViolation } from "@/lib/shared/product-errors";
-import { productSchema } from "@/lib/validation/catalog";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getWorkspaceContext } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
+import { isUniqueConstraintViolation } from "@/shared/product-errors";
+import { productSchema } from "@/shared/validation/catalog";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

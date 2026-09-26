@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBusinessReference } from "@/lib/admin/platform-admin-ui";
+import { formatBusinessReference } from "@/shared/admin/platform-admin-ui";
 
 describe("formatBusinessReference", () => {
   it("membentuk kode usaha yang stabil, terbaca, dan dapat diurutkan", () => {

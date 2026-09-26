@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getPlatformAdminRequestSession } from "@/lib/admin/platform-admin-api";
-import { recordPlatformAdminAudit } from "@/lib/admin/platform-admin-audit";
-import { buildCsvResponse, formatCsvDate } from "@/lib/admin/platform-admin-csv";
-import { getPlatformAdminPaymentExportRows } from "@/lib/admin/platform-admin-payments";
+import { getPlatformAdminRequestSession } from "@/server/admin/platform-admin-api";
+import { recordPlatformAdminAudit } from "@/server/admin/platform-admin-audit";
+import { buildCsvResponse, formatCsvDate } from "@/shared/admin/platform-admin-csv";
+import { getPlatformAdminPaymentExportRows } from "@/server/admin/platform-admin-payments";
 
 export const runtime = "nodejs";
 

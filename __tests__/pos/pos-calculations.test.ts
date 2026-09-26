@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/lib/pos/pos-calculations";
+import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/shared/pos/pos-calculations";
 
 describe("perhitungan POS", () => {
   it("menghitung subtotal berdasarkan harga dan jumlah barang", () => {

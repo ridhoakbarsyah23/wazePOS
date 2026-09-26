@@ -1,13 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { category, product } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageBusiness, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { hasPlanFeature } from "@/lib/billing/plans";
-import { isUniqueConstraintViolation } from "@/lib/shared/product-errors";
-import { productDeleteSchema, productUpdateSchema } from "@/lib/validation/catalog";
+import { category, inventoryStock, outlet, product } from "@/db/schema";
+import { auth } from "@/server/auth/auth";
+import { canManageBusiness, getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
+import { isUniqueConstraintViolation } from "@/shared/product-errors";
+import { productDeleteSchema, productUpdateSchema } from "@/shared/validation/catalog";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -35,19 +36,76 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!ownedCategory) return NextResponse.json({ message: "Kategori tidak valid." }, { status: 422 });
   }
 
-  let updated: { id: string } | undefined;
+  const [currentProduct] = await db
+    .select({ trackStock: product.trackStock })
+    .from(product)
+    .where(and(eq(product.id, id), eq(product.businessId, membership.businessId)))
+    .limit(1);
+  if (!currentProduct) return NextResponse.json({ message: "Produk tidak ditemukan." }, { status: 404 });
+
+  const nextTrackStock = canManageInventory && parsed.data.trackStock;
+
   try {
-    [updated] = await db.update(product).set({
-      name: parsed.data.name,
-      sku: parsed.data.sku || null,
-      categoryId: parsed.data.categoryId,
-      sellingPrice: parsed.data.sellingPrice,
-      costPrice: parsed.data.costPrice,
-      trackStock: canManageInventory && parsed.data.trackStock,
-      isActive: parsed.data.isActive,
-      updatedAt: new Date(),
-    }).where(and(eq(product.id, id), eq(product.businessId, membership.businessId))).returning({ id: product.id });
+    await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(product)
+        .set({
+          name: parsed.data.name,
+          sku: parsed.data.sku || null,
+          categoryId: parsed.data.categoryId,
+          sellingPrice: parsed.data.sellingPrice,
+          costPrice: parsed.data.costPrice,
+          trackStock: nextTrackStock,
+          isActive: parsed.data.isActive,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(product.id, id), eq(product.businessId, membership.businessId)))
+        .returning({ id: product.id });
+
+      if (!updated) throw new Error("PRODUCT_NOT_FOUND");
+
+      // Selaraskan baris inventory_stock saat status pelacakan stok berubah,
+      // agar daftar stok tidak menyisakan baris yatim / hilang tanpa baris.
+      if (canManageInventory && nextTrackStock !== currentProduct.trackStock) {
+        if (nextTrackStock) {
+          const businessOutlets = await tx
+            .select({ id: outlet.id })
+            .from(outlet)
+            .where(eq(outlet.businessId, membership.businessId));
+          const existingStocks = await tx
+            .select({ outletId: inventoryStock.outletId })
+            .from(inventoryStock)
+            .where(and(
+              eq(inventoryStock.productId, id),
+              eq(inventoryStock.businessId, membership.businessId),
+            ));
+          const existingOutletIds = new Set(existingStocks.map((row) => row.outletId));
+          const missingOutlets = businessOutlets.filter((row) => !existingOutletIds.has(row.id));
+          if (missingOutlets.length > 0) {
+            await tx.insert(inventoryStock).values(
+              missingOutlets.map((row) => ({
+                id: randomUUID(),
+                businessId: membership.businessId,
+                outletId: row.id,
+                productId: id,
+                quantity: 0,
+              })),
+            );
+          }
+        } else {
+          await tx
+            .delete(inventoryStock)
+            .where(and(
+              eq(inventoryStock.productId, id),
+              eq(inventoryStock.businessId, membership.businessId),
+            ));
+        }
+      }
+    });
   } catch (error) {
+    if (error instanceof Error && error.message === "PRODUCT_NOT_FOUND") {
+      return NextResponse.json({ message: "Produk tidak ditemukan." }, { status: 404 });
+    }
     if (isUniqueConstraintViolation(error)) {
       return NextResponse.json({ message: "SKU tersebut sudah digunakan oleh produk lain." }, { status: 409 });
     }
@@ -55,7 +113,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ message: "Produk gagal diperbarui." }, { status: 500 });
   }
 
-  if (!updated) return NextResponse.json({ message: "Produk tidak ditemukan." }, { status: 404 });
   return NextResponse.json({ message: "Produk berhasil diperbarui." });
 }
 

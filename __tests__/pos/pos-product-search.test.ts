@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/lib/pos/pos-product-search";
+import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/shared/pos/pos-product-search";
 
 const products = [
   {

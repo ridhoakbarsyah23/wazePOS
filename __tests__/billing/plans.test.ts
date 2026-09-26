@@ -5,7 +5,7 @@ import {
   getPlanFeatureComparison,
   hasPlanFeature,
   plans,
-} from "@/lib/billing/plans";
+} from "@/shared/billing/plans";
 
 describe("hak fitur paket", () => {
   it("QRIS hanya untuk Paket Bisnis, Tumbuh tetap tunai saja", () => {

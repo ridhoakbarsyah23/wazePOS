@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { customerSchema } from "@/lib/validation/customer";
+import { customerSchema } from "@/shared/validation/customer";
 
 describe("customerSchema", () => {
   it("menerima pelanggan dengan nama saja", () => {

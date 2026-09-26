@@ -3,10 +3,10 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { subscription } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { plans } from "@/lib/billing/plans";
-import { changeTrialPlanSchema } from "@/lib/validation/subscription";
+import { auth } from "@/server/auth/auth";
+import { getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { plans } from "@/shared/billing/plans";
+import { changeTrialPlanSchema } from "@/shared/validation/subscription";
 
 export async function PATCH(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

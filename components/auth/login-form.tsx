@@ -6,8 +6,8 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { GoogleSsoButton } from "@/components/auth/google-sso-button";
 import { authInputClass, PasswordField } from "@/components/auth/password-field";
-import { authClient } from "@/lib/auth/auth-client";
-import { loginSchema } from "@/lib/validation/auth";
+import { authClient } from "@/shared/auth/auth-client";
+import { loginSchema } from "@/shared/validation/auth";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 

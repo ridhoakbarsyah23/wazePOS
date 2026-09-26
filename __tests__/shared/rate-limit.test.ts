@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { checkRateLimit, getClientIp } from "@/lib/shared/rate-limit";
+import { checkRateLimit, getClientIp } from "@/server/rate-limit";
 
 describe("checkRateLimit", () => {
   beforeEach(() => {

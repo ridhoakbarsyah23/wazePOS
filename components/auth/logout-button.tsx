@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AlertCircle, AlertTriangle, LoaderCircle, LogOut, X } from "lucide-react";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient } from "@/shared/auth/auth-client";
 import { Button } from "@/components/ui/button";
 
 export function LogoutButton({

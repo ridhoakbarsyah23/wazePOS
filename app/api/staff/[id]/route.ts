@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { businessMember } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageStaff, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { hasPlanFeature } from "@/lib/billing/plans";
+import { auth } from "@/server/auth/auth";
+import { canManageStaff, getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
 
 export async function PATCH(
   request: Request,

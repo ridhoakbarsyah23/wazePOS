@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getPlatformAdminBusinessExportRows } from "@/lib/admin/platform-admin-dashboard";
-import { getPlatformAdminRequestSession } from "@/lib/admin/platform-admin-api";
-import { recordPlatformAdminAudit } from "@/lib/admin/platform-admin-audit";
-import { buildCsvResponse, formatCsvDate } from "@/lib/admin/platform-admin-csv";
-import { formatBusinessReference, platformAdminStateMeta } from "@/lib/admin/platform-admin-ui";
+import { getPlatformAdminBusinessExportRows } from "@/server/admin/platform-admin-dashboard";
+import { getPlatformAdminRequestSession } from "@/server/admin/platform-admin-api";
+import { recordPlatformAdminAudit } from "@/server/admin/platform-admin-audit";
+import { buildCsvResponse, formatCsvDate } from "@/shared/admin/platform-admin-csv";
+import { formatBusinessReference, platformAdminStateMeta } from "@/shared/admin/platform-admin-ui";
 
 export const runtime = "nodejs";
 

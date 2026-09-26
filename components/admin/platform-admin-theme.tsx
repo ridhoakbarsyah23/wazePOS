@@ -5,7 +5,7 @@ import { Moon, Sun } from "lucide-react";
 import {
   platformAdminThemeCookie,
   type PlatformAdminTheme,
-} from "@/lib/admin/platform-admin-theme";
+} from "@/shared/admin/platform-admin-theme";
 
 type PlatformAdminThemeContextValue = {
   theme: PlatformAdminTheme;

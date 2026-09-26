@@ -5,10 +5,11 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "@/db";
 import { account, businessMember, user } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { canManageStaff, getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { getPlanLimits, hasPlanFeature, normalizePlan, plans } from "@/lib/billing/plans";
-import { checkRateLimit, rateLimitResponse } from "@/lib/shared/rate-limit";
+import { auth } from "@/server/auth/auth";
+import { canManageStaff, getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { getPlanLimits, hasPlanFeature, normalizePlan, plans } from "@/shared/billing/plans";
+import { isUniqueConstraintViolation } from "@/shared/product-errors";
+import { checkRateLimit, rateLimitResponse } from "@/server/rate-limit";
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -170,6 +171,9 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    if (isUniqueConstraintViolation(error)) {
+      return NextResponse.json({ message: "Email sudah terdaftar pada sistem." }, { status: 409 });
+    }
     console.error("Gagal menambahkan staf:", error);
     return NextResponse.json({ message: "Gagal menyimpan akun karyawan." }, { status: 500 });
   }

@@ -4,12 +4,12 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { customer, inventoryStock, outlet, product, sale, saleItem, stockMovement } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { getBusinessSubscription, getMembership } from "@/lib/auth/auth-session";
-import { nextInvoiceNumber } from "@/lib/pos/invoice-number";
-import { getSubscriptionStatusDetails, hasPlanFeature } from "@/lib/billing/plans";
-import { saleSchema } from "@/lib/validation/sale";
-import { checkRateLimit, rateLimitResponse } from "@/lib/shared/rate-limit";
+import { auth } from "@/server/auth/auth";
+import { getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { nextInvoiceNumber } from "@/server/pos/invoice-number";
+import { getSubscriptionStatusDetails, hasPlanFeature } from "@/shared/billing/plans";
+import { saleSchema } from "@/shared/validation/sale";
+import { checkRateLimit, rateLimitResponse } from "@/server/rate-limit";
 
 const IDEMPOTENCY_HINTS = [
   "sale_business_client_request_idx",
@@ -258,6 +258,9 @@ export async function POST(request: Request) {
           unitPrice: item.unitPrice,
           unitCost: item.unitCost,
           subtotal: item.subtotal,
+          // Snapshot: catat apakah stok benar-benar dikurangi agar void nanti
+          // tidak bergantung pada kondisi produk/paket yang bisa berubah.
+          stockDeducted: item.trackStock,
         })),
       );
 

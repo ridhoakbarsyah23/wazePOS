@@ -6,15 +6,15 @@ const mocks = vi.hoisted(() => ({
   recordAudit: vi.fn(),
 }));
 
-vi.mock("@/lib/admin/platform-admin-api", () => ({
+vi.mock("@/server/admin/platform-admin-api", () => ({
   getPlatformAdminRequestSession: mocks.getRequestSession,
 }));
 
-vi.mock("@/lib/admin/platform-admin-dashboard", () => ({
+vi.mock("@/server/admin/platform-admin-dashboard", () => ({
   getPlatformAdminBusinessExportRows: mocks.getExportRows,
 }));
 
-vi.mock("@/lib/admin/platform-admin-audit", () => ({
+vi.mock("@/server/admin/platform-admin-audit", () => ({
   recordPlatformAdminAudit: mocks.recordAudit,
 }));
 

@@ -3,9 +3,9 @@ import { ChevronLeft, ChevronRight, History, ListFilter, Search } from "lucide-r
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/lib/shared/pagination";
-import type { PlatformAdminAuditLogItem } from "@/lib/admin/platform-admin-types";
-import { cn } from "@/lib/shared/utils";
+import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/shared/pagination";
+import type { PlatformAdminAuditLogItem } from "@/shared/admin/platform-admin-types";
+import { cn } from "@/shared/utils";
 
 export type PlatformAdminAuditListFilters = {
   query: string;

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { strFromU8, unzipSync } from "fflate";
-import { hasPlanFeature } from "@/lib/billing/plans";
+import { hasPlanFeature } from "@/shared/billing/plans";
 import {
   createSalesReportCsv,
   createSalesReportWorkbook,
   formatReportRange,
   getReportDateRange,
   getReportDayRange,
-} from "@/lib/pos/reporting";
+} from "@/server/pos/reporting";
 
 describe("laporan penjualan", () => {
   it("mengubah tanggal Jakarta menjadi batas waktu UTC yang tepat", () => {

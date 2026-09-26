@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatInvoiceNumber, invoiceCounterDateKey } from "@/lib/pos/invoice-number";
+import { formatInvoiceNumber, invoiceCounterDateKey } from "@/server/pos/invoice-number";
 
 describe("formatInvoiceNumber", () => {
   it("membentuk format INV-YYYYMMDD-NNNN dengan nomor antrian 4 digit", () => {

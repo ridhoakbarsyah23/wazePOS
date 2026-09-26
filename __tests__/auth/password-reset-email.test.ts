@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   getPasswordResetEmailConfig,
   sendPasswordResetEmail,
-} from "@/lib/email/password-reset-email";
+} from "@/server/email/password-reset-email";
 
 describe("email reset kata sandi", () => {
   it("menganggap konfigurasi belum siap jika salah satu variabel kosong", () => {

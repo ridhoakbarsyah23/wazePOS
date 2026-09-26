@@ -3,10 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, CheckCircle2, ChevronDown, MessageSquareShare, PlusCircle, Printer, ReceiptText, Send, X } from "lucide-react";
-import { getReceiptPrintPage, type ReceiptPaperSize } from "@/lib/pos/receipt-print";
-import { normalizeReceiptSettings, type ReceiptSettings } from "@/lib/validation/receipt-settings";
-import { DEFAULT_RECEIPT_DISCLAIMER, DEFAULT_RECEIPT_FOOTER } from "@/lib/validation/receipt-settings";
-import { paymentLabel } from "@/lib/billing/payment";
+import { getReceiptPrintPage, type ReceiptPaperSize } from "@/shared/pos/receipt-print";
+import { normalizeReceiptSettings, type ReceiptSettings } from "@/shared/validation/receipt-settings";
+import { DEFAULT_RECEIPT_DISCLAIMER, DEFAULT_RECEIPT_FOOTER } from "@/shared/validation/receipt-settings";
+import { paymentLabel } from "@/shared/billing/payment";
 import { buildReceiptWhatsAppMessage, type ReceiptShareData } from "@/components/marketing/whatsapp-share-button";
 
 export type PaperSize = ReceiptPaperSize;

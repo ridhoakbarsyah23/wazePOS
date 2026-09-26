@@ -7,10 +7,10 @@ import { PosTerminal } from "@/components/pos/pos-terminal";
 import { SubscriptionLockout } from "@/components/subscription/subscription-lockout";
 import { db } from "@/db";
 import { business, category, inventoryStock, outlet, product, sale } from "@/db/schema";
-import { getWorkspaceContext, requireSession } from "@/lib/auth/auth-session";
-import { paymentLabel } from "@/lib/billing/payment";
-import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/lib/billing/plans";
-import { normalizeReceiptSettings } from "@/lib/validation/receipt-settings";
+import { getWorkspaceContext, requireSession } from "@/server/auth/auth-session";
+import { paymentLabel } from "@/shared/billing/payment";
+import { getSubscriptionStatusDetails, hasPlanFeature, normalizePlan } from "@/shared/billing/plans";
+import { normalizeReceiptSettings } from "@/shared/validation/receipt-settings";
 
 export async function PosPageContent({
   outletSlug,

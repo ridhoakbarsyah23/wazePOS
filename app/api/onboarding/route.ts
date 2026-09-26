@@ -3,10 +3,10 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { business, businessMember, outlet, subscription } from "@/db/schema";
-import { auth } from "@/lib/auth/auth";
-import { getMembership } from "@/lib/auth/auth-session";
-import { slugifyOutletName } from "@/lib/shared/outlet-slug";
-import { onboardingSchema } from "@/lib/validation/onboarding";
+import { auth } from "@/server/auth/auth";
+import { getMembership } from "@/server/auth/auth-session";
+import { slugifyOutletName } from "@/shared/outlet-slug";
+import { onboardingSchema } from "@/shared/validation/onboarding";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

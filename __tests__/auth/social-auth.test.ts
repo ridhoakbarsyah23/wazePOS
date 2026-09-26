@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getGoogleAuthRedirects } from "@/lib/auth/social-auth";
+import { getGoogleAuthRedirects } from "@/shared/auth/social-auth";
 
 describe("redirect autentikasi Google", () => {
   it("meneruskan akun lama ke server dan akun baru dari login ke onboarding Tumbuh", () => {

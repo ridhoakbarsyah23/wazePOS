@@ -6,7 +6,7 @@ import { Check, CheckCircle2, CreditCard, Crown, LoaderCircle } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { planIds, plans, type PlanId } from "@/lib/billing/plans";
+import { planIds, plans, type PlanId } from "@/shared/billing/plans";
 
 const includedFeatures: Record<PlanId, string[]> = {
   tumbuh: [

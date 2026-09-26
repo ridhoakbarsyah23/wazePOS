@@ -12,8 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { PasswordField } from "@/components/auth/password-field";
-import { authClient } from "@/lib/auth/auth-client";
-import { accountProfileSchema, changePasswordSchema } from "@/lib/validation/profile";
+import { authClient } from "@/shared/auth/auth-client";
+import { accountProfileSchema, changePasswordSchema } from "@/shared/validation/profile";
 
 type Notice = { type: "success" | "error"; message: string } | null;
 
