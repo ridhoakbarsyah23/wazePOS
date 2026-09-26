@@ -16,7 +16,8 @@ RUN npm ci
 
 FROM node:20.20.2-alpine AS builder
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_OUTPUT_STANDALONE=1
 # Dummy khusus build agar prerender tidak noisy (BetterAuthError default secret).
 # Tidak terbawa ke image final karena stage runner tidak mewarisi ENV ini.
 ENV BETTER_AUTH_SECRET=build-only-dummy-secret-min-32-chars-000000 \

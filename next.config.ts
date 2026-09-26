@@ -35,7 +35,10 @@ const privateAdminHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Standalone hanya untuk image Docker (diaktifkan via NEXT_OUTPUT_STANDALONE=1
+  // di Dockerfile). Vercel memakai output default-nya sendiri — output
+  // standalone merusak build Vercel (ENOENT next-server.js.nft.json).
+  ...(process.env.NEXT_OUTPUT_STANDALONE === "1" ? { output: "standalone" as const } : {}),
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {
