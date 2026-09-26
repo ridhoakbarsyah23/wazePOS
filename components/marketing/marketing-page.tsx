@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { trackEvent } from "@/lib/marketing/analytics";
@@ -160,10 +160,21 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [showMobileComparison, setShowMobileComparison] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const heroVisualRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const updateHeader = () => setScrolled(window.scrollY > 18);
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    const updateHeader = () => {
+      setScrolled(window.scrollY > 18);
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      if (progressRef.current) {
+        progressRef.current.style.transform = reduceMotion ? "scaleX(1)" : `scaleX(${ratio.toFixed(4)})`;
+      }
+    };
 
     updateHeader();
     window.addEventListener("scroll", updateHeader, { passive: true });
@@ -189,10 +200,38 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
     revealElements.forEach((element) => observer.observe(element));
 
+    // Tilt hero mockup: transform-only, pointer fine, tanpa reduced-motion.
+    const heroVisual = heroVisualRef.current;
+    let raf = 0;
+    const resetTilt = () => {
+      if (heroVisual) heroVisual.style.setProperty("--hero-tilt", "rotateX(0deg) rotateY(0deg)");
+    };
+    const handleMove = (event: PointerEvent) => {
+      if (!heroVisual || reduceMotion || raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        const rect = heroVisual.getBoundingClientRect();
+        const px = (event.clientX - rect.left) / Math.max(1, rect.width) - 0.5;
+        const py = (event.clientY - rect.top) / Math.max(1, rect.height) - 0.5;
+        heroVisual.style.setProperty(
+          "--hero-tilt",
+          `rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 6).toFixed(2)}deg)`,
+        );
+      });
+    };
+
+    if (heroVisual && finePointer && !reduceMotion) {
+      heroVisual.addEventListener("pointermove", handleMove);
+      heroVisual.addEventListener("pointerleave", resetTilt);
+    }
+
     return () => {
       observer.disconnect();
       root.classList.remove("motion-ready");
       window.removeEventListener("scroll", updateHeader);
+      if (raf) window.cancelAnimationFrame(raf);
+      heroVisual?.removeEventListener("pointermove", handleMove);
+      heroVisual?.removeEventListener("pointerleave", resetTilt);
     };
   }, []);
 
@@ -202,6 +241,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
     <>
       <a className="skip-link" href="#konten">Lewati ke konten</a>
       <header className={scrolled ? "site-header scrolled" : "site-header"}>
+        <div className="site-progress" aria-hidden="true"><div ref={progressRef} className="site-progress-bar" /></div>
         <div className="container nav-wrap">
           <Brand />
           <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Navigasi utama">
@@ -215,20 +255,26 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
       </header>
 
       <main id="konten">
-        <section className="hero" id="beranda">
+        <section className="hero hero-pos" id="beranda">
+          <div className="hero-ledger" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
           <div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/>
           <div className="container hero-grid">
             <div className="hero-copy reveal">
-              <span className="eyebrow"><Icon name="spark" size={16}/> Aplikasi kasir untuk bisnis yang terus tumbuh</span>
-              <h1>Kelola kasir lebih mudah, <span>bisnis lebih teratur.</span></h1>
-              <p>wazePOS membantu Anda mengelola transaksi, stok, produk, pelanggan, dan laporan penjualan melalui satu aplikasi yang mudah digunakan.</p>
+              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS · Struk 58/80mm</span></span>
+              <h1 className="hero-display">Tutup buku <span>tanpa drama.</span><br />Kasir jalan, stok ketahuan.</h1>
+              <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, stok Paket Bisnis terpantau, laporan kebaca tanpa rekap manual.</p>
               <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
+              <dl className="pos-proof">
+                <div><dt className="mono">Kasir</dt><dd>Tunai + QRIS Bisnis</dd></div>
+                <div><dt className="mono">Stok</dt><dd>peringatan menipis</dd></div>
+                <div><dt className="mono">Laporan</dt><dd>Excel + layar</dd></div>
+              </dl>
               <div className="supporting-values"><span><Icon name="check" size={16}/> Mudah digunakan</span><span><Icon name="check" size={16}/> Sesuai untuk beragam usaha</span><span><Icon name="check" size={16}/> Program uji coba tersedia</span></div>
             </div>
-            <div className="hero-visual reveal delay-1"><div className="visual-backdrop"/><DashboardMockup/><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
+            <div className="hero-visual reveal delay-1" ref={heroVisualRef}><div className="visual-backdrop"/><div className="hero-tilt"><DashboardMockup/><div className="receipt-edge" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div></div><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
           </div>
           <div className="business-strip">
-            <span className="business-strip-label">Sesuai untuk</span>
+            <span className="business-strip-label"><span className="mono">Cocok untuk</span></span>
             <div className="business-strip-track">
               {Array.from({ length: MARQUEE_GROUPS }, (_, group) => (
                 <div className="business-strip-group" key={group} aria-hidden={group > 0 || undefined}>
@@ -242,20 +288,20 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
         </section>
 
         <section className="section problem-section">
-          <div className="container split-heading" data-reveal><div><span className="section-kicker">Kendala operasional</span><h2>Masih kesulitan mengelola bisnis <span>secara manual?</span></h2></div><p>Ketika transaksi bertambah, stok semakin sulit dipantau dan laporan manual menyita waktu. wazePOS membantu menyederhanakan pekerjaan tersebut.</p></div>
+          <div className="container split-heading" data-reveal><div><span className="section-kicker"><span className="mono">Buku kas kusut</span></span><h2 className="section-display">Tutup kasir jam 9 malam, <span>rekap masih jam 11?</span></h2></div><p>Nota tercecer, stok tidak cocok, laporan numpuk. Bagian ini yang kami bereskan duluan — bukan sekadar ganti tampilan.</p></div>
           <div className="container problem-grid">
-            {[{n:"01",t:"Transaksi masih manual",d:"Pencatatan mudah tercecer dan proses pembayaran menjadi lebih lambat."},{n:"02",t:"Stok sulit dipantau",d:"Jumlah barang tercatat tidak selalu sesuai dengan kondisi aktual."},{n:"03",t:"Penyusunan laporan memerlukan waktu",d:"Rekapitulasi penjualan berulang mengurangi waktu untuk mengembangkan bisnis."},{n:"04",t:"Data bisnis tersebar",d:"Informasi produk, pelanggan, dan transaksi tersimpan di berbagai tempat."}].map((item) => <article className="problem-card" key={item.n} data-reveal><span>{item.n}</span><h3>{item.t}</h3><p>{item.d}</p></article>)}
+            {[{n:"01",t:"Nota tercecer saat rame",d:"Tulisan tangan kelewat, kembalian dihitung ulang, antrean menumpuk."},{n:"02",t:"Stok di rak beda dengan catatan",d:"Barang habis ketahuan saat pelanggan sudah pesan."},{n:"03",t:"Rekap makan waktu tutup toko",d:"Omzet harian harus dihitung ulang dari tumpukan nota."},{n:"04",t:"Data nyebar di 3 tempat",d:"Harga di etalase, stok di buku, pelanggan di kepala."}].map((item) => <article className="problem-card" key={item.n} data-reveal><span>{item.n}</span><h3>{item.t}</h3><p>{item.d}</p></article>)}
           </div>
-          <div className="container bridge-copy" data-reveal><span className="bridge-copy-icon" aria-hidden="true"><Icon name="arrow" size={20}/></span><p>Saatnya beralih dari pencatatan manual dan mengelola bisnis secara lebih praktis bersama <b>wazePOS.</b></p></div>
+          <div className="container bridge-copy" data-reveal><span className="bridge-copy-icon" aria-hidden="true"><Icon name="arrow" size={20}/></span><p>Satu alur kasir: jual → catat → stok berkurang → laporan kebaca. Itu janji <b>wazePOS.</b></p></div>
         </section>
 
         <section className="section benefits-section">
-          <div className="container section-heading centered" data-reveal><span className="section-kicker">Lebih sederhana, lebih terkendali</span><h2>Fitur penting untuk bisnis Anda, <span>tersedia di wazePOS.</span></h2><p>Kelola aktivitas kasir dan operasional bisnis secara lebih praktis dalam satu sistem.</p></div>
+          <div className="container section-heading centered" data-reveal><span className="section-kicker">Kenapa pemilik usaha pindah</span><h2 className="section-display">Bukan aplikasi serba-bisa. <span>Yang rapi di kasir.</span></h2><p>Enam hal yang langsung terasa di minggu pertama pemakaian.</p></div>
             <div className="container benefits-grid">{benefits.map((item) => <article className="benefit-card" key={item.title} data-reveal><span className="icon-box"><Icon name={item.icon}/></span><h3>{item.title}</h3><p>{item.text}</p><a href="#fitur" className="card-link" onClick={() => trackEvent("click_feature", { source: "benefit", benefit: item.title })}>Lihat fitur <Icon name="arrow" size={16}/></a></article>)}</div>
         </section>
 
         <section className="section feature-section" id="fitur">
-          <div className="container section-heading centered" data-reveal><span className="section-kicker">Fitur utama</span><h2>Dirancang untuk mendukung <span>operasional harian Anda.</span></h2><p>Akses fitur yang dibutuhkan melalui navigasi yang ringkas dan mudah dipahami.</p></div>
+          <div className="container section-heading centered" data-reveal><span className="section-kicker">Meja kasir, versi rapi</span><h2 className="section-display">Lima layar yang dipakai <span>setiap hari.</span></h2><p>Tanpa menu pajangan. Semua yang di bawah ini kepakai saat toko rame.</p></div>
           <div className="container feature-tabs" role="tablist" aria-label="Kategori fitur" data-reveal>{featureGroups.map((feature) => <button key={feature.id} role="tab" aria-selected={activeFeature.id === feature.id} className={activeFeature.id === feature.id ? "active" : ""} onClick={() => { setActiveFeature(feature); trackEvent("click_feature", { feature: feature.id }); }}><Icon name={feature.icon} size={19}/>{feature.label}</button>)}</div>
           <div className="container feature-panel" role="tabpanel" data-reveal>
             <div className="feature-copy panel-swap" key={`copy-${activeFeature.id}`}><span className="icon-box icon-box-large"><Icon name={activeFeature.icon} size={27}/></span><h3>{activeFeature.title}</h3><p>{activeFeature.text}</p><ul>{activeFeature.bullets.map((bullet) => <li key={bullet}><span><Icon name="check" size={15}/></span>{bullet}</li>)}</ul><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Konsultasikan kebutuhan Anda <Icon name="arrow" size={17}/></TrackedLink></div>
@@ -264,23 +310,23 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
         </section>
 
         <section className="section business-section">
-          <div className="container section-heading" data-reveal><span className="section-kicker">Untuk beragam usaha</span><h2>Sesuai untuk berbagai <span>kebutuhan bisnis.</span></h2><p>Mulai dari usaha yang baru dirintis hingga bisnis dengan aktivitas operasional yang semakin berkembang.</p></div>
+          <div className="container section-heading" data-reveal><span className="section-kicker">Dari gerobak sampai 5 cabang</span><h2 className="section-display">Satu kasir untuk <span>semua jenis usaha.</span></h2><p>Bedanya cuma skala. Alurnya sama: barang keluar, uang masuk, data rapi.</p></div>
           <div className="container business-grid">{businessTypes.map((item) => <article className="business-card" key={item.title} data-reveal><span className="business-icon"><Icon name={item.icon}/></span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
         </section>
 
         <section className="section steps-section" id="cara-kerja">
-          <div className="container steps-layout"><div className="steps-intro" data-reveal><span className="section-kicker light">Proses awal yang mudah</span><h2>Mulai berjualan dalam <span>tiga langkah sederhana.</span></h2><p>Proses penyiapan yang jelas membantu Anda lebih cepat fokus melayani pelanggan.</p><TrackedLink href={trialUrl} event="click_try_free" className="button button-light button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink></div><div className="steps-list">{[{n:"01",i:"customer" as const,t:"Daftar Gratis",d:"Buat akun wazePOS untuk memulai uji coba."},{n:"02",i:"box" as const,t:"Siapkan Bisnis",d:"Tambahkan produk, harga, dan informasi usaha."},{n:"03",i:"receipt" as const,t:"Mulai Berjualan",d:"Gunakan wazePOS untuk melayani transaksi dan mengelola bisnis."}].map((step) => <article key={step.n} data-reveal><span className="step-number">{step.n}</span><span className="step-icon"><Icon name={step.i}/></span><div><h3>{step.t}</h3><p>{step.d}</p></div></article>)}</div></div>
+          <div className="container steps-layout"><div className="steps-intro" data-reveal><span className="section-kicker light">Jumat daftar, Senin jalan</span><h2 className="section-display">Berjualan dalam <span>tiga langkah.</span></h2><p>Tanpa instalasi aneh-aneh. Browser jalan, printer thermal nyambung, kasir siap.</p><TrackedLink href={trialUrl} event="click_try_free" className="button button-light button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink></div><div className="steps-list">{[{n:"01",i:"customer" as const,t:"Daftar Gratis",d:"Buat akun wazePOS untuk memulai uji coba."},{n:"02",i:"box" as const,t:"Siapkan Bisnis",d:"Tambahkan produk, harga, dan informasi usaha."},{n:"03",i:"receipt" as const,t:"Mulai Berjualan",d:"Gunakan wazePOS untuk melayani transaksi dan mengelola bisnis."}].map((step) => <article key={step.n} data-reveal><span className="step-number">{step.n}</span><span className="step-icon"><Icon name={step.i}/></span><div><h3>{step.t}</h3><p>{step.d}</p></div></article>)}</div></div>
         </section>
 
         <section className="section showcase-section" id="demo">
-          <div className="container section-heading centered" data-reveal><span className="section-kicker">Lihat lebih dekat</span><h2>Tampilan ringkas untuk <span>mendukung keputusan bisnis.</span></h2><p>Berikut pratinjau antarmuka wazePOS. Tampilan dapat menyesuaikan versi aplikasi yang tersedia.</p></div>
+          <div className="container section-heading centered" data-reveal><span className="section-kicker">Coba pencet-pencet</span><h2 className="section-display">Rasanya kayak kasir beneran. <span>Karena memang itu.</span></h2><p>Ilustrasi di bawah mengikuti tab yang Anda pilih. Bukan screenshot final, tapi alurnya sama.</p></div>
           <div className="container showcase-tabs" role="tablist" aria-label="Pratinjau halaman produk" data-reveal>{showcaseTabs.map((tab, index) => <button id={`showcase-tab-${index}`} key={tab} type="button" role="tab" aria-selected={activeShowcase === tab} aria-controls="showcase-panel" tabIndex={activeShowcase === tab ? 0 : -1} className={activeShowcase === tab ? "active" : ""} onClick={() => { setActiveShowcase(tab); trackEvent("click_demo", { screen: tab }); }}>{tab}</button>)}</div>
           <div id="showcase-panel" className="container showcase-frame" role="tabpanel" aria-labelledby={`showcase-tab-${showcaseTabs.indexOf(activeShowcase)}`} data-reveal><DashboardMockup key={activeShowcase} mode="showcase" active={activeShowcase}/></div>
         </section>
 
         <section className="section pricing-section" id="harga">
           <div className="container pricing-heading" data-reveal>
-            <div><span className="section-kicker light">Paket wazePOS</span><h2>Dua pilihan paket untuk <span>mendukung pertumbuhan bisnis.</span></h2><p>Pilih Paket Tumbuh untuk operasional harian satu gerai lengkap dengan pengelolaan pelanggan dan member kasir, atau Paket Bisnis untuk multi-gerai, manajemen stok, kustomisasi struk, dan alur usaha yang lebih lengkap.</p></div>
+            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>Tumbuh buat satu gerai yang mau rapi. Bisnis buat yang sudah multi-gerai + butuh stok, QRIS, dan ekspor Excel.</p></div>
           </div>
           <div className="container pricing-grid">
             {pricingPlans.map((plan) => {
