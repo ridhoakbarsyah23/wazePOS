@@ -74,9 +74,9 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <div className="mt-7">
+    <div className="mt-5 min-w-0 sm:mt-6">
       {isSuccess ? (
-        <div className="space-y-3 text-center animate-in fade-in duration-200">
+        <div className="animate-in fade-in space-y-3 text-center duration-200">
           <div className="flex items-center justify-center gap-2 rounded-2xl border border-[#cae8d9] bg-[#eaf7f0] p-4 text-sm text-[#106348] font-bold">
             <CheckCircle2 className="size-5 text-[#198760]" />
             <span>Kata sandi berhasil diperbarui!</span>
@@ -86,7 +86,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           </p>
         </div>
       ) : (
-        <form className="grid gap-4" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+        <form className="grid min-w-0 gap-3.5" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
           <PasswordField
             id="new-password"
             name="password"
@@ -119,7 +119,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           )}
 
           <button
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#198760] px-5 text-sm font-extrabold text-white transition hover:bg-[#116b4c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#1ba36f] to-[#147554] px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.25)] transition duration-200 hover:-translate-y-px hover:from-[#20ad78] hover:to-[#147554] hover:shadow-[0_12px_24px_rgba(25,135,96,.3)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none"
             type="submit"
             disabled={isPending || !password || !confirmPassword}
           >

@@ -15,7 +15,7 @@ type PasswordFieldProps = {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export const authInputClass = "h-12 w-full rounded-xl border border-[#d8e3dd] bg-white px-3.5 text-base font-medium text-[#15211d] outline-none transition placeholder:font-normal placeholder:text-[#9aa69f] hover:border-[#b5cec1] focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f5f8f6] disabled:opacity-60 sm:h-11 sm:text-sm";
+export const authInputClass = "h-12 w-full min-w-0 rounded-xl border border-[#d8e3dd] bg-white px-3.5 text-base font-medium text-[#15211d] outline-none transition duration-200 placeholder:font-normal placeholder:text-[#9aa69f] hover:border-[#b5cec1] focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f5f8f6] disabled:opacity-60 sm:text-sm motion-reduce:transition-none";
 
 function VisibilityIcon({ visible }: { visible: boolean }) {
   return visible ? (
@@ -39,9 +39,9 @@ export function PasswordField({ id, name, label, placeholder, autoComplete, disa
   const capsId = `${id}-caps-lock`;
 
   return (
-    <div className="grid gap-2 text-xs font-bold text-[#34443d]">
+    <div className="grid min-w-0 gap-2 text-xs font-bold text-[#34443d]">
       <label htmlFor={id}>{label}</label>
-      <div className="relative">
+      <div className="relative min-w-0">
         <input
           id={id}
           className={`${authInputClass} pr-12 ${error ? "!border-red-400 !ring-4 !ring-red-100" : ""}`}
@@ -61,7 +61,7 @@ export function PasswordField({ id, name, label, placeholder, autoComplete, disa
         />
         <button
           type="button"
-          className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-[#65736c] transition hover:bg-[#eaf7f0] hover:text-[#147554] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30 disabled:opacity-50"
+          className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-lg text-[#65736c] transition duration-200 hover:bg-[#eaf7f0] hover:text-[#147554] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30 disabled:opacity-50 motion-reduce:transition-none"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? `Sembunyikan ${label.toLowerCase()}` : `Tampilkan ${label.toLowerCase()}`}
           aria-pressed={visible}

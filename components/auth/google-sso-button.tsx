@@ -47,7 +47,7 @@ export function GoogleSsoButton({
         onClick={() => void continueWithGoogle()}
         disabled={disabled || isPending}
         aria-busy={isPending}
-        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#cfdcd5] bg-white px-3 text-[15px] font-bold text-[#263c33] shadow-[0_1px_2px_rgba(16,65,48,.05)] transition hover:border-[#94c5ad] hover:bg-[#f9fcfa] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 disabled:cursor-wait disabled:opacity-65 sm:h-11 sm:gap-3 sm:px-5 sm:text-sm"
+        className="flex h-12 w-full min-w-0 cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-[#cfdcd5] bg-white px-4 text-sm font-bold text-[#263c33] shadow-[0_1px_2px_rgba(16,65,48,.05)] transition duration-200 hover:-translate-y-px hover:border-[#94c5ad] hover:bg-[#f9fcfa] hover:shadow-[0_8px_20px_rgba(16,65,48,0.1)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none"
       >
         {isPending ? (
           <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-[#198760]/25 border-t-[#198760]" />
@@ -68,10 +68,10 @@ export function GoogleSsoButton({
         </p>
       )}
 
-      <div className="flex items-center gap-2 sm:gap-3" aria-hidden="true">
-        <span className="h-px flex-1 bg-[#e3ebe7]" />
-        <span className="whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.1em] text-[#8a9992] min-[380px]:text-[10px] min-[380px]:tracking-[0.13em]">atau gunakan email</span>
-        <span className="h-px flex-1 bg-[#e3ebe7]" />
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3" aria-hidden="true">
+        <span className="h-px min-w-0 flex-1 bg-[#e3ebe7]" />
+        <span className="shrink-0 px-1 text-center text-[10px] font-bold uppercase tracking-[0.13em] text-[#8a9992]">atau gunakan email</span>
+        <span className="h-px min-w-0 flex-1 bg-[#e3ebe7]" />
       </div>
     </div>
   );

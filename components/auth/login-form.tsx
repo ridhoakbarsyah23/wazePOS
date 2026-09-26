@@ -40,7 +40,13 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
 
     if (!result.success) {
       const errors = result.error.flatten().fieldErrors;
-      setFieldErrors({ email: errors.email?.[0], password: errors.password?.[0] });
+      const nextErrors = { email: errors.email?.[0], password: errors.password?.[0] };
+      setFieldErrors(nextErrors);
+      // Pro Max ux: focusable error summary — fokus ke ringkasan error agar
+      // keyboard/screen reader langsung menemukan masalahnya.
+      requestAnimationFrame(() => {
+        document.getElementById("login-error-summary")?.focus();
+      });
       return;
     }
 
@@ -89,9 +95,35 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
   }
 
   return (
-    <form className="mt-6 grid gap-3.5" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+    <form className="mt-5 grid min-w-0 gap-3.5 sm:mt-6" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
       {googleSsoEnabled && <GoogleSsoButton flow="login" disabled={isPending} />}
 
+      {(fieldErrors.email || fieldErrors.password || errorMessage) && (
+        <div
+          id="login-error-summary"
+          role="alert"
+          tabIndex={-1}
+          aria-labelledby="login-error-title"
+          className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
+        >
+          <p id="login-error-title" className="m-0 text-xs font-extrabold text-red-800">
+            Periksa kembali data masuk Anda
+          </p>
+          <ul className="m-0 mt-1.5 grid list-none gap-1 p-0 text-xs font-semibold text-red-700">
+            {fieldErrors.email && (
+              <li>
+                <a href="#login-email" className="underline underline-offset-2 hover:text-red-800">Email: {fieldErrors.email}</a>
+              </li>
+            )}
+            {fieldErrors.password && (
+              <li>
+                <a href="#login-password" className="underline underline-offset-2 hover:text-red-800">Kata sandi: {fieldErrors.password}</a>
+              </li>
+            )}
+            {!fieldErrors.email && !fieldErrors.password && errorMessage && <li>{errorMessage}</li>}
+          </ul>
+        </div>
+      )}
       <div className="grid gap-2 text-xs font-bold text-[#34443d]">
         <label htmlFor="login-email">Email</label>
         <input
@@ -150,9 +182,9 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
         </div>
       )}
 
-      {errorMessage && <p className="m-0 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-700" role="alert" aria-live="polite">{errorMessage}</p>}
+      {errorMessage && !fieldErrors.email && !fieldErrors.password && <p className="m-0 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-700" role="alert" aria-live="polite">{errorMessage}</p>}
 
-      <button className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#198760] px-5 text-[15px] font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.2)] transition hover:bg-[#116b4c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65 sm:h-11 sm:text-sm" type="submit" disabled={isPending}>
+      <button className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#1ba36f] to-[#147554] px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.25)] transition duration-200 hover:-translate-y-px hover:from-[#20ad78] hover:to-[#147554] hover:shadow-[0_12px_24px_rgba(25,135,96,.3)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none" type="submit" disabled={isPending}>
         {isPending && <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
         {isPending ? "Memeriksa akun..." : "Masuk"}
       </button>
