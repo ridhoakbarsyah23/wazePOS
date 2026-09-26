@@ -261,7 +261,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container hero-grid">
             <div className="hero-copy reveal">
               <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS · Struk 58/80mm</span></span>
-              <h1 className="hero-display">Tutup buku <span>tanpa drama.</span><br />Kasir jalan, stok ketahuan.</h1>
+              <h1 className="hero-display">Tutup buku <span>tanpa ribet.</span><br />Kasir jalan, stok aman.</h1>
               <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, stok Paket Bisnis terpantau, laporan kebaca tanpa rekap manual.</p>
               <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
               <dl className="pos-proof">
