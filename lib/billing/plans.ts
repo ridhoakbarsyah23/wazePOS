@@ -225,7 +225,7 @@ export function getMarketingPlanCards(): MarketingPlanCard[] {
       priceNote: "Ditagihkan satu kali setiap tahun",
       features: getMarketingPlanFeatures(id),
       cta: `Pilih Paket ${config.name}`,
-      popular: id === "tumbuh",
+      popular: id === "bisnis",
     };
   });
 }
