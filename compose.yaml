@@ -1,6 +1,8 @@
 services:
+  # Database lokal. Dipakai oleh app container lewat host `postgres:5432`
+  # maupun oleh `npm run dev` di host lewat port yang dipublish.
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17.11-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-wazepos}
       POSTGRES_USER: ${POSTGRES_USER:-wazepos}
@@ -14,6 +16,69 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  # Aplikasi Next.js production (standalone).
+  # Profil `prod`: `docker compose up -d postgres` (alur dev di README) tidak
+  # menyentuh service ini. Jalankan eksplisit dengan
+  # `docker compose --profile prod up -d --build`.
+  app:
+    profiles: ["prod"]
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_TRIAL_URL: ${NEXT_PUBLIC_TRIAL_URL:-/register}
+        NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER:-}
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # URL dari sudut pandang container (service `postgres`, bukan localhost).
+      # Compose ikut membaca `.env` di folder proyek, sedangkan DATABASE_URL di
+      # `.env` menunjuk ke 127.0.0.1:5434 yang hanya valid dari host — karena
+      # itu override memakai nama APP_DATABASE_URL agar tidak tertukar.
+      # Bila password mengandung `@:/?#`, isi APP_DATABASE_URL eksplisit dengan
+      # password yang sudah percent-encode.
+      DATABASE_URL: ${APP_DATABASE_URL:-postgres://${POSTGRES_USER:-wazepos}:${POSTGRES_PASSWORD:-wazepos}@postgres:5432/${POSTGRES_DB:-wazepos}}
+      # Secret wajib saat service app dijalankan; validasi dilakukan di
+      # entrypoint agar `docker compose up -d postgres` tetap bisa jalan
+      # tanpa secret (alur dev lokal sesuai README).
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      # Kosong = ikut NEXT_PUBLIC_SITE_URL (fallback di lib/auth/auth.ts).
+      # Samakan dengan NEXT_PUBLIC_SITE_URL saat deploy agar cookie/auth tidak mismatch.
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_TRIAL_URL: ${NEXT_PUBLIC_TRIAL_URL:-/register}
+      NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER:-}
+      PLATFORM_ADMIN_EMAILS: ${PLATFORM_ADMIN_EMAILS:-}
+      PLATFORM_ADMIN_NAME: ${PLATFORM_ADMIN_NAME:-Platform Admin}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY:-}
+      MIDTRANS_IS_PRODUCTION: ${MIDTRANS_IS_PRODUCTION:-false}
+      MIDTRANS_NOTIFICATION_URL: ${MIDTRANS_NOTIFICATION_URL:-}
+      LEAD_WEBHOOK_URL: ${LEAD_WEBHOOK_URL:-}
+      LEAD_WEBHOOK_SECRET: ${LEAD_WEBHOOK_SECRET:-}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
+      # Opt-in eksplisit bila APP_DATABASE_URL menunjuk database managed di luar
+      # compose (guard di scripts/migrate.mjs menolak migrasi remote tanpa ini).
+      MIGRATE_ALLOW_REMOTE: ${MIGRATE_ALLOW_REMOTE:-0}
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Liveness ringan (/api/live): tidak 503 saat RESEND_* kosong.
+    # Kesiapan bisnis tetap dicek manual via /api/health.
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
 
 volumes:

@@ -98,6 +98,36 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 Salin hasil perintah kedua ke `BETTER_AUTH_SECRET` di `.env.local`. Database Docker bawaan tersedia di port `5434` agar tidak mudah berbenturan dengan instalasi PostgreSQL lain.
 
+## Docker production lokal
+
+Service `app` memakai profil `prod` agar alur dev (`docker compose up -d postgres`)
+tidak ikut menyalakan container aplikasi:
+
+```bash
+docker compose --profile prod up -d --build
+```
+
+Entrypoint menunggu postgres, menjalankan migrasi Drizzle (`RUN_MIGRATIONS=1`),
+lalu menyalakan server standalone. Pemeriksaan:
+
+```bash
+curl http://localhost:3000/api/live    # liveness ringan, dipakai HEALTHCHECK
+curl http://localhost:3000/api/health  # kesiapan bisnis + database
+```
+
+Catatan:
+
+- Isi `BETTER_AUTH_SECRET` (min. 32 karakter) sebelum menyalakan profil `prod`.
+- `NEXT_PUBLIC_*` di-bake saat build; build ulang setelah nilainya berubah.
+- Compose membaca file `.env` lokal bila ada. `DATABASE_URL` di `.env` menunjuk
+  ke `127.0.0.1:5434` (valid dari host) tetapi tidak valid dari dalam container,
+  sehingga service `app` memakai `APP_DATABASE_URL` yang default-nya menunjuk
+  ke host `postgres:5432`. Jangan isi `APP_DATABASE_URL` di `.env` lokal.
+- Password dengan karakter `@:/?#` harus percent-encode bila diisi eksplisit
+  lewat `APP_DATABASE_URL`.
+- Kosongkan `BETTER_AUTH_URL` agar mengikuti `NEXT_PUBLIC_SITE_URL`.
+- Image di-pin ke `node:20.20.2-alpine` dan `postgres:17.11-alpine`.
+
 ## Struktur dan arsitektur
 
 Struktur folder dipisahkan berdasarkan domain agar lebih mudah dipelihara. Rute Next.js tetap berada di `app/`, komponen di `components/<domain>/`, logic domain di `lib/<domain>/`, dan test di `__tests__/<domain>/`. Panduan lengkap tersedia di [`docs/architecture.md`](docs/architecture.md).

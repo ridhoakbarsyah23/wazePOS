@@ -77,5 +77,45 @@ jobs:
         env:
           DATABASE_URL: postgresql://wazepos:wazepos@127.0.0.1:5432/wazepos
           BETTER_AUTH_SECRET: ci-only-secret-with-at-least-32-characters
-          BETTER_AUTH_URL: http://localhost:3000
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+  docker-smoke:
+    name: Docker build and smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build app image
+        run: docker compose --profile prod build app
+
+      - name: Start postgres and app
+        run: docker compose --profile prod up -d
+        env:
+          BETTER_AUTH_SECRET: ci-only-secret-with-at-least-32-characters
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          APP_PORT: 3100
+
+      - name: Wait for liveness probe
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3100/api/live > /dev/null; then
+              echo "App is live (attempt ${attempt})."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "App did not become live in time." >&2
+          docker compose --profile prod logs app postgres
+          exit 1
+        env:
+          APP_PORT: 3100
+
+      - name: Collect container logs on failure
+        if: failure()
+        run: docker compose --profile prod logs app postgres
+
+      - name: Stop containers
+        if: always()
+        run: docker compose --profile prod down -v
