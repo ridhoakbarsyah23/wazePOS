@@ -9,10 +9,10 @@ import {
   platformSubscriptionStates,
   type PlatformSubscriptionState,
 } from "@/lib/admin/platform-admin-access";
+import { PLATFORM_ADMIN_EXPORT_LIMIT } from "@/lib/admin/platform-admin-csv";
 import type { PlatformAdminSubscriptionItem } from "@/lib/admin/platform-admin-types";
 
 const PAGE_SIZE = 10;
-const PLATFORM_ADMIN_SUBSCRIPTION_EXPORT_LIMIT = 10_000;
 
 type SearchParam = string | string[] | undefined;
 
@@ -191,7 +191,7 @@ export async function getPlatformAdminSubscriptionExportRows(input: PlatformAdmi
   const filters = normalizePlatformAdminSubscriptionFilters(input);
   const result = await getPlatformAdminSubscriptionRows(filters, {
     page: 1,
-    pageSize: PLATFORM_ADMIN_SUBSCRIPTION_EXPORT_LIMIT,
+    pageSize: PLATFORM_ADMIN_EXPORT_LIMIT,
   });
 
   return {

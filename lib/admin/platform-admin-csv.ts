@@ -1,3 +1,5 @@
+export const PLATFORM_ADMIN_EXPORT_LIMIT = 10_000;
+
 export function escapeCsvValue(value: string | number | null | undefined): string {
   const raw = value == null ? "" : String(value);
   const normalized = /^[=+\-@]/.test(raw.trimStart()) ? `'${raw}` : raw;

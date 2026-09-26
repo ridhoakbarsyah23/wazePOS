@@ -4,10 +4,10 @@ import { and, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { business, businessMember, subscriptionPayment, user } from "@/db/schema";
 import { requirePlatformAdmin } from "@/lib/admin/platform-admin";
+import { PLATFORM_ADMIN_EXPORT_LIMIT } from "@/lib/admin/platform-admin-csv";
 import type { PlatformAdminPaymentItem } from "@/lib/admin/platform-admin-types";
 
 const PAGE_SIZE = 10;
-const PLATFORM_ADMIN_PAYMENT_EXPORT_LIMIT = 10_000;
 
 type SearchParam = string | string[] | undefined;
 
@@ -165,7 +165,7 @@ export async function getPlatformAdminPaymentExportRows(input: PlatformAdminPaym
   const filters = normalizePlatformAdminPaymentFilters(input);
   const result = await getPlatformAdminPaymentRows(filters, {
     page: 1,
-    pageSize: PLATFORM_ADMIN_PAYMENT_EXPORT_LIMIT,
+    pageSize: PLATFORM_ADMIN_EXPORT_LIMIT,
   });
 
   return {

@@ -41,9 +41,9 @@ import type {
   PlatformAdminSort,
 } from "@/lib/admin/platform-admin-types";
 import { plans } from "@/lib/billing/plans";
+import { PLATFORM_ADMIN_EXPORT_LIMIT } from "@/lib/admin/platform-admin-csv";
 
 const PLATFORM_ADMIN_PAGE_SIZE = 10;
-const PLATFORM_ADMIN_EXPORT_LIMIT = 10_000;
 const TRIAL_ENDING_WINDOW_DAYS = 7;
 const DATE_INPUT_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -427,7 +427,10 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
     db
       .select({
         totalSubscriptions: sql<number>`count(*)::int`,
-        convertedSubscriptions: sql<number>`count(*) filter (where ${subscription.status} <> 'trialing')::int`,
+        // Definisi konversi yang jujur: hanya status active yang dihitung
+        // sebagai trial yang berhasil menjadi pelanggan membayar. Past due
+        // dan cancelled tidak dihitung agar angka tidak terinflasi.
+        convertedSubscriptions: sql<number>`count(*) filter (where ${subscription.status} = 'active')::int`,
         activeMrr: sql<number>`coalesce(sum(case when ${subscription.status} = 'active' then case when ${subscription.plan} = 'bisnis' then ${sql.raw(String(Math.round(plans.bisnis.annualPrice / 12)))} else ${sql.raw(String(Math.round(plans.tumbuh.annualPrice / 12)))} end else 0 end), 0)::bigint`,
         trialEndingSoon: sql<number>`count(*) filter (where ${subscription.status} = 'trialing' and ${subscription.trialEndsAt} > ${nowParam} and ${subscription.trialEndsAt} <= ${trialWindowEndParam})::int`,
       })
