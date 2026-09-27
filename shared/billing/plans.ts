@@ -54,8 +54,8 @@ export const plans: Record<PlanId, PlanConfig> = {
       salesHistory: true,
       receiptPrinting: true,
       onscreenReports: false,
-      staffManagement: false,
-      roleBasedAccess: false,
+      staffManagement: true,
+      roleBasedAccess: true,
       qrisPayments: false,
       allPaymentMethods: false,
       customerLookup: true,
@@ -163,7 +163,7 @@ function formatOutletLimit(plan: PlanId): string {
 function formatStaffLimit(plan: PlanId): string {
   const config = plans[plan];
   if (config.features.unlimitedStaff) return "Akun staf kasir & admin tanpa batas";
-  return `Maksimal ${config.limits.maxStaff} akun staf (Owner + Kasir)`;
+  return `Maksimal ${config.limits.maxStaff} akun staf (termasuk Owner)`;
 }
 
 function formatProductLimit(plan: PlanId): string {
@@ -260,6 +260,8 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
             bisnis: hasPlanFeature("bisnis", "salesHistory") && hasPlanFeature("bisnis", "receiptPrinting"),
           },
         },
+        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} akun (termasuk Owner) pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
+        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir dan admin sesuai tanggung jawab operasional.", availability: availability("roleBasedAccess") },
       ],
     },
     {
@@ -275,8 +277,6 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
       category: "Tim & kapasitas usaha",
       items: [
         { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada Paket Tumbuh, hingga ${plans.bisnis.limits.maxOutlets} gerai pada Paket Bisnis.`, availability: businessOnlyAvailability("multiOutlet") },
-        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} staf pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: businessOnlyAvailability("staffManagement") },
-        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir tanpa bisa mengintip laporan rahasia toko.", availability: businessOnlyAvailability("roleBasedAccess") },
       ],
     },
     {

@@ -29,7 +29,7 @@ export default async function StaffPage() {
           businessName={membership.businessName}
           role={membership.role}
           featureName="Manajemen karyawan"
-          description="Buat akun kerja, atur peran, dan kelola tim kasir dengan fitur manajemen staf Paket Bisnis."
+          description="Buat akun kerja, atur peran, dan kelola tim kasir sesuai kuota paket Anda."
         />
       </AppHeader>
     );

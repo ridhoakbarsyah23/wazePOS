@@ -31,8 +31,9 @@ describe("hak fitur paket", () => {
     expect(hasPlanFeature("bisnis", "multiOutlet")).toBe(true);
     expect(hasPlanFeature("tumbuh", "onscreenReports")).toBe(false);
     expect(hasPlanFeature("tumbuh", "inventoryStock")).toBe(false);
-    expect(hasPlanFeature("tumbuh", "staffManagement")).toBe(false);
-    expect(hasPlanFeature("tumbuh", "roleBasedAccess")).toBe(false);
+    expect(hasPlanFeature("tumbuh", "staffManagement")).toBe(true);
+    expect(hasPlanFeature("bisnis", "staffManagement")).toBe(true);
+    expect(hasPlanFeature("tumbuh", "roleBasedAccess")).toBe(true);
 
     const items = getPlanFeatureComparison().flatMap((group) => group.items);
     expect(items.find((item) => item.name === "Pengaturan struk kustom")?.availability).toEqual({
@@ -87,10 +88,11 @@ describe("hak fitur paket", () => {
     expect(reportExport?.availability).toEqual({ tumbuh: false, bisnis: true });
   });
 
-  it("membatasi Paket Tumbuh pada fitur inti dan menandai stok sebagai fitur Bisnis", () => {
+  it("menyediakan manajemen staf untuk Paket Tumbuh dan menandai stok sebagai fitur Bisnis", () => {
     const items = getPlanFeatureComparison().flatMap((group) => group.items);
-    const cutoffIndex = items.findIndex((item) => item.name === "Riwayat transaksi & cetak struk");
+    const cutoffIndex = items.findIndex((item) => item.name === "Peran hak akses terpisah");
     const stockItem = items.find((item) => item.name === "Stok otomatis & peringatan stok");
+    const staffItem = items.find((item) => item.name === "Manajemen staf & tim kasir");
 
     const stockIndex = items.findIndex((item) => item.name === "Stok otomatis & peringatan stok");
 
@@ -99,6 +101,7 @@ describe("hak fitur paket", () => {
     expect(items.slice(0, stockIndex).every((item) => item.availability.tumbuh)).toBe(true);
     expect(items[cutoffIndex].availability.tumbuh).toBe(true);
     expect(stockItem?.availability).toEqual({ tumbuh: false, bisnis: true });
+    expect(staffItem?.availability).toEqual({ tumbuh: true, bisnis: true });
     expect(items.slice(cutoffIndex + 1).every((item) => !item.availability.tumbuh)).toBe(true);
   });
 });

@@ -23,7 +23,7 @@ export async function GET() {
   const subscription = await getBusinessSubscription(membership.businessId);
   if (!hasPlanFeature(subscription?.plan, "staffManagement")) {
     return NextResponse.json(
-      { message: "Manajemen karyawan hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Manajemen karyawan tidak tersedia pada paket Anda.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const subscription = await getBusinessSubscription(membership.businessId);
   if (!hasPlanFeature(subscription?.plan, "staffManagement")) {
     return NextResponse.json(
-      { message: "Manajemen karyawan hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Manajemen karyawan tidak tersedia pada paket Anda.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }

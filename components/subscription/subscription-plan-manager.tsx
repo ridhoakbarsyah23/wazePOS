@@ -11,7 +11,7 @@ import { planIds, plans, type PlanId } from "@/shared/billing/plans";
 const includedFeatures: Record<PlanId, string[]> = {
   tumbuh: [
     "Maksimal 1 Gerai Toko",
-    "Maksimal 2 Akun Staf (Owner + Kasir)",
+    "Maksimal 2 Akun Staf (termasuk Owner)",
     "Hingga 100 Produk Aktif",
     "Pembayaran Kasir Tunai",
     "Stok otomatis & peringatan stok",
