@@ -64,32 +64,32 @@ export function DashboardMetrics({
         } struk dari periode lalu`;
 
   return (
-    <div className={`grid gap-4 sm:grid-cols-2 ${showStock ? "xl:grid-cols-4" : "xl:grid-cols-3"} animate-page-enter`}>
-      {/* 1. TOTAL OMZET */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)]">
+    <div className={`dash-warung grid gap-3 sm:grid-cols-2 sm:gap-4 ${showStock ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
+      {/* 1. OMZET MASUK */}
+      <div className="dash-card rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)]">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#627069]">
-              Total Omzet
-            </span>
-            <h3 className="mt-1 text-2xl font-black tracking-tight text-[#15211d]">
+          <div className="min-w-0">
+            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#627069]">
+              Omzet masuk
+            </p>
+            <p className="dash-money m-0 mt-1 truncate text-xl font-bold text-[#15211d] sm:text-2xl">
               {money(currentSales)}
-            </h3>
+            </p>
           </div>
-          <div className="grid size-11 place-items-center rounded-2xl bg-emerald-50 text-[#198760] border border-emerald-100/80 shrink-0">
-            <Wallet className="size-5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+            <Wallet className="size-5" aria-hidden="true" />
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f0f4f2]">
+        <div className="mt-4 flex items-center gap-2 border-t border-dashed border-[#dfe8e3] pt-3">
           <span
             className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-bold ${
               isSalesUp
-                ? "bg-emerald-50 text-emerald-800 border border-emerald-200/60"
-                : "bg-rose-50 text-rose-700 border border-rose-200/60"
+                ? "border border-emerald-200/60 bg-emerald-50 text-emerald-800"
+                : "border border-rose-200/60 bg-rose-50 text-rose-700"
             }`}
           >
-            {isSalesUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {isSalesUp ? <TrendingUp className="size-3" aria-hidden="true" /> : <TrendingDown className="size-3" aria-hidden="true" />}
             <span>
               {hasComparableSales
                 ? isSalesUp
@@ -101,100 +101,100 @@ export function DashboardMetrics({
             </span>
           </span>
           {hasComparableSales && (
-            <span className="text-[11px] text-[#627069]">vs periode sebelumnya</span>
+            <span className="truncate text-[11px] text-[#627069]">vs periode lalu</span>
           )}
         </div>
       </div>
 
-      {/* 2. TOTAL TRANSAKSI */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)]">
+      {/* 2. STRUK KELUAR */}
+      <div className="dash-card rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)]">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#627069]">
-              Total Transaksi
-            </span>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <h3 className="text-2xl font-black tracking-tight text-[#15211d]">
+          <div className="min-w-0">
+            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#627069]">
+              Struk keluar
+            </p>
+            <p className="m-0 mt-1 flex items-baseline gap-1.5">
+              <span className="dash-num text-2xl font-black tracking-tight text-[#15211d]">
                 {currentTransactions}
-              </h3>
+              </span>
               <span className="text-xs font-bold text-[#627069]">struk</span>
-            </div>
+            </p>
           </div>
-          <div className="grid size-11 place-items-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100/80 shrink-0">
-            <Receipt className="size-5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+            <Receipt className="size-5" aria-hidden="true" />
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f0f4f2]">
-          <span className="text-[11px] font-semibold text-[#627069] truncate">
+        <div className="mt-4 flex items-center gap-2 border-t border-dashed border-[#dfe8e3] pt-3">
+          <span className="truncate text-[11px] font-semibold text-[#627069]">
             {txComparisonText}
           </span>
         </div>
       </div>
 
-      {/* 3. RATA-RATA TRANSAKSI (AOV) */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)]">
+      {/* 3. BELANJA PER STRUK */}
+      <div className="dash-card rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)]">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#627069]">
-              Rata-rata Keranjang
-            </span>
-            <h3 className="mt-1 text-2xl font-black tracking-tight text-[#15211d]">
+          <div className="min-w-0">
+            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#627069]">
+              Belanja per struk
+            </p>
+            <p className="dash-money m-0 mt-1 truncate text-xl font-bold text-[#15211d] sm:text-2xl">
               {money(currentAov)}
-            </h3>
+            </p>
           </div>
-          <div className="grid size-11 place-items-center rounded-2xl bg-purple-50 text-purple-700 border border-purple-100/80 shrink-0">
-            <ShoppingBag className="size-5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+            <ShoppingBag className="size-5" aria-hidden="true" />
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f0f4f2]">
-          <span className="text-[11px] text-[#627069]">Nilai rata-rata belanja pelanggan</span>
+        <div className="mt-4 flex items-center gap-2 border-t border-dashed border-[#dfe8e3] pt-3">
+          <span className="truncate text-[11px] text-[#627069]">Rata-rata belanja tiap pembeli</span>
         </div>
       </div>
 
-      {/* 4. STATUS STOK INVENTARIS */}
+      {/* 4. KONDISI STOK */}
       {showStock && (
         <Link
           href={lowStockHref}
         aria-label={outOfStockCount > 0 ? `Lihat ${outOfStockCount} produk yang stoknya habis` : lowStockCount > 0 ? `Lihat ${lowStockCount} produk dengan stok menipis` : "Buka halaman inventori"}
-        className="group relative overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_8px_25px_rgba(16,65,48,.08)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/40"
+        className="dash-card group relative cursor-pointer overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)] transition-colors duration-200 hover:border-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30"
       >
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#627069]">
-              Stok Produk
-            </span>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <h3 className="text-2xl font-black tracking-tight text-[#15211d]">
+          <div className="min-w-0">
+            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#627069]">
+              Kondisi stok
+            </p>
+            <p className="m-0 mt-1 flex items-baseline gap-1.5">
+              <span className="dash-num text-2xl font-black tracking-tight text-[#15211d]">
                 {totalStockUnits}
-              </h3>
-              <span className="text-xs font-bold text-[#627069]">unit total</span>
-            </div>
+              </span>
+              <span className="text-xs font-bold text-[#627069]">unit</span>
+            </p>
           </div>
-          <div className="grid size-11 place-items-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-100/80 shrink-0">
-            <Boxes className="size-5" />
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+            <Boxes className="size-5" aria-hidden="true" />
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f0f4f2]">
+        <div className="mt-4 flex items-center gap-2 border-t border-dashed border-[#dfe8e3] pt-3">
           {outOfStockCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700">
-              <AlertTriangle className="size-3" />
-              <span>{outOfStockCount} produk stok habis</span>
+              <AlertTriangle className="size-3" aria-hidden="true" />
+              <span>{outOfStockCount} produk habis</span>
             </span>
           ) : lowStockCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800">
-              <AlertTriangle className="size-3" />
-              <span>{lowStockCount} produk stok menipis</span>
+              <AlertTriangle className="size-3" aria-hidden="true" />
+              <span>{lowStockCount} produk menipis</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200">
-              <CheckCircle2 className="size-3" />
+            <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-800">
+              <CheckCircle2 className="size-3" aria-hidden="true" />
               <span>Semua stok aman</span>
             </span>
           )}
-          <ArrowRight className="ml-auto size-4 text-[#8a9b92] transition-transform group-hover:translate-x-0.5 group-hover:text-[#a35f12]" />
+          <ArrowRight className="ml-auto size-4 shrink-0 text-[#8a9b92] transition-colors duration-200 group-hover:text-[#198760]" aria-hidden="true" />
         </div>
         </Link>
       )}

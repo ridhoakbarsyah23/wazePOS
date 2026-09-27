@@ -206,7 +206,13 @@ html:has(.auth-pro-max) body {
   html[data-admin-theme="dark"] [data-admin-portal]
 ) :is(
   [class~="bg-white"],
-  [class~="bg-white/95"]
+  [class~="bg-white/95"],
+  [class~="bg-white/80"],
+  [class~="bg-white/70"],
+  [class~="bg-white/60"],
+  [class~="bg-white/40"],
+  [class~="bg-white/15"],
+  [class~="bg-white/12"]
 ) {
   background-color: #0d0d0d !important;
 }
@@ -280,7 +286,9 @@ html[data-admin-theme="dark"] [data-admin-portal] {
 ) :is(
   [class~="text-[#627069]"],
   [class~="text-[#718078]"],
-  [class~="text-[#82928a]"]
+  [class~="text-[#82928a]"],
+  [class~="text-[#556961]"],
+  [class~="text-[#75857e]"]
 ) {
   color: #a3a3a3 !important;
 }
@@ -398,8 +406,31 @@ html[data-admin-theme="dark"] [data-admin-portal] {
 :is(
   [data-admin-shell][data-admin-theme="dark"],
   html[data-admin-theme="dark"] [data-admin-portal]
-) [class*="border-[#b"] {
+) [class*="border-[#b"],
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="border-[#c"],
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="border-white/20"],
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class*="border-slate-"] {
   border-color: #303030 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="hover:border-[#9ac3b0]"]:hover,
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="hover:border-[#9ac3b0]"]:focus-visible {
+  border-color: #3f3f3f !important;
 }
 
 :is(
@@ -407,6 +438,26 @@ html[data-admin-theme="dark"] [data-admin-portal] {
   html[data-admin-theme="dark"] [data-admin-portal]
 ) :is(input, select, textarea) {
   color-scheme: dark;
+  background-color: #101010 !important;
+  color: #f5f5f5 !important;
+  border-color: #303030 !important;
+}
+
+/* Ikon kalender date input (Chrome/Edge/Safari) ikut terang di dark mode. */
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6);
+  opacity: 0.8;
+}
+
+/* Dropdown <select> di Windows/Chrome memakai warna native; pastikan teks
+ * dan latar opsi tetap kontras di dark mode. */
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) :is(select option) {
   background-color: #101010 !important;
   color: #f5f5f5 !important;
 }
@@ -425,14 +476,19 @@ html[data-admin-theme="dark"] [data-admin-portal] {
 :is(
   [data-admin-shell][data-admin-theme="dark"],
   html[data-admin-theme="dark"] [data-admin-portal]
-) [class*="hover:bg-[#e"]:hover {
-  background-color: #242424 !important;
-}
-
+) [class*="hover:bg-[#e"]:hover,
 :is(
   [data-admin-shell][data-admin-theme="dark"],
   html[data-admin-theme="dark"] [data-admin-portal]
-) [class*="hover:bg-[#d"]:hover {
+) [class*="hover:bg-[#d"]:hover,
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="hover:bg-white/40"]:hover,
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [role="tab"][aria-selected="false"]:hover {
   background-color: #242424 !important;
 }
 
@@ -441,6 +497,36 @@ html[data-admin-theme="dark"] [data-admin-portal] {
   html[data-admin-theme="dark"] [data-admin-portal]
 ) [class*="hover:bg-rose-50"]:hover {
   background-color: #2a1215 !important;
+}
+
+/* Tombol outline/secondary (bg-[#198760] tetap, teks gelap jadi terang). */
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="hover:text-[#106348]"]:hover {
+  color: #62d6a5 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="hover:text-[#198760]"]:hover {
+  color: #62d6a5 !important;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="hover:text-[#15211d]"]:hover {
+  color: #f5f5f5 !important;
+}
+
+/* Teks “secondary” tombol outline (text-[#106348]) jadi hijau terang. */
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) [class~="text-[#106348]"] {
+  color: #62d6a5 !important;
 }
 
 /* Dashboard-only dark theme. Access is gated by the active subscription plan. */
@@ -453,7 +539,9 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] {
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
   [class~="bg-white"],
   [class~="bg-white/95"],
-  [class~="bg-white/80"]
+  [class~="bg-white/80"],
+  [class~="bg-white/70"],
+  [class~="bg-white/60"]
 ) {
   background-color: #0d0d0d !important;
 }
@@ -626,6 +714,13 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-slate-"
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select) {
   color-scheme: dark;
+  border-color: #303030 !important;
+}
+
+/* Ikon kalender date input ikut terang di dark mode. */
+html[data-dashboard-theme="dark"] [data-dashboard-shell] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6);
+  opacity: 0.8;
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select)::placeholder {
@@ -633,8 +728,27 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, se
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-[#f"]:hover,
-html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-[#e"]:hover {
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-[#e"]:hover,
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="hover:bg-white/40"]:hover,
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [role="tab"][aria-selected="false"]:hover {
   background-color: #242424 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="hover:border-[#9ac3b0]"]
+):hover {
+  border-color: #3f3f3f !important;
+}
+
+/* Teks tombol outline/secondary jadi terang di dark mode. */
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="text-[#106348]"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="hover:text-[#106348]"]:hover,
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="hover:text-[#198760]"]:hover {
+  color: #62d6a5 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="hover:text-[#15211d]"]:hover {
+  color: #f5f5f5 !important;
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
@@ -1619,4 +1733,67 @@ h1, h2, h3, p { margin-top: 0; }
   .site-progress-bar {
     transform: scaleX(1);
   }
+
+  .dash-warung .dash-live-dot {
+    animation: none;
+  }
+
+  .dash-warung.animate-page-enter,
+  .dash-warung .animate-page-enter {
+    animation: none;
+  }
+}
+
+/* wazePOS Dashboard — "buku kas warung" (ui-ux-pro-max: Minimalism & Swiss,
+ * subtle motion, dense dashboard). Kartu putih, angka tabular, satu warna
+ * hijau warung; tanpa emoji, tanpa hover yang menggeser layout. */
+.dash-warung .dash-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #147554;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dash-warung .dash-live-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 999px;
+  background: #23a473;
+  box-shadow: 0 0 0 4px rgba(35, 164, 115, 0.16);
+  animation: dash-pulse 2.4s ease-in-out infinite;
+}
+
+.dash-warung .dash-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.dash-warung .dash-money {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.dash-warung .dash-card {
+  transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+
+.dash-warung .dash-card:hover {
+  border-color: #b8dfcb;
+  box-shadow: 0 10px 26px rgba(16, 65, 48, 0.08);
+}
+
+.dash-warung button,
+.dash-warung a {
+  cursor: pointer;
+}
+
+@keyframes dash-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(35, 164, 115, 0.2); }
+  50% { box-shadow: 0 0 0 7px rgba(35, 164, 115, 0.07); }
 }

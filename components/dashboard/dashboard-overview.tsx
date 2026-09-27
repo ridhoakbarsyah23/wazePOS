@@ -24,32 +24,24 @@ const actions = [
     label: "Produk",
     description: "Atur katalog dan harga",
     icon: Package,
-    iconClass: "bg-blue-600",
-    cardClass: "border-blue-200 bg-blue-50/60 hover:border-blue-300",
   },
   {
     href: "/inventory",
-    label: "Inventori",
+    label: "Stok",
     description: "Pantau dan koreksi stok",
     icon: Warehouse,
-    iconClass: "bg-amber-600",
-    cardClass: "border-amber-200 bg-amber-50/60 hover:border-amber-300",
   },
   {
     href: "/reports",
     label: "Laporan",
     description: "Tinjau performa usaha",
     icon: BarChart3,
-    iconClass: "bg-violet-600",
-    cardClass: "border-violet-200 bg-violet-50/60 hover:border-violet-300",
   },
   {
     href: "/settings",
     label: "Pengaturan",
     description: "Kelola usaha, gerai, dan kategori",
     icon: Settings2,
-    iconClass: "bg-slate-700",
-    cardClass: "border-slate-200 bg-slate-50/70 hover:border-slate-300",
   },
 ] as const;
 
@@ -86,52 +78,53 @@ export function DashboardOverview({
   );
 
   return (
-    <section className={`grid min-w-0 gap-4 ${showSalesChart ? "xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.75fr)]" : "grid-cols-1"}`}>
+    <section className={`dash-warung grid min-w-0 gap-3 sm:gap-4 ${showSalesChart ? "xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.75fr)]" : "grid-cols-1"}`}>
       {showSalesChart && (
-        <div className="min-w-0 rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-6">
-        <div className="flex flex-col gap-3 border-b border-[#edf2ee] pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="flex items-center gap-2 text-base font-black text-[#15211d]">
-              <TrendingUp className="size-4.5 text-[#198760]" />
-              Tren omzet
-            </h2>
-            <p className="mt-1 text-xs leading-5 text-[#627069]">
-              Periode {periodLabel.toLowerCase()}. Sentuh batang grafik untuk melihat rinciannya.
-            </p>
+        <div className="dash-card min-w-0 rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-6">
+          <div className="flex flex-col gap-3 border-b border-dashed border-[#dfe8e3] pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="dash-kicker m-0">Catatan omzet</p>
+              <h2 className="m-0 mt-1 flex items-center gap-2 text-base font-black text-[#15211d]">
+                <TrendingUp className="size-4 shrink-0 text-[#198760]" aria-hidden="true" />
+                Tren {periodLabel.toLowerCase()}
+              </h2>
+              <p className="m-0 mt-1 text-xs leading-5 text-[#627069]">
+                Pilih batang grafik untuk melihat rincian tiap struk.
+              </p>
+            </div>
+            <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-[#dbe5df] bg-[#f8faf9] px-3 py-1.5 text-xs font-bold text-[#15211d]">
+              <CheckCircle2 className="size-3.5 text-[#198760]" aria-hidden="true" />
+              <span className="dash-num">{currentTransactions} struk</span>
+            </span>
           </div>
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">
-            <CheckCircle2 className="size-3.5" />
-            {currentTransactions} transaksi
-          </span>
-        </div>
-        <div className="pt-4">
-          <DashboardSalesChart points={chartPoints} />
-        </div>
+          <div className="pt-4">
+            <DashboardSalesChart points={chartPoints} />
+          </div>
         </div>
       )}
 
-      <aside className="rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-5">
+      <aside className="dash-card rounded-3xl border border-[#dfe8e3] bg-white p-4 shadow-[0_4px_20px_rgba(16,65,48,.04)] sm:p-5">
         <div className="mb-4 flex items-start gap-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#198760]">
-            <Sparkles className="size-4" />
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+            <Sparkles className="size-4" aria-hidden="true" />
           </span>
-          <div>
-            <h2 className="text-sm font-extrabold text-[#15211d]">Aksi cepat</h2>
-            <p className="mt-0.5 text-xs leading-5 text-[#627069]">Lanjutkan pekerjaan tanpa mencari menu.</p>
+          <div className="min-w-0">
+            <h2 className="m-0 text-sm font-extrabold text-[#15211d]">Langkah berikutnya</h2>
+            <p className="m-0 mt-0.5 text-xs leading-5 text-[#627069]">Lanjut kerja tanpa cari menu.</p>
           </div>
         </div>
 
         <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
           <Link
             href={cashierHref}
-            className="group flex min-h-20 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+            className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#198760] bg-[#198760] p-3.5 text-white transition-colors duration-200 hover:bg-[#147554] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/40 focus-visible:ring-offset-2"
           >
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#198760] text-white">
-              <ShoppingCart className="size-4.5" />
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/15 text-white">
+              <ShoppingCart className="size-4" aria-hidden="true" />
             </span>
-            <span>
-              <strong className="block text-sm text-[#15211d]">Buka Kasir POS</strong>
-              <span className="text-xs text-[#627069]">Mulai transaksi penjualan</span>
+            <span className="min-w-0">
+              <strong className="block text-sm">Buka kasir</strong>
+              <span className="block text-xs text-white/80">Mulai transaksi baru</span>
             </span>
           </Link>
 
@@ -141,14 +134,14 @@ export function DashboardOverview({
               <Link
                 key={action.href}
                 href={action.href}
-                className={`group flex min-h-18 items-center gap-3 rounded-2xl border p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 ${action.cardClass}`}
+                className="group flex min-h-[4.5rem] cursor-pointer items-center gap-3 rounded-2xl border border-[#dbe5df] bg-white p-3.5 transition-colors duration-200 hover:border-[#b8dfcb] hover:bg-[#f8faf9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30"
               >
-                <span className={`grid size-9 shrink-0 place-items-center rounded-xl text-white ${action.iconClass}`}>
-                  <Icon className="size-4" />
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+                  <Icon className="size-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">
                   <strong className="block text-sm text-[#15211d]">{action.label}</strong>
-                  <span className="block text-xs leading-5 text-[#627069]">{action.description}</span>
+                  <span className="block truncate text-xs leading-5 text-[#627069]">{action.description}</span>
                 </span>
               </Link>
             );

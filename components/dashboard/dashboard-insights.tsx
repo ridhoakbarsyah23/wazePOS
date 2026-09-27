@@ -25,9 +25,9 @@ export type InsightOutletPerformance = {
 };
 
 const rankStyles = [
-  "bg-amber-100 text-amber-800 border-amber-200",
-  "bg-slate-100 text-slate-700 border-slate-200",
-  "bg-orange-100 text-orange-800 border-orange-200",
+  "border-[#198760] bg-[#198760] text-white",
+  "border-[#dbe5df] bg-[#f8faf9] text-[#53635b]",
+  "border-[#dbe5df] bg-[#f8faf9] text-[#53635b]",
 ];
 
 function formatMoney(value: number) {
@@ -50,14 +50,14 @@ function InsightCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)]">
-      <div className="flex items-center gap-2.5 border-b border-[#edf2ee] pb-3">
-        <div className="grid size-9 shrink-0 place-items-center rounded-xl border border-emerald-100 bg-emerald-50 text-[#198760]">
+    <div className="dash-warung dash-card rounded-3xl border border-[#dfe8e3] bg-white p-5 shadow-[0_4px_20px_rgba(16,65,48,.04)]">
+      <div className="flex items-center gap-2.5 border-b border-dashed border-[#dfe8e3] pb-3">
+        <div className="grid size-9 shrink-0 place-items-center rounded-xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
           {icon}
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-extrabold text-[#15211d]">{title}</h3>
-          <p className="text-[11px] text-[#627069]">{subtitle}</p>
+          <h3 className="m-0 text-sm font-extrabold text-[#15211d]">{title}</h3>
+          <p className="m-0 truncate text-[11px] text-[#627069]">{subtitle}</p>
         </div>
       </div>
       <div className="mt-4">{children}</div>
@@ -96,83 +96,85 @@ export function DashboardInsights({
   const maxOutletRevenue = Math.max(...outletPerformance.map((item) => item.revenue), 0);
 
   return (
-    <section className="space-y-4 animate-page-enter">
+    <section className="dash-warung space-y-4">
       <div>
-        <h2 className="flex items-center gap-2 text-lg font-black tracking-tight text-[#15211d]">
-          <Flame className="size-5 text-[#198760]" />
-          Insight Penjualan
+        <p className="dash-kicker m-0">Catatan warung</p>
+        <h2 className="m-0 mt-1 flex items-center gap-2 text-lg font-black tracking-tight text-[#15211d]">
+          <Flame className="size-5 shrink-0 text-[#198760]" aria-hidden="true" />
+          Yang laku {periodLabel.toLowerCase()}
         </h2>
-        <p className="text-xs text-[#627069]">
-          Produk terlaris, jam tersibuk, dan performa gerai untuk periode {periodLabel.toLowerCase()}.
+        <p className="m-0 mt-1 text-xs text-[#627069]">
+          Menu paling laris, jam paling ramai, dan gerai paling cuan.
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        {/* 1. PRODUK TERLARIS */}
+      <div className="grid gap-3 sm:gap-4 xl:grid-cols-3">
+        {/* 1. MENU PALING LARIS */}
         <InsightCard
-          icon={<Package className="size-4.5" />}
-          title="Produk Terlaris"
-          subtitle="5 produk paling laku & estimasi profit"
+          icon={<Package className="size-4" aria-hidden="true" />}
+          title="Menu paling laris"
+          subtitle="5 teratas + sisa cuan"
         >
           {topProducts.length === 0 || topQuantity === 0 ? (
-            <EmptyState message={`Belum ada penjualan produk pada ${periodLabel.toLowerCase()}.`} />
+            <EmptyState message={`Belum ada menu terjual pada ${periodLabel.toLowerCase()}.`} />
           ) : (
-            <div className="space-y-2.5">
+            <ol className="m-0 list-none space-y-2.5 p-0">
               {topProducts.map((product, index) => {
                 const share = Math.round((product.quantitySold / topQuantity) * 100);
                 const rankClass =
-                  rankStyles[index] ?? "bg-emerald-50 text-emerald-800 border-emerald-100";
+                  rankStyles[index] ?? "border-[#dbe5df] bg-[#f8faf9] text-[#53635b]";
                 return (
-                  <div
+                  <li
                     key={product.productId}
                     className="rounded-2xl border border-[#e5ede8] bg-[#fbfdfc] p-3"
                   >
                     <div className="flex items-center gap-2.5">
                       <span
+                        aria-hidden="true"
                         className={`grid size-7 shrink-0 place-items-center rounded-lg border text-[11px] font-black ${rankClass}`}
                       >
                         {index + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-bold text-[#15211d]">
+                        <p className="m-0 truncate text-xs font-bold text-[#15211d]">
                           {product.productName}
                         </p>
-                        <p className="text-[10px] text-[#627069]">
-                          {product.quantitySold} item terjual
+                        <p className="m-0 text-[10px] text-[#627069]">
+                          <span className="dash-num">{product.quantitySold}</span> porsi terjual
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-xs font-black text-[#198760]">
+                        <p className="dash-money m-0 text-xs font-bold text-[#198760]">
                           {formatMoney(product.revenue)}
                         </p>
-                        <p className="text-[10px] font-semibold text-emerald-700/80">
+                        <p className="m-0 text-[10px] font-semibold text-[#627069]">
                           {product.estimatedProfit === null
-                            ? "Modal historis belum tersedia"
-                            : `Profit ${formatMoney(product.estimatedProfit)}`}
+                            ? "Modal belum tercatat"
+                            : `Sisa ${formatMoney(product.estimatedProfit)}`}
                         </p>
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#eef4f0]">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#198760] to-[#55b88f]"
+                        className="h-full rounded-full bg-[#198760]"
                         style={{ width: `${share}%` }}
                       />
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           )}
         </InsightCard>
 
-        {/* 2. JAM SIBUK */}
+        {/* 2. JAM PALING RAMAI */}
         <InsightCard
-          icon={<Clock className="size-4.5" />}
-          title="Jam Sibuk"
-          subtitle="Distribusi transaksi per jam (WIB)"
+          icon={<Clock className="size-4" aria-hidden="true" />}
+          title="Jam paling ramai"
+          subtitle="Struk per jam (WIB)"
         >
           {hourPoints.length === 0 || maxHourTransactions === 0 ? (
-            <EmptyState message={`Belum ada transaksi pada ${periodLabel.toLowerCase()}.`} />
+            <EmptyState message={`Belum ada struk pada ${periodLabel.toLowerCase()}.`} />
           ) : (
             <div>
               <div className="flex h-28 gap-[3px]">
@@ -189,11 +191,11 @@ export function DashboardInsights({
                     >
                       <div className="flex w-full flex-1 items-end">
                         <div
-                          title={`${point.label} · ${point.transactions} transaksi · ${formatMoney(point.revenue)}`}
-                          className={`w-full rounded-t-[4px] transition-colors ${
+                          title={`${point.label} · ${point.transactions} struk · ${formatMoney(point.revenue)}`}
+                          className={`w-full rounded-t-[4px] ${
                             isPeak
                               ? "bg-[#198760]"
-                              : "bg-[#bfe3d1] hover:bg-[#55b88f]"
+                              : "bg-[#9fd6bd]"
                           }`}
                           style={{ height: `${height}%` }}
                         />
@@ -208,27 +210,26 @@ export function DashboardInsights({
                 })}
               </div>
 
-              <div className="mt-3 flex items-start gap-2 rounded-xl bg-[#f5faf7] px-3 py-2.5">
-                <Flame className="mt-0.5 size-4 shrink-0 text-orange-500" />
-                <p className="text-[11px] leading-relaxed text-[#53635b]">
-                  Jam tersibuk{" "}
-                  <strong className="text-[#15211d]">{peakHour?.label}</strong> dengan{" "}
-                  <strong className="text-[#15211d]">
-                    {peakHour?.transactions} transaksi
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-dashed border-[#dfe8e3] bg-[#f5faf7] px-3 py-2.5">
+                <Flame className="mt-0.5 size-4 shrink-0 text-[#198760]" aria-hidden="true" />
+                <p className="m-0 text-[11px] leading-relaxed text-[#53635b]">
+                  Paling ramai jam{" "}
+                  <strong className="text-[#15211d]">{peakHour?.label}</strong> ·{" "}
+                  <strong className="dash-num text-[#15211d]">
+                    {peakHour?.transactions} struk
                   </strong>{" "}
-                  ({formatMoney(peakHour?.revenue ?? 0)}). Siapkan stok dan personel ekstra
-                  menjelang jam ini.
+                  ({formatMoney(peakHour?.revenue ?? 0)}). Siapkan bahan dan orang sebelum jam ini.
                 </p>
               </div>
             </div>
           )}
         </InsightCard>
 
-        {/* 3. PERBANDINGAN GERAI */}
+        {/* 3. GERAI PALING CUAN */}
         <InsightCard
-          icon={<Store className="size-4.5" />}
-          title="Performa Gerai"
-          subtitle="Kontribusi omzet tiap lokasi"
+          icon={<Store className="size-4" aria-hidden="true" />}
+          title="Gerai paling cuan"
+          subtitle="Omzet tiap lokasi"
         >
           {outletPerformance.length === 0 ? (
             <EmptyState message="Belum ada gerai terdaftar." />
@@ -251,35 +252,31 @@ export function DashboardInsights({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
-                        <span className="grid size-7 shrink-0 place-items-center rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-800">
-                          <Store className="size-3.5" />
+                        <span className="grid size-7 shrink-0 place-items-center rounded-lg border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
+                          <Store className="size-3.5" aria-hidden="true" />
                         </span>
                         <div className="min-w-0">
-                          <p className="flex items-center gap-1.5 truncate text-xs font-bold text-[#15211d]">
+                          <p className="m-0 flex items-center gap-1.5 truncate text-xs font-bold text-[#15211d]">
                             {item.name}
-                            {isLeader && <Crown className="size-3.5 shrink-0 text-amber-500" />}
+                            {isLeader && <Crown className="size-3.5 shrink-0 text-amber-500" aria-hidden="true" />}
                           </p>
-                          <p className="text-[10px] text-[#627069]">
-                            {item.transactions} transaksi · Rata-rata {formatMoney(aov)}
+                          <p className="m-0 text-[10px] text-[#627069]">
+                            <span className="dash-num">{item.transactions}</span> struk · {formatMoney(aov)}/struk
                           </p>
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-xs font-black text-[#198760]">
+                        <p className="dash-money m-0 text-xs font-bold text-[#198760]">
                           {formatMoney(item.revenue)}
                         </p>
-                        <p className="text-[10px] font-semibold text-[#627069]">
-                          {share}% omzet
+                        <p className="m-0 text-[10px] font-semibold text-[#627069]">
+                          <span className="dash-num">{share}%</span> omzet
                         </p>
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#eef4f0]">
                       <div
-                        className={`h-full rounded-full ${
-                          isLeader
-                            ? "bg-gradient-to-r from-[#198760] to-[#55b88f]"
-                            : "bg-[#9fd6bd]"
-                        }`}
+                        className="h-full rounded-full bg-[#198760]"
                         style={{ width: `${share}%` }}
                       />
                     </div>
@@ -288,8 +285,8 @@ export function DashboardInsights({
               })}
 
               {outletPerformance.length <= 1 && (
-                <p className="rounded-xl bg-[#f5faf7] px-3 py-2.5 text-[11px] text-[#53635b]">
-                  Tambah gerai cabang untuk membandingkan performa antar lokasi.
+                <p className="m-0 rounded-xl border border-dashed border-[#dfe8e3] bg-[#f5faf7] px-3 py-2.5 text-[11px] text-[#53635b]">
+                  Baru satu gerai. Tambah cabang kalau sudah siap.
                 </p>
               )}
             </div>

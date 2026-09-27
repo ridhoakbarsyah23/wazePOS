@@ -1,12 +1,13 @@
-import { and, eq, gte, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, or, sql } from "drizzle-orm";
 import { AppFooter } from "@/components/shared/app-footer";
 import { AppHeader } from "@/components/shared/app-header";
 import { DashboardHeader, PeriodKey } from "@/components/dashboard/dashboard-header";
+import { DashboardCashflow } from "@/components/dashboard/dashboard-cashflow";
 import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
 import { DashboardInsights } from "@/components/dashboard/dashboard-insights";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { db } from "@/db";
-import { inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
+import { cashExpense, inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
 import { hasPlanFeature, normalizePlan } from "@/shared/billing/plans";
 
@@ -110,7 +111,16 @@ export default async function DashboardPage({
     stockFilters.push(eq(inventoryStock.outletId, selectedOutletId));
   }
 
-  const [periodRows, stockRows, topProductRows, trendRows, outletRows] = await Promise.all([
+  const expenseFilters = [
+    eq(cashExpense.businessId, membership.businessId),
+    gte(cashExpense.spentAt, periodStart),
+    lt(cashExpense.spentAt, now),
+  ];
+  if (selectedOutletId !== "all") {
+    expenseFilters.push(eq(cashExpense.outletId, selectedOutletId));
+  }
+
+  const [periodRows, stockRows, topProductRows, trendRows, outletRows, expenseTotalRows, expenseRecentRows] = await Promise.all([
     db
       .select({
         bucket: sql<string>`case
@@ -178,6 +188,26 @@ export default async function DashboardPage({
       .where(eq(outlet.businessId, membership.businessId))
       .groupBy(outlet.id, outlet.name)
       .orderBy(outlet.name),
+    db
+      .select({
+        total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
+        count: sql<number>`COUNT(*)::int`,
+      })
+      .from(cashExpense)
+      .where(and(...expenseFilters)),
+    db
+      .select({
+        id: cashExpense.id,
+        amount: cashExpense.amount,
+        category: cashExpense.category,
+        note: cashExpense.note,
+        spentAt: cashExpense.spentAt,
+        outletId: cashExpense.outletId,
+      })
+      .from(cashExpense)
+      .where(and(...expenseFilters))
+      .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
+      .limit(5),
   ]);
 
   const currentPeriodRow = periodRows.find((item) => item.bucket === "current");
@@ -188,6 +218,16 @@ export default async function DashboardPage({
   const previousTransactions = Number(previousPeriodRow?.transactions ?? 0);
   const currentAverage =
     currentTransactions > 0 ? Math.round(currentRevenue / currentTransactions) : 0;
+  const currentExpenseTotal = Number(expenseTotalRows[0]?.total ?? 0);
+  const currentExpenseCount = Number(expenseTotalRows[0]?.count ?? 0);
+  const expenseRecent = expenseRecentRows.map((row) => ({
+    id: row.id,
+    amount: Number(row.amount),
+    category: row.category,
+    note: row.note,
+    spentAt: row.spentAt instanceof Date ? row.spentAt.toISOString() : String(row.spentAt),
+    outletId: row.outletId,
+  }));
 
   const totalStock = stockRows.reduce((sum, item) => sum + Number(item.quantity), 0);
   const outOfStockProductIds = new Set(
@@ -334,8 +374,8 @@ export default async function DashboardPage({
       allowDarkMode={allowDarkMode}
       plan={selectedPlan}
     >
-      <div className="mx-auto w-[min(1240px,calc(100%-32px))] py-8 space-y-6 animate-page-enter">
-        {/* Executive Merchant Cockpit & Filter Header */}
+      <div className="dash-warung mx-auto w-[min(1240px,calc(100%-32px))] py-8 space-y-4 sm:space-y-6 animate-page-enter">
+        {/* Buku kas harian + filter kas */}
         <DashboardHeader
           userName={session.user.name ?? "Pemilik Toko"}
           businessName={membership.businessName}
@@ -361,6 +401,19 @@ export default async function DashboardPage({
           outOfStockCount={outOfStockCount}
           lowStockHref={lowStockHref}
           showStock={canManageInventory}
+        />
+
+        {/* Arus kas realtime: uang masuk vs keluar */}
+        <DashboardCashflow
+          selectedPeriod={selectedPeriod}
+          selectedOutletId={selectedOutletId}
+          outlets={outlets.map((item) => ({ id: item.id, name: item.name }))}
+          defaultOutletId={selectedOutletId !== "all" ? selectedOutletId : outlets[0]?.id ?? "all"}
+          initialIncomeTotal={currentRevenue}
+          initialIncomeCount={currentTransactions}
+          initialExpenseTotal={currentExpenseTotal}
+          initialExpenseCount={currentExpenseCount}
+          initialRecent={expenseRecent}
         />
 
         {canViewReports && (

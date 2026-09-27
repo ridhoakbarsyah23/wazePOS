@@ -21,6 +21,7 @@ import {
   Tag,
   User,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { DashboardAccountFooter } from "@/components/dashboard/dashboard-account-footer";
@@ -63,6 +64,13 @@ const navItems: NavItem[] = [
     icon: ShoppingCart,
     roles: ["owner", "admin", "cashier"],
     badge: "Terminal",
+  },
+  {
+    href: "/cashflow",
+    label: "Arus Kas",
+    icon: Wallet,
+    roles: ["owner", "admin"],
+    badge: null,
   },
   {
     href: "/transactions",
