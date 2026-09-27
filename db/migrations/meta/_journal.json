@@ -162,6 +162,13 @@
       "when": 1790489214368,
       "tag": "0022_loose_catseye",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790495695945,
+      "tag": "0023_sale-item-note",
+      "breakpoints": true
     }
   ]
 }
