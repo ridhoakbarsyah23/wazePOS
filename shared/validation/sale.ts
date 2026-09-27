@@ -13,6 +13,8 @@ export const saleSchema = z.object({
     z.object({
       productId: z.string().uuid("Produk tidak valid."),
       quantity: z.coerce.number().int().min(1).max(10_000),
+      note: z
+        .preprocess((value) => (value == null || value === "" ? undefined : value), z.string().trim().max(140, "Catatan item maksimal 140 karakter.").optional()),
     }),
   ).min(1, "Keranjang masih kosong."),
 });

@@ -121,6 +121,7 @@ export async function POST(request: Request) {
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
   const allowsQrisPayments = hasPlanFeature(currentSubscription?.plan, "qrisPayments");
   const canManageInventory = hasPlanFeature(currentSubscription?.plan, "inventoryStock");
+  const allowsSaleItemNotes = hasPlanFeature(currentSubscription?.plan, "saleItemNotes");
 
   if ((parsed.data.paymentMethod === "debit" || parsed.data.paymentMethod === "credit") && !allowsAllPayments) {
     return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
@@ -134,12 +135,25 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   }
-
-  const quantities = new Map<string, number>();
-  for (const item of parsed.data.items) {
-    quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
+  if (!allowsSaleItemNotes && parsed.data.items.some((item) => (item.note ?? "").trim().length > 0)) {
+    return NextResponse.json({ message: "Catatan per item tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
   }
-  const items = [...quantities.entries()].map(([productId, quantity]) => ({ productId, quantity }));
+
+  const quantities = new Map<string, { quantity: number; note: string | null }>();
+  for (const item of parsed.data.items) {
+    const note = allowsSaleItemNotes ? ((item.note ?? "").trim() || null) : null;
+    const key = `${item.productId}::${note ?? ""}`;
+    const existing = quantities.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+    } else {
+      quantities.set(key, { quantity: item.quantity, note });
+    }
+  }
+  const items = [...quantities.entries()].map(([key, value]) => {
+    const separatorIndex = key.indexOf("::");
+    return { productId: key.slice(0, separatorIndex), quantity: value.quantity, note: value.note };
+  });
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -258,6 +272,7 @@ export async function POST(request: Request) {
           unitPrice: item.unitPrice,
           unitCost: item.unitCost,
           subtotal: item.subtotal,
+          note: item.note,
           // Snapshot: catat apakah stok benar-benar dikurangi agar void nanti
           // tidak bergantung pada kondisi produk/paket yang bisa berubah.
           stockDeducted: item.trackStock,

@@ -4,7 +4,7 @@ type SaleRequestPayload = {
   outletId: string;
   paymentMethod: "cash" | "qris" | "debit" | "credit";
   paidAmount: number;
-  items: Array<{ productId: string; quantity: number }>;
+  items: Array<{ productId: string; quantity: number; note?: string | null }>;
 };
 
 type PendingSaleRequest = {
@@ -17,7 +17,9 @@ type SaleRequestStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 export function createSaleRequestFingerprint(payload: SaleRequestPayload) {
   return JSON.stringify({
     ...payload,
-    items: [...payload.items].sort((a, b) => a.productId.localeCompare(b.productId)),
+    items: [...payload.items]
+      .map((item) => ({ productId: item.productId, quantity: item.quantity, note: (item.note ?? "").trim() }))
+      .sort((a, b) => a.productId.localeCompare(b.productId) || a.note.localeCompare(b.note)),
   });
 }
 
