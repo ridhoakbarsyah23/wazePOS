@@ -26,6 +26,7 @@ export type PlanFeature =
   | "unlimitedProducts"
   | "multiOutlet"
   | "receiptSettings"
+  | "saleItemNotes"
   | "darkMode";
 
 export type PlanConfig = {
@@ -64,6 +65,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       unlimitedProducts: false,
       multiOutlet: false,
       receiptSettings: false,
+      saleItemNotes: false,
       darkMode: false,
     },
   },
@@ -94,6 +96,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       unlimitedProducts: true,
       multiOutlet: true,
       receiptSettings: true,
+      saleItemNotes: true,
       darkMode: true,
     },
   },
@@ -192,6 +195,7 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
           ]
         : []),
       ...(config.features.inventoryStock ? ["Manajemen stok & peringatan stok menipis"] : []),
+      ...(config.features.saleItemNotes ? ["Catatan per item di struk (mis. less sugar, pedas lvl 2)"] : []),
       ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
       ...(config.features.receiptSettings ? ["Kustomisasi pengaturan struk"] : []),
       ...(config.features.darkMode ? ["Mode gelap untuk dashboard"] : []),
@@ -259,6 +263,11 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
             tumbuh: hasPlanFeature("tumbuh", "salesHistory") && hasPlanFeature("tumbuh", "receiptPrinting"),
             bisnis: hasPlanFeature("bisnis", "salesHistory") && hasPlanFeature("bisnis", "receiptPrinting"),
           },
+        },
+        {
+          name: "Catatan per item di struk",
+          detail: "Catat permintaan per produk di kasir, mis. less sugar atau pedas level 2, dan tampil di struk.",
+          availability: businessOnlyAvailability("saleItemNotes"),
         },
         { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} akun (termasuk Owner) pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
         { name: "Peran hak akses terpisah", detail: "Akses khusus kasir dan admin sesuai tanggung jawab operasional.", availability: availability("roleBasedAccess") },
