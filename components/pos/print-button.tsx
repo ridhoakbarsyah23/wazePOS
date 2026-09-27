@@ -10,10 +10,12 @@ export function PrintButton({
   itemCount,
   hasDiscount = false,
   isVoided = false,
+  hasItemNotes = false,
 }: {
   itemCount: number;
   hasDiscount?: boolean;
   isVoided?: boolean;
+  hasItemNotes?: boolean;
 }) {
   const [paperSize, setPaperSize] = useState<PaperSize>(() => {
     if (typeof window !== "undefined") {
@@ -39,6 +41,7 @@ export function PrintButton({
   const printPage = getReceiptPrintPage(paperSize, itemCount, {
     hasDiscount,
     isVoided,
+    hasItemNotes,
   });
   const isA4Print = paperSize === "a4";
 

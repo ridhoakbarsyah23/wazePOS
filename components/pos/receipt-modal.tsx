@@ -113,6 +113,7 @@ export function ReceiptModal({
   const money = (val: number) => `Rp ${Number(val).toLocaleString("id-ID")}`;
   const printPage = getReceiptPrintPage(paperSize, receipt.items.length, {
     hasDiscount: Boolean(receipt.discount),
+    hasItemNotes: receipt.items.some((item) => (item.note ?? "").trim().length > 0),
   });
   const isA4Print = paperSize === "a4";
 
@@ -395,6 +396,9 @@ export function ReceiptModal({
                         <p className="m-0 text-[10px] text-[#627069]">
                           {item.quantity} × {money(item.unitPrice)}
                         </p>
+                      )}
+                      {(item.note ?? "").trim() && (
+                        <p className="m-0 text-[10px] italic text-[#627069]">Catatan: {(item.note ?? "").trim()}</p>
                       )}
                     </div>
                     <strong className="text-right">{money(item.subtotal)}</strong>

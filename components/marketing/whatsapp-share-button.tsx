@@ -16,6 +16,7 @@ export type ReceiptShareData = {
     quantity: number;
     unitPrice: number;
     subtotal: number;
+    note?: string | null;
   }>;
   subtotal: number;
   discount?: number;
@@ -46,6 +47,8 @@ export function buildReceiptWhatsAppMessage(data: ReceiptShareData, siteUrl: str
 
   for (const item of data.items) {
     lines.push(`• ${item.quantity}x ${item.name} (${money(item.unitPrice)}) = *${money(item.subtotal)}*`);
+    const note = (item.note ?? "").trim();
+    if (note) lines.push(`  Catatan: ${note}`);
   }
 
   lines.push(`--------------------------------`);

@@ -92,6 +92,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       subtotal: i.subtotal,
+      note: i.note ?? null,
     })),
     subtotal: receipt.subtotal,
     discount: receipt.discount,
@@ -159,6 +160,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
               itemCount={items.length}
               hasDiscount={receipt.discount > 0}
               isVoided={isVoided}
+              hasItemNotes={items.some((item) => (item.note ?? "").trim().length > 0)}
             />
           </div>
 
@@ -263,6 +265,9 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
                     <p className="m-0 text-xs text-[#627069]">
                       {item.quantity} × {money(item.unitPrice)}
                     </p>
+                  )}
+                  {(item.note ?? "").trim() && (
+                    <p className="m-0 text-xs italic text-[#627069]">Catatan: {(item.note ?? "").trim()}</p>
                   )}
                 </div>
                 <strong className={isVoided ? "text-[#8b9991]" : "text-[#15211d]"}>
