@@ -50,7 +50,8 @@ export function CashflowManager({
   resultCount,
   page,
   totalPages,
-  pageHref,
+  prevHref,
+  nextHref,
 }: {
   outlets: Array<{ id: string; name: string }>;
   activeOutletId: string;
@@ -61,7 +62,8 @@ export function CashflowManager({
   resultCount: number;
   page: number;
   totalPages: number;
-  pageHref: (target: number) => string;
+  prevHref: string | null;
+  nextHref: string | null;
 }) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -314,8 +316,8 @@ export function CashflowManager({
               Halaman {page} dari {totalPages}
             </p>
             <nav className="flex items-center gap-1" aria-label="Navigasi halaman">
-              {page > 1 ? (
-                <a href={pageHref(page - 1)} className="inline-flex h-9 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] hover:border-[#198760] hover:text-[#198760]">
+              {prevHref ? (
+                <a href={prevHref} className="inline-flex h-9 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] hover:border-[#198760] hover:text-[#198760]">
                   Sebelumnya
                 </a>
               ) : (
@@ -323,8 +325,8 @@ export function CashflowManager({
                   Sebelumnya
                 </span>
               )}
-              {page < totalPages ? (
-                <a href={pageHref(page + 1)} className="inline-flex h-9 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] hover:border-[#198760] hover:text-[#198760]">
+              {nextHref ? (
+                <a href={nextHref} className="inline-flex h-9 items-center rounded-lg border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#52645c] hover:border-[#198760] hover:text-[#198760]">
                   Berikutnya
                 </a>
               ) : (

@@ -113,6 +113,8 @@ export default async function CashflowPage({
     });
     return `/cashflow?${search.toString()}`;
   }
+  const prevHref = safePage > 1 ? pageHref(safePage - 1) : null;
+  const nextHref = safePage < totalPages ? pageHref(safePage + 1) : null;
 
   return (
     <AppHeader
@@ -181,7 +183,8 @@ export default async function CashflowPage({
           resultCount={resultCount}
           page={safePage}
           totalPages={totalPages}
-          pageHref={pageHref}
+          prevHref={prevHref}
+          nextHref={nextHref}
         />
       </section>
       <AppFooter businessName={membership.businessName} />
