@@ -264,13 +264,13 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
             bisnis: hasPlanFeature("bisnis", "salesHistory") && hasPlanFeature("bisnis", "receiptPrinting"),
           },
         },
+        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} akun (termasuk Owner) pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
+        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir dan admin sesuai tanggung jawab operasional.", availability: availability("roleBasedAccess") },
         {
           name: "Catatan per item di struk",
           detail: "Catat permintaan per produk di kasir, mis. less sugar atau pedas level 2, dan tampil di struk.",
           availability: businessOnlyAvailability("saleItemNotes"),
         },
-        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} akun (termasuk Owner) pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
-        { name: "Peran hak akses terpisah", detail: "Akses khusus kasir dan admin sesuai tanggung jawab operasional.", availability: availability("roleBasedAccess") },
       ],
     },
     {
