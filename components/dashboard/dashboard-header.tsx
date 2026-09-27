@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Calendar,
   CheckCircle2,
   ChevronDown,
-  Clock,
   Crown,
   RotateCw,
   ShoppingCart,
   Store,
 } from "lucide-react";
+import { DashboardClock } from "@/components/dashboard/dashboard-clock";
 
 export type PeriodKey = "today" | "7d" | "30d";
 
@@ -42,28 +41,6 @@ export function DashboardHeader({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const todayFormatted = new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(now);
-
-  const timeFormatted = new Intl.DateTimeFormat("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Jakarta",
-  }).format(now);
 
   function navigateFilter(newPeriod: PeriodKey, newOutletId: string) {
     startTransition(() => {
@@ -105,20 +82,7 @@ export function DashboardHeader({
                 <span className="dash-live-dot" aria-hidden="true" />
                 Buku kas harian
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#dbe5df] bg-[#f8faf9] px-3 py-1 text-xs font-semibold text-[#627069]">
-                <Calendar className="size-3.5 text-[#8b9991]" aria-hidden="true" />
-                <span suppressHydrationWarning>{todayFormatted}</span>
-              </span>
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#cce4d7] bg-[#eef6f1] px-3 py-1 text-xs font-bold text-[#14532d]"
-                title="Jam operasional (WIB)"
-              >
-                <Clock className="size-3.5 text-[#198760]" aria-hidden="true" />
-                <span className="tabular-nums" suppressHydrationWarning>
-                  {timeFormatted}
-                </span>
-                <span className="font-semibold text-[#198760]">WIB</span>
-              </span>
+              <DashboardClock />
             </div>
 
             <div className="min-w-0">

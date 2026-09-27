@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -12,6 +13,11 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+
+type CashflowSummaryEvent = {
+  incomeTotal?: number;
+  incomeCount?: number;
+};
 
 type DashboardMetricsProps = {
   currentSales: number;
@@ -45,10 +51,28 @@ export function DashboardMetrics({
       maximumFractionDigits: 0,
     }).format(val);
 
+  // Angka omzet/transaksi mengikuti polling arus kas realtime agar
+  // "Omzet masuk" selalu sama dengan "Uang masuk" setelah 15 detik.
+  const [liveSales, setLiveSales] = useState<number | null>(null);
+  const [liveTransactions, setLiveTransactions] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<CashflowSummaryEvent>).detail;
+      if (typeof detail?.incomeTotal === "number") setLiveSales(detail.incomeTotal);
+      if (typeof detail?.incomeCount === "number") setLiveTransactions(detail.incomeCount);
+    };
+    window.addEventListener("wazepos:cashflow-summary", handler);
+    return () => window.removeEventListener("wazepos:cashflow-summary", handler);
+  }, []);
+
+  const displaySales = liveSales ?? currentSales;
+  const displayTransactions = liveTransactions ?? currentTransactions;
+
   // Sales change calculation
   const hasComparableSales = previousSales > 0;
   const salesChange = hasComparableSales
-    ? Math.round(((currentSales - previousSales) / previousSales) * 100)
+    ? Math.round(((displaySales - previousSales) / previousSales) * 100)
     : 0;
 
   const isSalesUp = salesChange >= 0;
@@ -56,11 +80,11 @@ export function DashboardMetrics({
   // Transaction comparison text
   const txComparisonText =
     previousTransactions === 0
-      ? currentTransactions > 0
+      ? displayTransactions > 0
         ? "Mulai tercatat periode ini"
         : "Belum ada transaksi"
-      : `${currentTransactions - previousTransactions >= 0 ? "+" : ""}${
-          currentTransactions - previousTransactions
+      : `${displayTransactions - previousTransactions >= 0 ? "+" : ""}${
+          displayTransactions - previousTransactions
         } struk dari periode lalu`;
 
   return (
@@ -73,7 +97,7 @@ export function DashboardMetrics({
               Omzet masuk
             </p>
             <p className="dash-money m-0 mt-1 truncate text-xl font-bold text-[#15211d] sm:text-2xl">
-              {money(currentSales)}
+              {money(displaySales)}
             </p>
           </div>
           <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100 bg-[#eaf7f0] text-[#198760]">
@@ -95,7 +119,7 @@ export function DashboardMetrics({
                 ? isSalesUp
                   ? `+${salesChange}%`
                   : `${salesChange}%`
-                : currentSales > 0
+                : displaySales > 0
                   ? "Baru tercatat"
                   : "Belum ada omzet"}
             </span>
@@ -115,7 +139,7 @@ export function DashboardMetrics({
             </p>
             <p className="m-0 mt-1 flex items-baseline gap-1.5">
               <span className="dash-num text-2xl font-black tracking-tight text-[#15211d]">
-                {currentTransactions}
+                {displayTransactions}
               </span>
               <span className="text-xs font-bold text-[#627069]">struk</span>
             </p>

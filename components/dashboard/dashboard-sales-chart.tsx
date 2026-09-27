@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type SalesPoint = {
   key: string;
@@ -19,6 +19,16 @@ function formatCurrency(value: number) {
 
 export function DashboardSalesChart({ points }: { points: SalesPoint[] }) {
   const [activeKey, setActiveKey] = useState(points.at(-1)?.key);
+
+  // Reset batang aktif saat periode/gerai berubah agar ringkasan
+  // tidak nyangkut di key lama yang sudah tidak ada di points.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setActiveKey(points.at(-1)?.key);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [points]);
+
   const activePoint = points.find((point) => point.key === activeKey) ?? points.at(-1);
   const maximum = Math.max(...points.map((point) => point.revenue), 1);
 

@@ -110,6 +110,7 @@ export function DashboardCashflow({
         if (!response.ok) throw new Error("fetch-failed");
         const data = (await response.json()) as CashflowSummary;
         setSummary(data);
+        window.dispatchEvent(new CustomEvent("wazepos:cashflow-summary", { detail: data }));
       } catch {
         setError("Gagal memuat arus kas terbaru.");
       } finally {
