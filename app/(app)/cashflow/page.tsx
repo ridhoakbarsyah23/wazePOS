@@ -3,11 +3,12 @@ import Link from "next/link";
 import { AppFooter } from "@/components/shared/app-footer";
 import { AppHeader } from "@/components/shared/app-header";
 import { CashflowManager } from "@/components/cashflow/cashflow-manager";
+import { PlanFeatureNotice } from "@/components/subscription/plan-feature-notice";
 import { db } from "@/db";
 import { cashExpense, outlet, sale, user } from "@/db/schema";
 import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
-import { normalizePlan } from "@/shared/billing/plans";
+import { hasPlanFeature, normalizePlan } from "@/shared/billing/plans";
 import { getReportDateRange } from "@/server/pos/reporting";
 import { expenseCategoryLabels, type ExpenseCategory } from "@/shared/validation/expense";
 
@@ -26,6 +27,27 @@ export default async function CashflowPage({
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
   const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
+  const selectedPlan = normalizePlan(currentSubscription?.plan);
+
+  if (!hasPlanFeature(selectedPlan, "cashflow")) {
+    return (
+      <AppHeader
+        businessName={membership.businessName}
+        userName={session.user.name}
+        role={membership.role}
+        trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
+        allowDarkMode={allowDarkMode}
+        plan={selectedPlan}
+      >
+        <PlanFeatureNotice
+          businessName={membership.businessName}
+          role={membership.role}
+          featureName="Arus kas"
+          description="Catat uang keluar (belanja, gaji, sewa, operasional) dan pantau saldo bersih realtime tersedia di Paket Bisnis."
+        />
+      </AppHeader>
+    );
+  }
 
   const params = await searchParams;
   const { fromKey, toKey, start, end } = getReportDateRange(params.from, params.to);
@@ -153,7 +175,7 @@ export default async function CashflowPage({
       role={membership.role}
       trialDaysRemaining={subDetails.isTrialing ? subDetails.daysRemaining : null}
       allowDarkMode={allowDarkMode}
-      plan={normalizePlan(currentSubscription?.plan)}
+      plan={selectedPlan}
     >
       <section className="mx-auto w-[min(1180px,calc(100%-24px))] space-y-4 py-6 sm:w-[min(1180px,calc(100%-40px))] sm:py-8">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

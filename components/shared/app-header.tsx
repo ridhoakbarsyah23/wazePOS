@@ -70,7 +70,8 @@ const navItems: NavItem[] = [
     label: "Arus Kas",
     icon: Wallet,
     roles: ["owner", "admin"],
-    badge: null,
+    planFeature: "cashflow",
+    badge: "Bisnis",
   },
   {
     href: "/transactions",

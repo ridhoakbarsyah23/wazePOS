@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { cashExpense, outlet, sale } from "@/db/schema";
 import { isMissingSchemaError } from "@/server/db/schema-errors";
-import { getMembership } from "@/server/auth/auth-session";
+import { getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
 import { auth } from "@/server/auth/auth";
 
 const dayInMilliseconds = 86_400_000;
@@ -35,6 +36,14 @@ export async function GET(request: Request) {
   const membership = await getMembership(session.user.id);
   if (!membership) {
     return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
+  }
+
+  const currentSubscription = await getBusinessSubscription(membership.businessId);
+  if (!hasPlanFeature(currentSubscription?.plan, "cashflow")) {
+    return NextResponse.json(
+      { message: "Arus kas tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   const url = new URL(request.url);

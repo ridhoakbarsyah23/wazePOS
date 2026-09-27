@@ -5,7 +5,8 @@ import { db } from "@/db";
 import { cashExpense } from "@/db/schema";
 import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { auth } from "@/server/auth/auth";
-import { canManageBusiness, getMembership } from "@/server/auth/auth-session";
+import { canManageBusiness, getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -15,6 +16,14 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   if (!membership) return NextResponse.json({ message: "Profil usaha belum tersedia." }, { status: 403 });
   if (!canManageBusiness(membership.role)) {
     return NextResponse.json({ message: "Hanya Owner atau Admin yang boleh menghapus pengeluaran." }, { status: 403 });
+  }
+
+  const currentSubscription = await getBusinessSubscription(membership.businessId);
+  if (!hasPlanFeature(currentSubscription?.plan, "cashflow")) {
+    return NextResponse.json(
+      { message: "Arus kas tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   const { id } = await params;

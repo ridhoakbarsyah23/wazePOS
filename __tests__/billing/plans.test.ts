@@ -77,6 +77,21 @@ describe("hak fitur paket", () => {
     expect(cards.bisnis.features).toContain("Manajemen stok & peringatan stok menipis");
   });
 
+  it("mengunci arus kas hanya untuk Paket Bisnis", () => {
+    expect(hasPlanFeature("tumbuh", "cashflow")).toBe(false);
+    expect(hasPlanFeature("bisnis", "cashflow")).toBe(true);
+
+    const cards = Object.fromEntries(getMarketingPlanCards().map((plan) => [plan.id, plan]));
+    expect(cards.bisnis.features).toContain("Arus kas: uang masuk & keluar warung");
+    expect(cards.tumbuh.features).not.toContain("Arus kas: uang masuk & keluar warung");
+
+    const cashflow = getPlanFeatureComparison()
+      .flatMap((group) => group.items)
+      .find((item) => item.name === "Arus kas uang masuk & keluar");
+
+    expect(cashflow?.availability).toEqual({ tumbuh: false, bisnis: true });
+  });
+
   it("menyamakan tabel perbandingan dengan hak fitur paket", () => {
     const items = getPlanFeatureComparison().flatMap((group) => group.items);
     const qris = items.find((item) => item.name === "Pembayaran QRIS");

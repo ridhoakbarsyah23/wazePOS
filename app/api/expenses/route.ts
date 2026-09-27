@@ -5,7 +5,8 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/db";
 import { cashExpense, outlet } from "@/db/schema";
 import { isMissingSchemaError } from "@/server/db/schema-errors";
-import { getMembership } from "@/server/auth/auth-session";
+import { getBusinessSubscription, getMembership } from "@/server/auth/auth-session";
+import { hasPlanFeature } from "@/shared/billing/plans";
 import { auth } from "@/server/auth/auth";
 import { canManageBusiness } from "@/server/auth/auth-session";
 import { checkRateLimit, rateLimitResponse } from "@/server/rate-limit";
@@ -24,6 +25,14 @@ export async function POST(request: Request) {
 
   if (!canManageBusiness(membership.role)) {
     return NextResponse.json({ message: "Hanya Owner atau Admin yang boleh mencatat pengeluaran." }, { status: 403 });
+  }
+
+  const currentSubscription = await getBusinessSubscription(membership.businessId);
+  if (!hasPlanFeature(currentSubscription?.plan, "cashflow")) {
+    return NextResponse.json(
+      { message: "Arus kas tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   const rate = checkRateLimit({ key: `expenses:${session.user.id}`, limit: 60, windowSeconds: 60 });

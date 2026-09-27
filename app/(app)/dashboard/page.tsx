@@ -45,6 +45,7 @@ export default async function DashboardPage({
   const canViewReports = hasPlanFeature(selectedPlan, "onscreenReports");
   const canManageOutlets = hasPlanFeature(selectedPlan, "multiOutlet");
   const canManageInventory = hasPlanFeature(selectedPlan, "inventoryStock");
+  const canUseCashflow = hasPlanFeature(selectedPlan, "cashflow");
   const selectedPeriod: PeriodKey =
     feedback.period === "today" || feedback.period === "30d" ? feedback.period : "7d";
 
@@ -189,9 +190,13 @@ export default async function DashboardPage({
       .where(eq(outlet.businessId, membership.businessId))
       .groupBy(outlet.id, outlet.name)
       .orderBy(outlet.name),
-    // Tabel cash_expense dibuat migrasi 0022. Database production yang belum
-    // dimigrasi tidak boleh membuat seluruh dashboard jatuh ke error boundary.
+    // Tabel cash_expense dibuat migrasi 0022. Paket Tumbuh tidak memakai arus kas,
+    // sehingga query pengeluaran dilewati sepenuhnya. Database production yang
+    // belum dimigrasi juga tidak boleh membuat dashboard jatuh ke error boundary.
     (async () => {
+      if (!canUseCashflow) {
+        return { expenseTotalRows: [], expenseRecentRows: [], unavailable: false };
+      }
       try {
         const [expenseTotalRows, expenseRecentRows] = await Promise.all([
           db
@@ -420,25 +425,27 @@ export default async function DashboardPage({
           showStock={canManageInventory}
         />
 
-        {/* Arus kas realtime: uang masuk vs keluar */}
-        {expenseUnavailable && (
+        {/* Arus kas realtime khusus Paket Bisnis: uang masuk vs keluar */}
+        {canUseCashflow && expenseUnavailable && (
           <p className="m-0 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-900">
             Fitur uang keluar belum aktif di database production. Jalankan migrasi terbaru lalu muat ulang
             halaman ini.
           </p>
         )}
-        <DashboardCashflow
-          selectedPeriod={selectedPeriod}
-          selectedOutletId={selectedOutletId}
-          outlets={outlets.map((item) => ({ id: item.id, name: item.name }))}
-          defaultOutletId={selectedOutletId !== "all" ? selectedOutletId : outlets[0]?.id ?? "all"}
-          initialIncomeTotal={currentRevenue}
-          initialIncomeCount={currentTransactions}
-          initialExpenseTotal={currentExpenseTotal}
-          initialExpenseCount={currentExpenseCount}
-          initialRecent={expenseRecent}
-          initialExpenseUnavailable={expenseUnavailable}
-        />
+        {canUseCashflow && (
+          <DashboardCashflow
+            selectedPeriod={selectedPeriod}
+            selectedOutletId={selectedOutletId}
+            outlets={outlets.map((item) => ({ id: item.id, name: item.name }))}
+            defaultOutletId={selectedOutletId !== "all" ? selectedOutletId : outlets[0]?.id ?? "all"}
+            initialIncomeTotal={currentRevenue}
+            initialIncomeCount={currentTransactions}
+            initialExpenseTotal={currentExpenseTotal}
+            initialExpenseCount={currentExpenseCount}
+            initialRecent={expenseRecent}
+            initialExpenseUnavailable={expenseUnavailable}
+          />
+        )}
 
         {canViewReports && (
           <DashboardInsights

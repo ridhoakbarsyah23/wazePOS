@@ -27,6 +27,7 @@ export type PlanFeature =
   | "multiOutlet"
   | "receiptSettings"
   | "saleItemNotes"
+  | "cashflow"
   | "darkMode";
 
 export type PlanConfig = {
@@ -66,6 +67,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       multiOutlet: false,
       receiptSettings: false,
       saleItemNotes: false,
+      cashflow: false,
       darkMode: false,
     },
   },
@@ -97,6 +99,7 @@ export const plans: Record<PlanId, PlanConfig> = {
       multiOutlet: true,
       receiptSettings: true,
       saleItemNotes: true,
+      cashflow: true,
       darkMode: true,
     },
   },
@@ -195,6 +198,7 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
           ]
         : []),
       ...(config.features.inventoryStock ? ["Manajemen stok & peringatan stok menipis"] : []),
+      ...(config.features.cashflow ? ["Arus kas: uang masuk & keluar warung"] : []),
       ...(config.features.saleItemNotes ? ["Catatan per item di struk (mis. less sugar, pedas lvl 2)"] : []),
       ...(config.features.exportReports ? ["Ekspor laporan penjualan Excel"] : []),
       ...(config.features.receiptSettings ? ["Kustomisasi pengaturan struk"] : []),
@@ -278,6 +282,7 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
       items: [
         { name: "Pembayaran QRIS", detail: "Terima pembayaran QRIS dari seluruh e-wallet dan mobile banking.", availability: businessOnlyAvailability("qrisPayments") },
         { name: "Seluruh metode pembayaran (Kartu EDC)", detail: "Menerima kartu debit dan kredit untuk pembayaran pelanggan.", availability: businessOnlyAvailability("allPaymentMethods") },
+        { name: "Arus kas uang masuk & keluar", detail: "Catat belanja, gaji, sewa, dan biaya warung lalu pantau saldo bersih realtime.", availability: businessOnlyAvailability("cashflow") },
         { name: "Ekspor laporan Excel", detail: "Mengunduh laporan penjualan sesuai filter untuk analisis lanjutan.", availability: businessOnlyAvailability("exportReports") },
         { name: "Laporan penjualan di layar", detail: "Melihat performa omzet dan produk terlaris secara langsung.", availability: businessOnlyAvailability("onscreenReports") },
       ],

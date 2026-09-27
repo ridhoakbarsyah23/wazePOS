@@ -260,12 +260,13 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/>
           <div className="container hero-grid">
             <div className="hero-copy reveal">
-              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS · Struk 58/80mm</span></span>
+              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS Bisnis · Struk 58/80mm</span></span>
               <h1 className="hero-display">Tutup buku <span>tanpa ribet.</span><br />Kasir jalan, stok aman.</h1>
-              <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, stok Paket Bisnis terpantau, laporan kebaca tanpa rekap manual.</p>
+              <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, arus kas & stok Paket Bisnis terpantau, laporan kebaca tanpa rekap manual.</p>
               <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
               <dl className="pos-proof">
                 <div><dt className="mono">Kasir</dt><dd>Tunai + QRIS Bisnis</dd></div>
+                <div><dt className="mono">Arus kas</dt><dd>masuk-keluar Bisnis</dd></div>
                 <div><dt className="mono">Stok</dt><dd>peringatan menipis</dd></div>
                 <div><dt className="mono">Laporan</dt><dd>Excel + layar</dd></div>
               </dl>
@@ -326,7 +327,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
         <section className="section pricing-section" id="harga">
           <div className="container pricing-heading" data-reveal>
-            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>Tumbuh buat satu gerai yang mau rapi. Bisnis buat yang sudah multi-gerai + butuh stok, QRIS, dan ekspor Excel.</p></div>
+            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>Tumbuh buat satu gerai yang mau rapi. Bisnis buat yang sudah multi-gerai + butuh arus kas, stok, QRIS, catatan per item, dan ekspor Excel.</p></div>
           </div>
           <div className="container pricing-grid">
             {pricingPlans.map((plan) => {
@@ -347,7 +348,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container mt-12 rounded-3xl border border-white/15 bg-[#032d22]/30 p-[30px] max-[820px]:mt-8 max-[820px]:rounded-[19px] max-[820px]:px-3.5 max-[820px]:py-5" data-reveal>
             <div className="mb-[22px] flex items-end justify-between gap-6 max-[820px]:mb-4 max-[820px]:block">
               <div><span className="section-kicker light">Bandingkan paket</span><h3 className="mt-2.5 mb-0 text-[25px] tracking-[-0.8px] text-white max-[820px]:text-[21px]">Pilih paket yang paling sesuai.</h3></div>
-              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Paket Tumbuh mencakup operasional satu gerai, pengelolaan hingga 200 pelanggan, member di kasir, dan manajemen staf hingga 2 akun tanpa manajemen stok. Paket Bisnis menambahkan kapasitas pelanggan tanpa batas, manajemen stok, multi-gerai, pengaturan struk kustom, dan fitur untuk tim yang lebih kompleks.</p>
+              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Paket Tumbuh mencakup operasional satu gerai, pengelolaan hingga 200 pelanggan, member di kasir, dan manajemen staf hingga 2 akun tanpa manajemen stok. Paket Bisnis menambahkan arus kas uang masuk & keluar realtime, kapasitas pelanggan tanpa batas, manajemen stok, catatan per item di struk, multi-gerai, pengaturan struk kustom, dan fitur untuk tim yang lebih kompleks.</p>
             </div>
             <button
               type="button"
