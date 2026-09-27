@@ -9,6 +9,19 @@ const globalDatabase = globalThis as unknown as {
   wazeposSql?: ReturnType<typeof postgres>;
 };
 
+function shouldUseSSL(connectionString: string) {
+  const lowercased = connectionString.toLowerCase();
+  if (lowercased.includes("sslmode=disable") || lowercased.includes("ssl=false")) return false;
+  if (lowercased.includes("sslmode=require") || lowercased.includes("sslmode=verify")) return true;
+  if (lowercased.includes("ssl=true") || lowercased.includes("ssl=require")) return true;
+  // Host lokal tidak butuh SSL; semua host remote/cloud (Supabase, Neon, AWS, dsb.)
+  // umumnya mewajibkan TLS.
+  if (/@(127\.0\.0\.1|localhost|\[::1\]|postgres|db|host\.docker\.internal)[:/]/.test(lowercased)) {
+    return false;
+  }
+  return true;
+}
+
 const configuredPoolSize = Number(process.env.DB_POOL_MAX);
 const poolSize = Number.isInteger(configuredPoolSize) && configuredPoolSize > 0
   ? configuredPoolSize
@@ -24,7 +37,7 @@ const sql =
     connect_timeout: 8,
     idle_timeout: 20,
     max_lifetime: 60 * 30,
-    ssl: connectionString.includes("supabase.com") ? "require" : undefined,
+    ssl: shouldUseSSL(connectionString) ? "require" : undefined,
   });
 
 if (process.env.NODE_ENV !== "production") globalDatabase.wazeposSql = sql;

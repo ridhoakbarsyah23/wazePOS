@@ -46,6 +46,7 @@ export function CashflowManager({
   fromKey,
   toKey,
   categoryFilter,
+  expenseUnavailable = false,
   rows,
   resultCount,
   page,
@@ -58,6 +59,7 @@ export function CashflowManager({
   fromKey: string;
   toKey: string;
   categoryFilter: string | null;
+  expenseUnavailable?: boolean;
   rows: CashflowRow[];
   resultCount: number;
   page: number;
@@ -80,8 +82,14 @@ export function CashflowManager({
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const hasOutlets = outlets.length > 0;
+  const expenseWriteDisabled = expenseUnavailable || !hasOutlets;
 
   function handleOpenForm() {
+    if (expenseUnavailable) {
+      setFormError("Fitur uang keluar belum aktif di database. Jalankan migrasi terbaru dahulu.");
+      setIsFormOpen(true);
+      return;
+    }
     setFormOutletId(defaultOutletId);
     setFormDate(new Date().toISOString().slice(0, 10));
     setFormError(null);
@@ -91,6 +99,10 @@ export function CashflowManager({
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setFormError(null);
+    if (expenseUnavailable) {
+      setFormError("Fitur uang keluar belum aktif di database. Jalankan migrasi terbaru dahulu.");
+      return;
+    }
     if (!hasOutlets || formOutletId === "all" || !outlets.some((item) => item.id === formOutletId)) {
       setFormError("Belum ada gerai untuk mencatat pengeluaran.");
       return;
@@ -133,6 +145,10 @@ export function CashflowManager({
   }
 
   async function handleDelete(id: string) {
+    if (expenseUnavailable) {
+      setError("Fitur uang keluar belum aktif di database. Jalankan migrasi terbaru dahulu.");
+      return;
+    }
     if (!window.confirm("Hapus catatan pengeluaran ini? Angka arus kas akan ikut berubah.")) return;
     setDeletingId(id);
     setError(null);
@@ -223,8 +239,8 @@ export function CashflowManager({
             <button
               type="button"
               onClick={handleOpenForm}
-              disabled={!hasOutlets}
-              title={hasOutlets ? "Catat belanja atau biaya warung" : "Belum ada gerai"}
+              disabled={expenseWriteDisabled}
+              title={expenseUnavailable ? "Butuh migrasi database terbaru" : hasOutlets ? "Catat belanja atau biaya warung" : "Belum ada gerai"}
               className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl bg-[#198760] px-3 text-xs font-extrabold text-white hover:bg-[#147554] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Plus className="size-3.5" aria-hidden="true" />

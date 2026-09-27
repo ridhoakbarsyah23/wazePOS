@@ -8,6 +8,7 @@ import { DashboardInsights } from "@/components/dashboard/dashboard-insights";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { db } from "@/db";
 import { cashExpense, inventoryStock, outlet, product, sale, saleItem } from "@/db/schema";
+import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
 import { hasPlanFeature, normalizePlan } from "@/shared/billing/plans";
 
@@ -120,7 +121,7 @@ export default async function DashboardPage({
     expenseFilters.push(eq(cashExpense.outletId, selectedOutletId));
   }
 
-  const [periodRows, stockRows, topProductRows, trendRows, outletRows, expenseTotalRows, expenseRecentRows] = await Promise.all([
+  const [periodRows, stockRows, topProductRows, trendRows, outletRows, expenseResults] = await Promise.all([
     db
       .select({
         bucket: sql<string>`case
@@ -188,27 +189,43 @@ export default async function DashboardPage({
       .where(eq(outlet.businessId, membership.businessId))
       .groupBy(outlet.id, outlet.name)
       .orderBy(outlet.name),
-    db
-      .select({
-        total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(cashExpense)
-      .where(and(...expenseFilters)),
-    db
-      .select({
-        id: cashExpense.id,
-        amount: cashExpense.amount,
-        category: cashExpense.category,
-        note: cashExpense.note,
-        spentAt: cashExpense.spentAt,
-        outletId: cashExpense.outletId,
-      })
-      .from(cashExpense)
-      .where(and(...expenseFilters))
-      .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
-      .limit(5),
+    // Tabel cash_expense dibuat migrasi 0022. Database production yang belum
+    // dimigrasi tidak boleh membuat seluruh dashboard jatuh ke error boundary.
+    (async () => {
+      try {
+        const [expenseTotalRows, expenseRecentRows] = await Promise.all([
+          db
+            .select({
+              total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
+              count: sql<number>`COUNT(*)::int`,
+            })
+            .from(cashExpense)
+            .where(and(...expenseFilters)),
+          db
+            .select({
+              id: cashExpense.id,
+              amount: cashExpense.amount,
+              category: cashExpense.category,
+              note: cashExpense.note,
+              spentAt: cashExpense.spentAt,
+              outletId: cashExpense.outletId,
+            })
+            .from(cashExpense)
+            .where(and(...expenseFilters))
+            .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
+            .limit(5),
+        ]);
+        return { expenseTotalRows, expenseRecentRows, unavailable: false };
+      } catch (error) {
+        if (!isMissingSchemaError(error)) throw error;
+        console.error("Dashboard tanpa data pengeluaran: tabel cash_expense belum dimigrasi.", error);
+        return { expenseTotalRows: [], expenseRecentRows: [], unavailable: true };
+      }
+    })(),
   ]);
+  const expenseTotalRows = expenseResults.expenseTotalRows;
+  const expenseRecentRows = expenseResults.expenseRecentRows;
+  const expenseUnavailable = expenseResults.unavailable;
 
   const currentPeriodRow = periodRows.find((item) => item.bucket === "current");
   const previousPeriodRow = periodRows.find((item) => item.bucket === "previous");
@@ -404,6 +421,12 @@ export default async function DashboardPage({
         />
 
         {/* Arus kas realtime: uang masuk vs keluar */}
+        {expenseUnavailable && (
+          <p className="m-0 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-900">
+            Fitur uang keluar belum aktif di database production. Jalankan migrasi terbaru lalu muat ulang
+            halaman ini.
+          </p>
+        )}
         <DashboardCashflow
           selectedPeriod={selectedPeriod}
           selectedOutletId={selectedOutletId}
@@ -414,6 +437,7 @@ export default async function DashboardPage({
           initialExpenseTotal={currentExpenseTotal}
           initialExpenseCount={currentExpenseCount}
           initialRecent={expenseRecent}
+          initialExpenseUnavailable={expenseUnavailable}
         />
 
         {canViewReports && (

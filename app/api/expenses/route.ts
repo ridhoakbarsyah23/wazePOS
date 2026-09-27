@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { db } from "@/db";
 import { cashExpense, outlet } from "@/db/schema";
+import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { getMembership } from "@/server/auth/auth-session";
 import { auth } from "@/server/auth/auth";
 import { canManageBusiness } from "@/server/auth/auth-session";
@@ -77,6 +78,13 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (isMissingSchemaError(error)) {
+      console.error("Failed to create expense: tabel cash_expense belum dimigrasi.", error);
+      return NextResponse.json(
+        { message: "Fitur uang keluar belum aktif. Jalankan migrasi database terbaru." },
+        { status: 503 },
+      );
+    }
     console.error("Failed to create expense", error);
     return NextResponse.json({ message: "Pengeluaran gagal disimpan. Silakan coba lagi." }, { status: 500 });
   }

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { cashExpense, outlet, sale } from "@/db/schema";
+import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { getMembership } from "@/server/auth/auth-session";
 import { auth } from "@/server/auth/auth";
 
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
     ...(outletId ? [eq(cashExpense.outletId, outletId)] : []),
   ];
 
-  const [saleRows, expenseRows, recentRows] = await Promise.all([
+  const [saleRows, expenseResults] = await Promise.all([
     db
       .select({
         total: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
@@ -81,34 +82,49 @@ export async function GET(request: Request) {
       })
       .from(sale)
       .where(and(...saleFilters)),
-    db
-      .select({
-        total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(cashExpense)
-      .where(and(...expenseFilters)),
-    db
-      .select({
-        id: cashExpense.id,
-        amount: cashExpense.amount,
-        category: cashExpense.category,
-        note: cashExpense.note,
-        spentAt: cashExpense.spentAt,
-        outletId: cashExpense.outletId,
-      })
-      .from(cashExpense)
-      .where(
-        and(
-          eq(cashExpense.businessId, membership.businessId),
-          gte(cashExpense.spentAt, periodStart),
-          lt(cashExpense.spentAt, now),
-          ...(outletId ? [eq(cashExpense.outletId, outletId)] : []),
-        ),
-      )
-      .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
-      .limit(5),
+    // Tabel cash_expense dibuat migrasi 0022; production yang belum dimigrasi
+    // tetap mengembalikan ringkasan uang masuk + flag unavailable.
+    (async () => {
+      try {
+        const [expenseRows, recentRows] = await Promise.all([
+          db
+            .select({
+              total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
+              count: sql<number>`COUNT(*)::int`,
+            })
+            .from(cashExpense)
+            .where(and(...expenseFilters)),
+          db
+            .select({
+              id: cashExpense.id,
+              amount: cashExpense.amount,
+              category: cashExpense.category,
+              note: cashExpense.note,
+              spentAt: cashExpense.spentAt,
+              outletId: cashExpense.outletId,
+            })
+            .from(cashExpense)
+            .where(
+              and(
+                eq(cashExpense.businessId, membership.businessId),
+                gte(cashExpense.spentAt, periodStart),
+                lt(cashExpense.spentAt, now),
+                ...(outletId ? [eq(cashExpense.outletId, outletId)] : []),
+              ),
+            )
+            .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
+            .limit(5),
+        ]);
+        return { expenseRows, recentRows, unavailable: false };
+      } catch (error) {
+        if (!isMissingSchemaError(error)) throw error;
+        console.error("Cashflow summary tanpa pengeluaran: tabel cash_expense belum dimigrasi.", error);
+        return { expenseRows: [], recentRows: [], unavailable: true };
+      }
+    })(),
   ]);
+  const expenseRows = expenseResults.expenseRows;
+  const recentRows = expenseResults.recentRows;
 
   const incomeTotal = Number(saleRows[0]?.total ?? 0);
   const incomeCount = Number(saleRows[0]?.count ?? 0);
@@ -122,6 +138,7 @@ export async function GET(request: Request) {
     incomeCount,
     expenseTotal,
     expenseCount,
+    expenseUnavailable: expenseResults.unavailable,
     netTotal: incomeTotal - expenseTotal,
     recent: recentRows.map((row) => ({
       id: row.id,

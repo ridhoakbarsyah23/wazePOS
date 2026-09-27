@@ -32,6 +32,7 @@ type CashflowSummary = {
   incomeCount: number;
   expenseTotal: number;
   expenseCount: number;
+  expenseUnavailable?: boolean;
   netTotal: number;
   recent: CashflowRecent[];
   updatedAt: string;
@@ -67,6 +68,7 @@ export function DashboardCashflow({
   initialExpenseTotal,
   initialExpenseCount,
   initialRecent,
+  initialExpenseUnavailable = false,
 }: {
   selectedPeriod: string;
   selectedOutletId: string;
@@ -77,6 +79,7 @@ export function DashboardCashflow({
   initialExpenseTotal: number;
   initialExpenseCount: number;
   initialRecent: CashflowRecent[];
+  initialExpenseUnavailable?: boolean;
 }) {
   const router = useRouter();
   const [summary, setSummary] = useState<CashflowSummary | null>(null);
@@ -149,7 +152,7 @@ export function DashboardCashflow({
   function handleOpenForm() {
     setFormOutletId(defaultOutletId);
     setFormDate(new Date().toISOString().slice(0, 10));
-    setFormError(null);
+    setFormError(expenseUnavailable ? "Fitur uang keluar belum aktif di database. Jalankan migrasi terbaru dahulu." : null);
     setIsFormOpen(true);
   }
 
@@ -188,11 +191,17 @@ export function DashboardCashflow({
   const expenseCount = summary?.expenseCount ?? initialExpenseCount;
   const netTotal = summary ? summary.netTotal : incomeTotal - expenseTotal;
   const recent = summary?.recent ?? initialRecent;
+  const expenseUnavailable = summary?.expenseUnavailable ?? initialExpenseUnavailable;
+  const expenseWriteDisabled = expenseUnavailable || !hasOutlets;
   const updatedLabel = summary ? formatTime(summary.updatedAt) : null;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setFormError(null);
+    if (expenseUnavailable) {
+      setFormError("Fitur uang keluar belum aktif di database. Jalankan migrasi terbaru dahulu.");
+      return;
+    }
     if (!hasOutlets || formOutletId === "all" || !outlets.some((item) => item.id === formOutletId)) {
       setFormError("Belum ada gerai untuk mencatat pengeluaran.");
       return;
@@ -265,8 +274,8 @@ export function DashboardCashflow({
           <button
             type="button"
             onClick={handleOpenForm}
-            disabled={!hasOutlets}
-            title={hasOutlets ? "Catat belanja atau biaya warung" : "Belum ada gerai"}
+            disabled={expenseWriteDisabled}
+            title={expenseUnavailable ? "Butuh migrasi database terbaru" : hasOutlets ? "Catat belanja atau biaya warung" : "Belum ada gerai"}
             className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-[#198760] px-3 text-xs font-extrabold text-white transition-colors duration-200 hover:bg-[#147554] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Plus className="size-4" aria-hidden="true" />

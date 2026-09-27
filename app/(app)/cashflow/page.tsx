@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/shared/app-header";
 import { CashflowManager } from "@/components/cashflow/cashflow-manager";
 import { db } from "@/db";
 import { cashExpense, outlet, sale, user } from "@/db/schema";
+import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
 import { normalizePlan } from "@/shared/billing/plans";
 import { getReportDateRange } from "@/server/pos/reporting";
@@ -56,26 +57,40 @@ export default async function CashflowPage({
     ...(categoryFilter ? [eq(cashExpense.category, categoryFilter)] : []),
   ];
 
-  const [incomeRows, expenseSummary, expenseCountRows] = await Promise.all([
-    db
-      .select({
-        total: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(sale)
-      .where(and(...saleFilters)),
-    db
-      .select({
-        total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(cashExpense)
-      .where(and(...expenseFilters)),
-    db
-      .select({ count: sql<number>`COUNT(*)::int` })
-      .from(cashExpense)
-      .where(and(...expenseFilters)),
-  ]);
+  const incomeRows = await db
+    .select({
+      total: sql<number>`COALESCE(SUM(${sale.total}), 0)::int`,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(sale)
+    .where(and(...saleFilters));
+
+  // Tabel cash_expense dibuat migrasi 0022; production yang belum dimigrasi
+  // tetap menampilkan uang masuk + banner migrasi, bukan error boundary.
+  let expenseSummary: Array<{ total: number; count: number }> = [];
+  let expenseCountRows: Array<{ count: number }> = [];
+  let expenseUnavailable = false;
+  try {
+    const [summary, counts] = await Promise.all([
+      db
+        .select({
+          total: sql<number>`COALESCE(SUM(${cashExpense.amount}), 0)::int`,
+          count: sql<number>`COUNT(*)::int`,
+        })
+        .from(cashExpense)
+        .where(and(...expenseFilters)),
+      db
+        .select({ count: sql<number>`COUNT(*)::int` })
+        .from(cashExpense)
+        .where(and(...expenseFilters)),
+    ]);
+    expenseSummary = summary;
+    expenseCountRows = counts;
+  } catch (error) {
+    if (!isMissingSchemaError(error)) throw error;
+    console.error("Halaman arus kas tanpa pengeluaran: tabel cash_expense belum dimigrasi.", error);
+    expenseUnavailable = true;
+  }
 
   const incomeTotal = Number(incomeRows[0]?.total ?? 0);
   const incomeCount = Number(incomeRows[0]?.count ?? 0);
@@ -85,23 +100,35 @@ export default async function CashflowPage({
   const totalPages = Math.max(Math.ceil(resultCount / PAGE_SIZE), 1);
   const safePage = Math.min(page, totalPages);
 
-  const rows = await db
-    .select({
-      id: cashExpense.id,
-      amount: cashExpense.amount,
-      category: cashExpense.category,
-      note: cashExpense.note,
-      spentAt: cashExpense.spentAt,
-      outletName: outlet.name,
-      creatorName: user.name,
-    })
-    .from(cashExpense)
-    .innerJoin(outlet, eq(outlet.id, cashExpense.outletId))
-    .innerJoin(user, eq(user.id, cashExpense.createdById))
-    .where(and(...expenseFilters))
-    .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
-    .limit(PAGE_SIZE)
-    .offset((safePage - 1) * PAGE_SIZE);
+  type CashflowPageRow = {
+    id: string;
+    amount: number;
+    category: string;
+    note: string | null;
+    spentAt: Date | string;
+    outletName: string;
+    creatorName: string;
+  };
+  let rows: CashflowPageRow[] = [];
+  if (!expenseUnavailable) {
+    rows = await db
+      .select({
+        id: cashExpense.id,
+        amount: cashExpense.amount,
+        category: cashExpense.category,
+        note: cashExpense.note,
+        spentAt: cashExpense.spentAt,
+        outletName: outlet.name,
+        creatorName: user.name,
+      })
+      .from(cashExpense)
+      .innerJoin(outlet, eq(outlet.id, cashExpense.outletId))
+      .innerJoin(user, eq(user.id, cashExpense.createdById))
+      .where(and(...expenseFilters))
+      .orderBy(desc(cashExpense.spentAt), desc(cashExpense.createdAt))
+      .limit(PAGE_SIZE)
+      .offset((safePage - 1) * PAGE_SIZE);
+  }
 
   function pageHref(target: number) {
     const search = new URLSearchParams({
@@ -145,6 +172,13 @@ export default async function CashflowPage({
           </Link>
         </header>
 
+        {expenseUnavailable && (
+          <p className="m-0 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-900">
+            Fitur uang keluar belum aktif di database production. Jalankan migrasi terbaru lalu muat ulang
+            halaman ini.
+          </p>
+        )}
+
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl border border-emerald-100 bg-[#f2faf6] p-3 sm:p-4">
             <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#147554]">Masuk</p>
@@ -171,6 +205,7 @@ export default async function CashflowPage({
           fromKey={fromKey}
           toKey={toKey}
           categoryFilter={categoryFilter}
+          expenseUnavailable={expenseUnavailable}
           rows={rows.map((row) => ({
             id: row.id,
             amount: Number(row.amount),

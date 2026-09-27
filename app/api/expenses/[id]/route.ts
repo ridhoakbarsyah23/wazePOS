@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { cashExpense } from "@/db/schema";
+import { isMissingSchemaError } from "@/server/db/schema-errors";
 import { auth } from "@/server/auth/auth";
 import { canManageBusiness, getMembership } from "@/server/auth/auth-session";
 
@@ -30,6 +31,13 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     return NextResponse.json({ message: "Pengeluaran berhasil dihapus." });
   } catch (error) {
+    if (isMissingSchemaError(error)) {
+      console.error("Failed to delete expense: tabel cash_expense belum dimigrasi.", error);
+      return NextResponse.json(
+        { message: "Fitur uang keluar belum aktif. Jalankan migrasi database terbaru." },
+        { status: 503 },
+      );
+    }
     console.error("Failed to delete expense", error);
     return NextResponse.json({ message: "Gagal menghapus pengeluaran." }, { status: 500 });
   }

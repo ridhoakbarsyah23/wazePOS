@@ -8,6 +8,9 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const databaseUrl = process.env.DATABASE_URL ?? "postgresql://wazepos:wazepos@127.0.0.1:5434/wazepos";
+const usesSSL = !/sslmode=disable|ssl=false/i.test(databaseUrl)
+  && (/sslmode=require|sslmode=verify|ssl=true|ssl=require/i.test(databaseUrl)
+    || !/@(127\.0\.0\.1|localhost|\[::1\]|postgres|db|host\.docker\.internal)[:/]/.test(databaseUrl));
 
 // Guard: jalankan eksplisit dengan --remote (atau MIGRATE_ALLOW_REMOTE=1) untuk
 // menyentuh database remote. Mencegah migrasi lokal tidak sengaja mengubah produksi.
@@ -30,7 +33,7 @@ if (isRemote && !allowRemote) {
   process.exit(1);
 }
 
-const client = postgres(databaseUrl, { max: 1 });
+const client = postgres(databaseUrl, { max: 1, ssl: usesSSL ? "require" : undefined });
 
 try {
   await migrate(drizzle(client), { migrationsFolder: "db/migrations" });
