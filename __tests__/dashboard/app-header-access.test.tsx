@@ -9,14 +9,22 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AppHeader role navigation", () => {
-  it("menampilkan Dashboard hanya untuk pemilik usaha", () => {
+  it("menampilkan Dashboard untuk pemilik dan admin usaha", () => {
     const { rerender } = render(
-      <AppHeader businessName="Toko Uji" role="admin">
+      <AppHeader businessName="Toko Uji" role="cashier">
         <main>Konten</main>
       </AppHeader>,
     );
 
     expect(screen.queryByText("Dashboard")).toBeNull();
+
+    rerender(
+      <AppHeader businessName="Toko Uji" role="admin">
+        <main>Konten</main>
+      </AppHeader>,
+    );
+
+    expect(screen.getAllByText("Dashboard").length).toBeGreaterThan(0);
 
     rerender(
       <AppHeader businessName="Toko Uji" role="owner">

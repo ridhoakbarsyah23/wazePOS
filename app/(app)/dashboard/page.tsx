@@ -36,7 +36,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ status?: string; message?: string; period?: string; outlet?: string }>;
 }) {
   const feedback = await searchParams;
-  const access = await requireDashboardAccess({ rule: "ownerOnly" });
+  const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
   const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
 

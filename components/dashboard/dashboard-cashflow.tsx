@@ -88,10 +88,31 @@ export function DashboardCashflow({
   const [formCategory, setFormCategory] = useState<ExpenseCategory>("belanja");
   const [formAmount, setFormAmount] = useState(0);
   const [formNote, setFormNote] = useState("");
+  const [formDate, setFormDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [maxFormDate] = useState(() => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const errorCountRef = useRef(0);
+  const fetchSummaryRef = useRef<(mode?: "auto" | "manual") => Promise<void>>(async () => {});
   const hasOutlets = outlets.length > 0;
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const schedulePolling = useCallback(() => {
+    stopPolling();
+    // Backoff saat error beruntun agar tidak membanjiri API:
+    // 15s normal, 30s setelah 1 gagal, 60s setelah 2+ gagal.
+    const delay = errorCountRef.current <= 0 ? 15000 : errorCountRef.current === 1 ? 30000 : 60000;
+    intervalRef.current = window.setInterval(() => {
+      void fetchSummaryRef.current("auto");
+    }, delay);
+  }, [stopPolling]);
 
   const fetchSummary = useCallback(
     async (mode: "auto" | "manual" = "auto") => {
@@ -111,37 +132,55 @@ export function DashboardCashflow({
         const data = (await response.json()) as CashflowSummary;
         setSummary(data);
         window.dispatchEvent(new CustomEvent("wazepos:cashflow-summary", { detail: data }));
+        errorCountRef.current = 0;
+        if (mode === "auto") schedulePolling();
       } catch {
         setError("Gagal memuat arus kas terbaru.");
+        errorCountRef.current += 1;
+        if (mode === "auto") schedulePolling();
       } finally {
         if (mode === "manual") setRefreshing(false);
         else setLoading(false);
       }
     },
-    [selectedPeriod, selectedOutletId],
+    [selectedPeriod, selectedOutletId, schedulePolling],
   );
 
   function handleOpenForm() {
     setFormOutletId(defaultOutletId);
+    setFormDate(new Date().toISOString().slice(0, 10));
     setFormError(null);
     setIsFormOpen(true);
   }
 
   useEffect(() => {
+    fetchSummaryRef.current = fetchSummary;
+  }, [fetchSummary]);
+
+  useEffect(() => {
     // Tunda fetch awal ke callback timer agar tidak dianggap setState
     // sinkron di badan effect (react-hooks/set-state-in-effect).
+    // Polling dijeda saat tab disembunyikan agar hemat baterai/kuota.
     const timeout = window.setTimeout(() => {
-      void fetchSummary("auto");
+      void fetchSummaryRef.current("auto");
     }, 0);
-    if (intervalRef.current) window.clearInterval(intervalRef.current);
-    intervalRef.current = window.setInterval(() => {
-      void fetchSummary("auto");
-    }, 15000);
+    schedulePolling();
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        void fetchSummaryRef.current("auto");
+        schedulePolling();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       window.clearTimeout(timeout);
-      if (intervalRef.current) window.clearInterval(intervalRef.current);
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [fetchSummary]);
+  }, [schedulePolling, stopPolling]);
 
   const incomeTotal = summary?.incomeTotal ?? initialIncomeTotal;
   const incomeCount = summary?.incomeCount ?? initialIncomeCount;
@@ -162,6 +201,10 @@ export function DashboardCashflow({
       setFormError("Nominal minimal Rp1.");
       return;
     }
+    if (!formDate) {
+      setFormError("Tanggal pengeluaran wajib diisi.");
+      return;
+    }
     setSaving(true);
     try {
       const response = await fetch("/api/expenses", {
@@ -172,6 +215,7 @@ export function DashboardCashflow({
           category: formCategory,
           amount: formAmount,
           note: formNote.trim() ? formNote.trim() : null,
+          spentAt: new Date(`${formDate}T12:00:00+07:00`).toISOString(),
         }),
       });
       const data = (await response.json().catch(() => null)) as { message?: string } | null;
@@ -358,6 +402,17 @@ export function DashboardCashflow({
                 <label htmlFor="cashflow-amount">Nominal keluar</label>
                 <RupiahInput id="cashflow-amount" value={formAmount} onChange={setFormAmount} required />
               </div>
+
+              <label className="grid gap-1.5 text-xs font-bold text-[#53635b]">
+                Tanggal keluar
+                <input
+                  type="date"
+                  value={formDate}
+                  onChange={(e) => setFormDate(e.target.value)}
+                  max={maxFormDate}
+                  className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#15211d] outline-none focus:border-[#198760]"
+                />
+              </label>
 
               <label className="grid gap-1.5 text-xs font-bold text-[#53635b]">
                 Catatan (opsional)

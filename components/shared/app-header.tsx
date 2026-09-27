@@ -55,7 +55,7 @@ const navItems: NavItem[] = [
     href: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    roles: ["owner"],
+    roles: ["owner", "admin"],
     badge: null,
   },
   {

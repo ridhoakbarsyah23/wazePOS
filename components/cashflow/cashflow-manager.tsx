@@ -73,12 +73,15 @@ export function CashflowManager({
   const [formCategory, setFormCategory] = useState<ExpenseCategory>("belanja");
   const [formAmount, setFormAmount] = useState(0);
   const [formNote, setFormNote] = useState("");
+  const [formDate, setFormDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [maxFormDate] = useState(() => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const hasOutlets = outlets.length > 0;
 
   function handleOpenForm() {
     setFormOutletId(defaultOutletId);
+    setFormDate(new Date().toISOString().slice(0, 10));
     setFormError(null);
     setIsFormOpen(true);
   }
@@ -94,6 +97,10 @@ export function CashflowManager({
       setFormError("Nominal minimal Rp1.");
       return;
     }
+    if (!formDate) {
+      setFormError("Tanggal pengeluaran wajib diisi.");
+      return;
+    }
     setSaving(true);
     try {
       const response = await fetch("/api/expenses", {
@@ -104,6 +111,7 @@ export function CashflowManager({
           category: formCategory,
           amount: formAmount,
           note: formNote.trim() ? formNote.trim() : null,
+          spentAt: new Date(`${formDate}T12:00:00+07:00`).toISOString(),
         }),
       });
       const data = (await response.json().catch(() => null)) as { message?: string } | null;
@@ -382,6 +390,17 @@ export function CashflowManager({
                 <label htmlFor="cashflow-page-amount">Nominal keluar</label>
                 <RupiahInput id="cashflow-page-amount" value={formAmount} onChange={setFormAmount} required />
               </div>
+
+              <label className="grid gap-1.5 text-xs font-bold text-[#53635b]">
+                Tanggal keluar
+                <input
+                  type="date"
+                  value={formDate}
+                  onChange={(e) => setFormDate(e.target.value)}
+                  max={maxFormDate}
+                  className="h-10 rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-semibold text-[#15211d] outline-none focus:border-[#198760]"
+                />
+              </label>
 
               <label className="grid gap-1.5 text-xs font-bold text-[#53635b]">
                 Catatan (opsional)
