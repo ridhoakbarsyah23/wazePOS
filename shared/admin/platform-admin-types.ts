@@ -44,8 +44,8 @@ export type PlatformAdminBusiness = {
 export type PlatformAdminAnalytics = {
   activeMrr: number;
   totalSubscriptions: number;
-  convertedSubscriptions: number;
-  trialConversionRate: number;
+  currentActiveSubscriptions: number;
+  activeSubscriptionRate: number;
   trialEndingSoon: number;
   activeSubscriptions: number;
   trialActive: number;
@@ -161,6 +161,26 @@ export type PlatformAdminAuditItem = {
   adminName: string | null;
   adminEmail: string | null;
   metadata: Record<string, unknown> | null;
+};
+
+export type PlatformAdminTodayFollowUpItem = {
+  businessId: string;
+  businessName: string;
+  ownerName: string | null;
+  ownerEmail: string | null;
+  note: string;
+  status: "open" | "in_progress" | "completed";
+  followUpDate: string;
+  authorName: string;
+  authorEmail: string;
+  createdAt: Date | string;
+};
+
+export type PlatformAdminTodayFollowUps = {
+  /** Tanggal acuan dalam format YYYY-MM-DD zona Asia/Jakarta. */
+  today: string;
+  total: number;
+  items: PlatformAdminTodayFollowUpItem[];
 };
 
 export type PlatformAdminBusinessDetailData = {

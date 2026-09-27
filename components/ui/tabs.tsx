@@ -129,19 +129,22 @@ export function TabsContent({
   value,
   children,
   className,
+  forceMount = false,
 }: {
   value: string;
   children: React.ReactNode;
   className?: string;
+  forceMount?: boolean;
 }) {
   const context = React.useContext(TabsContext);
   if (!context) throw new Error("TabsContent must be used within a Tabs component");
 
-  if (context.value !== value) return null;
+  if (context.value !== value && !forceMount) return null;
 
   return (
     <div
       role="tabpanel"
+      hidden={context.value !== value}
       id={`${context.baseId}-panel-${value}`}
       aria-labelledby={`${context.baseId}-tab-${value}`}
       tabIndex={0}

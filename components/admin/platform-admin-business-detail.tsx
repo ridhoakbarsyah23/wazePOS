@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Activity,
@@ -27,6 +27,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PlatformAdminFollowUp } from "@/components/admin/platform-admin-follow-up";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
@@ -43,7 +44,7 @@ type PlatformAdminBusinessDetailProps = {
   trigger?: DetailTrigger;
 };
 
-type DetailTab = "overview" | "subscription" | "payments" | "team" | "outlets" | "activity" | "audit";
+type DetailTab = "overview" | "subscription" | "payments" | "team" | "outlets" | "activity" | "audit" | "follow_up";
 
 const detailTabClass = "h-8 shrink-0 snap-start gap-1.5 whitespace-nowrap px-3 text-[11px] sm:h-9 sm:px-3.5 sm:text-xs";
 
@@ -176,6 +177,13 @@ export function PlatformAdminBusinessDetail({
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descriptionId = useId();
+  const pendingFollowUp = useRef(false);
+  const onPendingChange = useCallback((pending: boolean) => { pendingFollowUp.current = pending; }, []);
+  const closeDetail = useCallback(() => {
+    if (pendingFollowUp.current && !window.confirm("Ada catatan yang belum selesai disimpan. Tutup detail usaha?")) return;
+    pendingFollowUp.current = false;
+    setIsOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -213,7 +221,7 @@ export function PlatformAdminBusinessDetail({
     const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        closeDetail();
         return;
       }
       if (event.key !== "Tab") return;
@@ -239,7 +247,7 @@ export function PlatformAdminBusinessDetail({
       document.body.style.overflow = previousBodyOverflow;
       previouslyFocused?.focus();
     };
-  }, [isOpen]);
+  }, [isOpen, closeDetail]);
 
   const currentBusiness = detail?.business ?? business;
   const currentMeta = platformAdminStateMeta[currentBusiness.state];
@@ -284,7 +292,7 @@ export function PlatformAdminBusinessDetail({
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
         >
-          <div className="absolute inset-0" aria-hidden="true" onClick={() => setIsOpen(false)} />
+          <div className="absolute inset-0" aria-hidden="true" onClick={closeDetail} />
           <section ref={dialogRef} className="relative flex h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] max-h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] w-full flex-col overflow-hidden rounded-t-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] sm:h-[min(92dvh,900px)] sm:max-h-[92dvh] sm:max-w-5xl sm:rounded-3xl">
             <div className="flex shrink-0 items-start gap-3 border-b border-[#e8efeb] bg-white p-4 sm:p-5 lg:p-6">
               <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#eaf7f0] text-[#198760] sm:size-12">
@@ -300,7 +308,7 @@ export function PlatformAdminBusinessDetail({
               <button
                 ref={closeButtonRef}
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDetail}
                 className="grid size-10 shrink-0 place-items-center rounded-xl text-[#718078] transition hover:bg-[#eef6f2] hover:text-[#15211d] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 sm:size-9"
                 aria-label="Tutup detail usaha"
               >
@@ -335,6 +343,7 @@ export function PlatformAdminBusinessDetail({
                     className="platform-admin-tabs-scroll sticky top-0 z-10 !flex w-full min-w-0 max-w-full flex-nowrap snap-x gap-1 overflow-x-auto overscroll-x-contain rounded-xl p-1 sm:flex-wrap sm:justify-start sm:overflow-visible sm:snap-none"
                     aria-label="Tab detail usaha"
                   >
+                    <TabsTrigger className={detailTabClass} value="follow_up"><span className="inline-flex items-center gap-1.5"><CalendarDays className="size-3.5" />Tindak lanjut</span></TabsTrigger>
                     <TabsTrigger className={detailTabClass} value="overview"><span className="inline-flex items-center gap-1.5"><LayoutDashboard className="size-3.5" />Ringkasan</span></TabsTrigger>
                     <TabsTrigger className={detailTabClass} value="subscription"><span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5" />Subscription</span></TabsTrigger>
                     <TabsTrigger className={detailTabClass} value="payments"><span className="inline-flex items-center gap-1.5"><CreditCard className="size-3.5" />Pembayaran</span></TabsTrigger>
@@ -344,6 +353,9 @@ export function PlatformAdminBusinessDetail({
                     <TabsTrigger className={detailTabClass} value="audit"><span className="inline-flex items-center gap-1.5"><History className="size-3.5" />Audit</span></TabsTrigger>
                   </TabsList>
 
+                  <TabsContent value="follow_up" forceMount>
+                    <PlatformAdminFollowUp businessId={business.id} onPendingChange={onPendingChange} />
+                  </TabsContent>
                   <TabsContent value="overview">
                     <dl className="grid min-w-0 grid-cols-1 gap-2 sm:gap-3 min-[420px]:grid-cols-2 xl:grid-cols-3">
                       <DetailItem icon={UserRound} label="Owner" value={currentBusiness.ownerName ?? "Belum tersedia"} detail={currentBusiness.ownerEmail ?? undefined} />
@@ -440,14 +452,14 @@ export function PlatformAdminBusinessDetail({
                   </TabsContent>
 
                   <TabsContent value="audit">
-                    {detail?.auditLog.length ? <ul className="min-w-0 space-y-2">{detail.auditLog.map((item) => <li key={item.id} className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3 sm:p-3.5"><div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"><p className="m-0 min-w-0 flex-1 break-words text-xs font-extrabold text-[#15211d]">{item.action === "business_detail_view" ? "Detail usaha dibuka" : item.action === "business_export" ? "Daftar usaha diekspor" : item.action}</p><time className="shrink-0 text-[11px] tabular-nums text-[#82928a]">{formatDateTime(item.createdAt)}</time></div><p className="m-0 mt-1 min-w-0 break-all text-xs leading-5 text-[#627069]">{item.adminName ?? item.adminEmail ?? "Admin"}</p></li>)}</ul> : <EmptyDetail>Belum ada aktivitas admin terekam.</EmptyDetail>}
+                    {detail?.auditLog.length ? <ul className="min-w-0 space-y-2">{detail.auditLog.map((item) => <li key={item.id} className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eee9] bg-[#f9fcfa] p-3 sm:p-3.5"><div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"><p className="m-0 min-w-0 flex-1 break-words text-xs font-extrabold text-[#15211d]">{item.action === "business_follow_up_created" ? "Tindak lanjut dicatat" : item.action === "business_detail_view" ? "Detail usaha dibuka" : item.action === "business_export" ? "Daftar usaha diekspor" : item.action}</p><time className="shrink-0 text-[11px] tabular-nums text-[#82928a]">{formatDateTime(item.createdAt)}</time></div><p className="m-0 mt-1 min-w-0 break-all text-xs leading-5 text-[#627069]">{item.adminName ?? item.adminEmail ?? "Admin"}</p></li>)}</ul> : <EmptyDetail>Belum ada aktivitas admin terekam.</EmptyDetail>}
                   </TabsContent>
                 </Tabs>
               )}
             </div>
 
             <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-[#e8efeb] bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:p-5 sm:pb-5">
-              <Button type="button" variant="outline" size="sm" className="h-9 w-full gap-2 px-3 text-xs sm:w-auto [&_svg]:size-3.5" onClick={() => setIsOpen(false)}>
+              <Button type="button" variant="outline" size="sm" className="h-9 w-full gap-2 px-3 text-xs sm:w-auto [&_svg]:size-3.5" onClick={closeDetail}>
                 <X className="size-3.5" aria-hidden="true" />
                 Tutup
               </Button>

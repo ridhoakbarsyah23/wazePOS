@@ -45,6 +45,21 @@ const summary = {
 };
 
 describe("PlatformAdminSubscriptionList", () => {
+  it("mempertahankan filter trial tujuh hari pada pagination dan ekspor", () => {
+    render(
+      <PlatformAdminSubscriptionList
+        subscriptions={subscriptions}
+        filters={{ query: "", state: "trial_ending", plan: "all" }}
+        summary={summary}
+        pagination={{ total: 11, page: 1, pageSize: 10, totalPages: 2, from: 1, to: 10 }}
+      />,
+    );
+
+    expect((screen.getByRole("combobox", { name: "Filter status langganan" }) as HTMLSelectElement).value).toBe("trial_ending");
+    expect(screen.getByRole("link", { name: "2" }).getAttribute("href")).toBe("/admin/subscriptions?state=trial_ending&page=2");
+    expect(document.querySelector('a[href="/api/admin/subscriptions/export?state=trial_ending"]')).not.toBeNull();
+  });
+
   it("menampilkan tabel langganan dan pagination dengan filter", () => {
     render(
       <PlatformAdminSubscriptionList

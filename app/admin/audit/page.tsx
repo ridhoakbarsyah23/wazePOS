@@ -38,7 +38,7 @@ export default async function PlatformAdminAuditPage({
           Audit aktivitas admin
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069]">
-          {data.pagination.total} aktivitas terekam dari pembukaan detail usaha dan ekspor direktori usaha, langganan, serta pembayaran. Halaman ini read-only.
+          {data.pagination.total} aktivitas terekam dari catatan tindak lanjut, pembukaan detail usaha, dan ekspor data. Halaman ini read-only.
         </p>
       </section>
 

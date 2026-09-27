@@ -139,6 +139,7 @@ export function PlatformAdminSubscriptionList({
               className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua status</option>
+              <option value="trial_ending">Trial berakhir dalam 7 hari</option>
               {Object.entries(platformAdminStateMeta).map(([value, meta]) => (
                 <option key={value} value={value}>
                   {meta.label}

@@ -23,6 +23,7 @@ export type PlatformAdminAuditInput = {
 
 const auditActions: readonly string[] = [
   "all",
+  "business_follow_up_created",
   "business_detail_view",
   "business_export",
   "subscription_export",

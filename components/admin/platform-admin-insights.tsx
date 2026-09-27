@@ -1,5 +1,4 @@
 import {
-  CalendarClock,
   CircleDollarSign,
   Gauge,
   Percent,
@@ -51,16 +50,16 @@ export function PlatformAdminInsights({ analytics }: { analytics: PlatformAdminA
               <div className="flex min-w-0 items-center gap-2 text-[#198760]">
                 <TrendingUp className="size-4 shrink-0" aria-hidden="true" />
                 <h2 id="subscription-insights-title" className="admin-display m-0 min-w-0 break-words text-base font-normal">
-                  Kesehatan subscription
+                  Komposisi langganan
                 </h2>
               </div>
               <p className="mt-1 min-w-0 break-words text-xs leading-5 text-[#627069]">
-                Ringkasan kesehatan langganan dan MRR aktif.
+                Status langganan saat halaman dimuat.
               </p>
             </div>
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#eaf7f0] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#106348]">
               <span className="admin-live-dot" aria-hidden="true" />
-              Live database
+              Data saat ini
             </span>
           </div>
 
@@ -68,25 +67,18 @@ export function PlatformAdminInsights({ analytics }: { analytics: PlatformAdminA
             <div className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-[#f7faf8] p-4">
               <div className="flex min-w-0 items-center gap-2 text-[#627069]">
                 <CircleDollarSign className="size-4 shrink-0" aria-hidden="true" />
-                <span className="min-w-0 break-words text-xs font-bold">MRR aktif estimasi</span>
+                <span className="min-w-0 break-words text-xs font-bold">Estimasi pendapatan bulanan (MRR)</span>
               </div>
               <p className="admin-mono mt-2 min-w-0 break-words text-xl font-bold tracking-tight text-[#15211d] sm:text-2xl">{formatRupiah(analytics.activeMrr)}</p>
-              <p className="mt-1 min-w-0 break-words text-[11px] leading-4 text-[#82928a]">Berdasarkan harga tahunan paket aktif.</p>
+              <p className="mt-1 min-w-0 break-words text-[11px] leading-4 text-[#82928a]">Jumlah harga tahunan paket yang masih aktif dibagi 12. Estimasi ini berbeda dari pembayaran yang diterima.</p>
             </div>
-            <div className="grid min-w-0 grid-cols-2 gap-2 min-[520px]:grid-cols-1">
+            <div className="grid min-w-0 gap-2">
               <div className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eee9] p-3">
                 <div className="flex min-w-0 items-center gap-1.5 text-[#627069]">
                   <Gauge className="size-3.5 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 break-words text-[10px] font-extrabold uppercase tracking-[0.08em]">Total subscription</span>
+                  <span className="min-w-0 break-words text-[10px] font-extrabold uppercase tracking-[0.08em]">Total langganan</span>
                 </div>
                 <p className="admin-mono mt-1 min-w-0 break-words text-lg font-bold text-[#15211d]">{analytics.totalSubscriptions}</p>
-              </div>
-              <div className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eee9] p-3">
-                <div className="flex min-w-0 items-center gap-1.5 text-[#627069]">
-                  <Percent className="size-3.5 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 break-words text-[10px] font-extrabold uppercase tracking-[0.08em]">Trial ending</span>
-                </div>
-                <p className="admin-mono mt-1 min-w-0 break-words text-lg font-bold text-[#15211d]">{analytics.trialEndingSoon}</p>
               </div>
             </div>
           </div>
@@ -94,7 +86,7 @@ export function PlatformAdminInsights({ analytics }: { analytics: PlatformAdminA
           <div className="mt-5 grid min-w-0 grid-cols-1 gap-3 min-[520px]:grid-cols-2">
             <SummaryBar label="Aktif" value={analytics.activeSubscriptions} total={totalSubscriptions} tone="bg-emerald-500" />
             <SummaryBar label="Trial" value={analytics.trialActive + analytics.trialExpired} total={totalSubscriptions} tone="bg-amber-400" />
-            <SummaryBar label="Past due" value={analytics.pastDue} total={totalSubscriptions} tone="bg-rose-400" />
+            <SummaryBar label="Lewat jatuh tempo" value={analytics.pastDue} total={totalSubscriptions} tone="bg-rose-400" />
             <SummaryBar label="Dibatalkan" value={analytics.cancelled} total={totalSubscriptions} tone="bg-slate-400" />
           </div>
         </CardContent>
@@ -103,29 +95,22 @@ export function PlatformAdminInsights({ analytics }: { analytics: PlatformAdminA
       <Card className="min-w-0 max-w-full overflow-hidden shadow-none">
         <CardContent className="flex h-full min-w-0 max-w-full flex-col p-4 sm:p-5">
           <div className="flex min-w-0 items-center gap-2 text-[#198760]">
-            <CalendarClock className="size-4 shrink-0" aria-hidden="true" />
-            <h2 className="admin-display m-0 min-w-0 break-words text-base font-normal">Konversi trial</h2>
+            <Percent className="size-4 shrink-0" aria-hidden="true" />
+            <h2 className="admin-display m-0 min-w-0 break-words text-base font-normal">Persentase langganan aktif</h2>
           </div>
           <div className="mt-5 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-1">
-            <p className="admin-mono m-0 min-w-0 break-words text-4xl font-bold tracking-tight text-[#15211d]">{analytics.trialConversionRate}%</p>
+            <p className="admin-mono m-0 min-w-0 break-words text-4xl font-bold tracking-tight text-[#15211d]">{analytics.activeSubscriptionRate}%</p>
             <p className="m-0 min-w-0 flex-1 basis-32 break-words pb-1 text-xs leading-5 text-[#627069]">
-              subscription berstatus active (membayar)
+              langganan masih aktif
             </p>
           </div>
-          <div className="mt-4 h-3 w-full min-w-0 max-w-full overflow-hidden rounded-full bg-[#edf3ef]" aria-label={`Konversi trial ${analytics.trialConversionRate}%`} role="img">
-            <div className="h-full max-w-full rounded-full bg-gradient-to-r from-[#198760] to-[#52c997]" style={{ width: `${Math.min(100, analytics.trialConversionRate)}%` }} />
+          <div className="mt-4 h-3 w-full min-w-0 max-w-full overflow-hidden rounded-full bg-[#edf3ef]" aria-label={`Persentase langganan aktif ${analytics.activeSubscriptionRate}%`} role="img">
+            <div className="h-full max-w-full rounded-full bg-gradient-to-r from-[#198760] to-[#52c997]" style={{ width: `${Math.min(100, analytics.activeSubscriptionRate)}%` }} />
           </div>
           <p className="mt-3 min-w-0 break-words text-xs leading-5 text-[#627069]">
-            {analytics.convertedSubscriptions} dari {analytics.totalSubscriptions} subscription berstatus active (membayar).
+            {analytics.currentActiveSubscriptions} dari {analytics.totalSubscriptions} langganan masih aktif.
           </p>
-          <div className="mt-3 min-w-0 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 sm:mt-auto sm:translate-y-3">
-            <p className="m-0 min-w-0 break-words text-xs font-extrabold text-amber-900">Perhatian trial</p>
-            <p className="mt-1 min-w-0 break-words text-xs leading-5 text-amber-800">
-              {analytics.trialEndingSoon > 0
-                ? `${analytics.trialEndingSoon} usaha akan melewati batas trial dalam 7 hari.`
-                : "Tidak ada usaha yang akan melewati batas trial dalam 7 hari."}
-            </p>
-          </div>
+          <p className="mt-3 rounded-xl bg-[#f7faf8] p-3 text-xs leading-5 text-[#627069]">Dihitung dari langganan berstatus aktif yang masa berlakunya belum habis atau tanpa tanggal akhir, dibagi seluruh langganan. Angka ini menunjukkan kondisi saat ini, bukan konversi trial.</p>
         </CardContent>
       </Card>
     </section>

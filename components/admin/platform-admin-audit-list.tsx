@@ -22,6 +22,7 @@ type Pagination = {
 };
 
 function getActionLabel(action: string) {
+  if (action === "business_follow_up_created") return "Tindak lanjut dicatat";
   if (action === "business_detail_view") return "Detail usaha dibuka";
   if (action === "business_export") return "Daftar usaha diekspor";
   if (action === "subscription_export") return "Langganan diekspor";
@@ -132,6 +133,7 @@ export function PlatformAdminAuditList({
               className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua aksi</option>
+              <option value="business_follow_up_created">Tindak lanjut dicatat</option>
               <option value="business_detail_view">Detail usaha dibuka</option>
               <option value="business_export">Daftar usaha diekspor</option>
               <option value="subscription_export">Langganan diekspor</option>

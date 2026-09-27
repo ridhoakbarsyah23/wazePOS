@@ -29,6 +29,7 @@ import {
   user,
 } from "@/db/schema";
 import { requirePlatformAdmin } from "@/server/admin/platform-admin";
+import { getTodayFollowUps, getTodayWIBDateString } from "@/server/admin/platform-admin-follow-up";
 import {
   getPlatformSubscriptionState,
   platformSubscriptionStates,
@@ -427,11 +428,9 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
     db
       .select({
         totalSubscriptions: sql<number>`count(*)::int`,
-        // Definisi konversi yang jujur: hanya status active yang dihitung
-        // sebagai trial yang berhasil menjadi pelanggan membayar. Past due
-        // dan cancelled tidak dihitung agar angka tidak terinflasi.
-        convertedSubscriptions: sql<number>`count(*) filter (where ${subscription.status} = 'active')::int`,
-        activeMrr: sql<number>`coalesce(sum(case when ${subscription.status} = 'active' then case when ${subscription.plan} = 'bisnis' then ${sql.raw(String(Math.round(plans.bisnis.annualPrice / 12)))} else ${sql.raw(String(Math.round(plans.tumbuh.annualPrice / 12)))} end else 0 end), 0)::bigint`,
+        // Gunakan batas masa aktif yang sama dengan ringkasan dan filter daftar.
+        currentActiveSubscriptions: sql<number>`count(*) filter (where ${subscription.status} = 'active' and (${subscription.currentPeriodEnd} is null or ${subscription.currentPeriodEnd} > ${nowParam}))::int`,
+        activeMrr: sql<number>`coalesce(sum(case when ${subscription.status} = 'active' and (${subscription.currentPeriodEnd} is null or ${subscription.currentPeriodEnd} > ${nowParam}) then case when ${subscription.plan} = 'bisnis' then ${sql.raw(String(Math.round(plans.bisnis.annualPrice / 12)))} else ${sql.raw(String(Math.round(plans.tumbuh.annualPrice / 12)))} end else 0 end), 0)::bigint`,
         trialEndingSoon: sql<number>`count(*) filter (where ${subscription.status} = 'trialing' and ${subscription.trialEndsAt} > ${nowParam} and ${subscription.trialEndsAt} <= ${trialWindowEndParam})::int`,
       })
       .from(subscription),
@@ -450,19 +449,19 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
   const payments = paymentRows[0] ?? { pendingPayments: 0, paidPayments: 0, paidRevenue: 0 };
   const analyticsRowsResult = analyticsRows[0] ?? {
     totalSubscriptions: 0,
-    convertedSubscriptions: 0,
+    currentActiveSubscriptions: 0,
     activeMrr: 0,
     trialEndingSoon: 0,
   };
   const analytics = {
     totalSubscriptions: Number(analyticsRowsResult.totalSubscriptions),
-    convertedSubscriptions: Number(analyticsRowsResult.convertedSubscriptions),
+    currentActiveSubscriptions: Number(analyticsRowsResult.currentActiveSubscriptions),
     activeMrr: Number(analyticsRowsResult.activeMrr),
     trialEndingSoon: Number(analyticsRowsResult.trialEndingSoon),
-    trialConversionRate:
+    activeSubscriptionRate:
       Number(analyticsRowsResult.totalSubscriptions) > 0
         ? Math.round(
-            (Number(analyticsRowsResult.convertedSubscriptions) /
+            (Number(analyticsRowsResult.currentActiveSubscriptions) /
               Number(analyticsRowsResult.totalSubscriptions)) *
               1000,
           ) / 10
@@ -497,11 +496,20 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
 
 export async function getPlatformAdminOverviewData() {
   const adminSession = await requirePlatformAdmin();
-  const stats = await getPlatformAdminStats(new Date());
+  const now = new Date();
+  const [stats, todayFollowUps] = await Promise.all([
+    getPlatformAdminStats(now),
+    getTodayFollowUps(now).catch((error) => {
+      // Ringkasan tetap dapat dibuka jika migrasi tindak lanjut belum dijalankan.
+      console.error("Failed to load Platform Admin today follow-ups", error);
+      return { today: getTodayWIBDateString(now), total: 0, items: [] };
+    }),
+  ]);
 
   return {
     admin: adminSession.user,
     ...stats,
+    todayFollowUps,
   };
 }
 

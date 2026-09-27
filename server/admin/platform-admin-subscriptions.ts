@@ -18,7 +18,7 @@ type SearchParam = string | string[] | undefined;
 
 export type PlatformAdminSubscriptionFilters = {
   query: string;
-  state: PlatformSubscriptionState | "all";
+  state: PlatformSubscriptionState | "trial_ending" | "all";
   plan: "all" | "tumbuh" | "bisnis";
 };
 
@@ -45,7 +45,7 @@ export function normalizePlatformAdminSubscriptionFilters(
   const planRaw = getFirst(input.plan)?.trim() ?? "all";
   return {
     query: getFirst(input.query)?.trim().slice(0, 100) ?? "",
-    state: (platformSubscriptionStates as readonly string[]).includes(stateRaw)
+    state: stateRaw === "trial_ending" || (platformSubscriptionStates as readonly string[]).includes(stateRaw)
       ? (stateRaw as PlatformAdminSubscriptionFilters["state"])
       : "all",
     plan: planRaw === "tumbuh" || planRaw === "bisnis" ? planRaw : "all",
@@ -77,6 +77,11 @@ function buildOwnerRows() {
 
 function getStateCondition(state: PlatformAdminSubscriptionFilters["state"], now: Date): SQL | undefined {
   switch (state) {
+    case "trial_ending": {
+      const windowEnd = new Date(now);
+      windowEnd.setDate(windowEnd.getDate() + 7);
+      return and(eq(subscription.status, "trialing"), gt(subscription.trialEndsAt, now), lte(subscription.trialEndsAt, windowEnd));
+    }
     case "trial_active":
       return and(eq(subscription.status, "trialing"), gt(subscription.trialEndsAt, now));
     case "trial_expired":
