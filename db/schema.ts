@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -199,6 +199,7 @@ export const platformAdminAuditLog = pgTable(
         | "business_export"
         | "subscription_export"
         | "payment_export"
+        | "business_follow_up_created"
       >()
       .notNull(),
     entityType: text("entity_type")
@@ -212,6 +213,27 @@ export const platformAdminAuditLog = pgTable(
     index("platform_admin_audit_business_created_idx").on(table.businessId, table.createdAt),
     index("platform_admin_audit_actor_created_idx").on(table.actorUserId, table.createdAt),
     index("platform_admin_audit_action_created_idx").on(table.action, table.createdAt),
+  ],
+);
+
+export const platformAdminFollowUp = pgTable(
+  "platform_admin_follow_up",
+  {
+    id: text("id").primaryKey(),
+    businessId: text("business_id").notNull().references(() => business.id, { onDelete: "cascade" }),
+    note: text("note").notNull(),
+    status: text("status").$type<"open" | "in_progress" | "completed">().notNull(),
+    followUpDate: date("follow_up_date", { mode: "string" }),
+    authorUserId: text("author_user_id").references(() => user.id, { onDelete: "set null" }),
+    authorName: text("author_name").notNull(),
+    authorEmail: text("author_email").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("platform_admin_follow_up_business_created_idx").on(table.businessId, table.createdAt, table.id),
+    check("platform_admin_follow_up_status_check", sql`${table.status} in ('open', 'in_progress', 'completed')`),
+    check("platform_admin_follow_up_note_check", sql`char_length(trim(${table.note})) between 1 and 2000`),
+    check("platform_admin_follow_up_completed_date_check", sql`${table.status} <> 'completed' or ${table.followUpDate} is null`),
   ],
 );
 
@@ -334,6 +356,40 @@ export const cashShift = pgTable(
   ],
 );
 
+export const cashExpense = pgTable(
+  "cash_expense",
+  {
+    id: text("id").primaryKey(),
+    businessId: text("business_id")
+      .notNull()
+      .references(() => business.id, { onDelete: "cascade" }),
+    outletId: text("outlet_id")
+      .notNull()
+      .references(() => outlet.id, { onDelete: "restrict" }),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    category: text("category")
+      .$type<"belanja" | "gaji" | "sewa" | "operasional" | "lainnya">()
+      .notNull(),
+    amount: integer("amount").notNull(),
+    note: text("note"),
+    spentAt: timestamp("spent_at", { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("cash_expense_business_id_idx").on(table.businessId),
+    index("cash_expense_business_spent_at_idx").on(table.businessId, table.spentAt),
+    index("cash_expense_business_outlet_spent_at_idx").on(
+      table.businessId,
+      table.outletId,
+      table.spentAt,
+    ),
+    check("cash_expense_category_check", sql`${table.category} in ('belanja', 'gaji', 'sewa', 'operasional', 'lainnya')`),
+    check("cash_expense_amount_check", sql`${table.amount} > 0 and ${table.amount} <= 2000000000`),
+  ],
+);
+
 export const sale = pgTable(
   "sale",
   {
@@ -439,11 +495,13 @@ export const schema = {
   subscription,
   subscriptionPayment,
   platformAdminAuditLog,
+  platformAdminFollowUp,
   category,
   product,
   inventoryStock,
   stockMovement,
   cashShift,
+  cashExpense,
   sale,
   saleItem,
   invoiceCounter,
