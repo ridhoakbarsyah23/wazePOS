@@ -43,6 +43,7 @@ export async function PosPageContent({
   const allowNonCashPayments = hasPlanFeature(selectedPlan, "allPaymentMethods");
   const allowQrisPayments = hasPlanFeature(selectedPlan, "qrisPayments");
   const canManageInventory = hasPlanFeature(selectedPlan, "inventoryStock");
+  const allowSaleItemNotes = hasPlanFeature(selectedPlan, "saleItemNotes");
   const allowDarkMode = hasPlanFeature(selectedPlan, "darkMode");
   const outlets = await db
     .select({ id: outlet.id, name: outlet.name, slug: outlet.slug })
@@ -118,7 +119,7 @@ export async function PosPageContent({
              ...item,
              stock: Number(item.stock ?? 0),
              trackStock: canManageInventory && item.trackStock,
-           }))} outlets={[activeOutlet]} initialOutletId={activeOutlet.id} allowCustomerLookup={hasPlanFeature(selectedPlan, "customerLookup")} allowNonCashPayments={allowNonCashPayments} allowQrisPayments={allowQrisPayments} allowInventory={canManageInventory} checkoutDisabledReason={null} receiptSettings={normalizeReceiptSettings(businessRow[0]?.receiptSettings)} />
+           }))} outlets={[activeOutlet]} initialOutletId={activeOutlet.id} allowCustomerLookup={hasPlanFeature(selectedPlan, "customerLookup")} allowNonCashPayments={allowNonCashPayments} allowQrisPayments={allowQrisPayments} allowInventory={canManageInventory} allowSaleItemNotes={allowSaleItemNotes} checkoutDisabledReason={null} receiptSettings={normalizeReceiptSettings(businessRow[0]?.receiptSettings)} />
         </div>
         <details className="group mt-4 overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_4px_20px_rgba(16,65,48,.04)]">
           <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-black text-[#15211d] [&::-webkit-details-marker]:hidden">

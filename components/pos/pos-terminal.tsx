@@ -16,6 +16,7 @@ import {
   Banknote,
   CheckCircle2,
   CreditCard,
+  Lock,
   Minus,
   Plus,
   QrCode,
@@ -51,7 +52,16 @@ type PosProduct = {
 
 type PosOutlet = { id: string; name: string };
 type PosMember = { id: string; name: string; phone: string | null };
-type CartItem = PosProduct & { quantity: number };
+type CartItem = PosProduct & { lineId: string; quantity: number; note: string };
+
+export const POS_SALE_ITEM_NOTE_MAX_LENGTH = 140;
+
+function createCartLineId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `line-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+}
 
 const money = (value: number) => `Rp ${value.toLocaleString("id-ID")}`;
 
@@ -70,6 +80,7 @@ export function PosTerminal({
   allowNonCashPayments,
   allowQrisPayments,
   allowInventory = true,
+  allowSaleItemNotes = false,
   checkoutDisabledReason,
   businessName = "wazePOS Store",
   receiptSettings,
@@ -81,6 +92,8 @@ export function PosTerminal({
   allowNonCashPayments: boolean;
   allowQrisPayments: boolean;
   allowInventory?: boolean;
+  /** Paket Bisnis: kasir bisa mengisi catatan per item (mis. less sugar). Tumbuh: tampil terkunci. */
+  allowSaleItemNotes?: boolean;
   checkoutDisabledReason: string | null;
   businessName?: string;
   receiptSettings?: ReceiptSettings | null;
@@ -267,7 +280,9 @@ export function PosTerminal({
   }, []);
 
   const addProduct = useCallback((product: PosProduct) => {
-    const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
+    const quantityInCart = cart
+      .filter((item) => item.id === product.id)
+      .reduce((sum, item) => sum + item.quantity, 0);
     const stockIssue = getProductStockIssue(product, quantityInCart);
     if (stockIssue === "out-of-stock") {
       setMessage({ type: "error", text: `Stok produk ${product.name} sudah habis.` });
@@ -279,11 +294,11 @@ export function PosTerminal({
     }
 
     setCart((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const existing = current.find((item) => item.id === product.id && item.note.trim() === "");
       if (existing) {
-        return current.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
+        return current.map((item) => (item.lineId === existing.lineId ? { ...item, quantity: item.quantity + 1 } : item));
       }
-      return [...current, { ...product, quantity: 1 }];
+      return [...current, { ...product, lineId: createCartLineId(), quantity: 1, note: "" }];
     });
     showAddedFeedback(product);
     setMessage(null);
@@ -314,36 +329,41 @@ export function PosTerminal({
     }
   }, [addProduct, products]);
 
-  function removeCartItem(id: string) {
-    if (removingItemIds.includes(id)) return;
-    setRemovingItemIds((current) => [...current, id]);
+  function removeCartItem(lineId: string) {
+    if (removingItemIds.includes(lineId)) return;
+    setRemovingItemIds((current) => [...current, lineId]);
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timer = setTimeout(() => {
-      setCart((current) => current.filter((item) => item.id !== id));
-      setRemovingItemIds((current) => current.filter((itemId) => itemId !== id));
+      setCart((current) => current.filter((item) => item.lineId !== lineId));
+      setRemovingItemIds((current) => current.filter((itemId) => itemId !== lineId));
       removalTimersRef.current.delete(timer);
     }, reduceMotion ? 0 : 220);
     removalTimersRef.current.add(timer);
   }
 
-  function updateQuantity(id: string, quantity: number) {
-    const currentItem = cart.find((item) => item.id === id);
-    if (!currentItem || removingItemIds.includes(id)) return;
+  function updateQuantity(lineId: string, quantity: number) {
+    const currentItem = cart.find((item) => item.lineId === lineId);
+    if (!currentItem || removingItemIds.includes(lineId)) return;
     if (quantity <= 0) {
-      removeCartItem(id);
+      removeCartItem(lineId);
       return;
     }
 
     const direction = quantity > currentItem.quantity ? "increase" : "decrease";
     if (quantityFeedbackTimerRef.current) clearTimeout(quantityFeedbackTimerRef.current);
     setQuantityFeedback((current) => ({
-      productId: id,
+      productId: lineId,
       direction,
       sequence: (current?.sequence ?? 0) + 1,
     }));
     quantityFeedbackTimerRef.current = setTimeout(() => setQuantityFeedback(null), 360);
-    setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity } : item)));
+    setCart((current) => current.map((item) => (item.lineId === lineId ? { ...item, quantity } : item)));
+  }
+
+  function updateLineNote(lineId: string, note: string) {
+    const nextNote = note.slice(0, POS_SALE_ITEM_NOTE_MAX_LENGTH);
+    setCart((current) => current.map((item) => (item.lineId === lineId ? { ...item, note: nextNote } : item)));
   }
 
   function clearCart() {
@@ -394,7 +414,13 @@ export function PosTerminal({
       customerId: selectedMember?.id ?? null,
       paymentMethod,
       paidAmount: paid,
-      items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
+      items: cart.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        ...(allowSaleItemNotes && item.note.trim()
+          ? { note: item.note.trim().slice(0, POS_SALE_ITEM_NOTE_MAX_LENGTH) }
+          : {}),
+      })),
     };
     const fingerprint = createSaleRequestFingerprint(salePayload);
     const clientRequestId = getOrCreateSaleRequestId(sessionStorage, fingerprint);
@@ -417,6 +443,7 @@ export function PosTerminal({
         quantity: item.quantity,
         unitPrice: item.sellingPrice,
         subtotal: item.sellingPrice * item.quantity,
+        ...(allowSaleItemNotes && item.note.trim() ? { note: item.note.trim() } : {}),
       }));
       const activeOutletName = outlets.find((o) => o.id === outletId)?.name ?? "Kasir";
 
@@ -645,7 +672,9 @@ export function PosTerminal({
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {filteredProducts.map((product) => {
               const unavailable = allowInventory && product.trackStock && product.stock < 1;
-              const quantityInCart = cart.find((item) => item.id === product.id)?.quantity ?? 0;
+              const quantityInCart = cart
+                .filter((item) => item.id === product.id)
+                .reduce((sum, item) => sum + item.quantity, 0);
               const isJustAdded = addedFeedback?.productId === product.id;
               return (
                 <button
@@ -770,11 +799,16 @@ export function PosTerminal({
         <div className="max-h-[320px] overflow-y-auto px-4">
           {cart.map((item) => {
             const isJustAdded = addedFeedback?.productId === item.id;
-            const quantityChange = quantityFeedback?.productId === item.id ? quantityFeedback : null;
-            const isRemoving = removingItemIds.includes(item.id);
+            const quantityChange = quantityFeedback?.productId === item.lineId ? quantityFeedback : null;
+            const isRemoving = removingItemIds.includes(item.lineId);
+            const quantityInThisLine = item.quantity;
+            const quantitySameProduct = cart
+              .filter((line) => line.id === item.id)
+              .reduce((sum, line) => sum + line.quantity, 0);
+            const stockCapped = allowInventory && item.trackStock && quantitySameProduct >= item.stock;
             return (
             <div
-              key={`${item.id}:${isJustAdded ? addedFeedback.sequence : 0}`}
+              key={`${item.lineId}:${isJustAdded ? addedFeedback.sequence : 0}`}
               className={`border-b border-[#edf1ef] py-3.5 ${isJustAdded ? styles.cartItemAdded : ""} ${isRemoving ? styles.cartItemRemoving : ""}`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -784,12 +818,39 @@ export function PosTerminal({
                 </div>
                 <strong className="shrink-0 text-sm text-[#17211d]">{money(item.sellingPrice * item.quantity)}</strong>
               </div>
+              <div className="mt-2.5 grid gap-2">
+                <label className="grid gap-1 text-xs font-bold text-[#44534c]">
+                  <span className="flex items-center justify-between">
+                    <span>Catatan item</span>
+                    {!allowSaleItemNotes && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#f0f5f2] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#627069]">
+                        <Lock className="size-3" /> Bisnis
+                      </span>
+                    )}
+                  </span>
+                  <input
+                    type="text"
+                    value={item.note}
+                    disabled={!allowSaleItemNotes || isRemoving || isSubmitting}
+                    onChange={(event) => updateLineNote(item.lineId, event.target.value)}
+                    placeholder={allowSaleItemNotes ? "Mis. less sugar, pedas level 2" : "Upgrade ke Bisnis untuk catat permintaan"}
+                    maxLength={POS_SALE_ITEM_NOTE_MAX_LENGTH}
+                    aria-label={`Catatan untuk ${item.name}`}
+                    className="h-9 w-full rounded-xl border border-[#dbe5df] bg-[#f8faf9] px-3 text-xs font-medium text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:bg-white focus:ring-2 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f1f4f2] disabled:text-[#96a19b]"
+                  />
+                </label>
+                <p className="m-0 text-[11px] leading-4 text-[#78857f]">
+                  {allowSaleItemNotes
+                    ? `${item.note.trim().length}/${POS_SALE_ITEM_NOTE_MAX_LENGTH} karakter, tampil di struk.`
+                    : "Catatan per item khusus Paket Bisnis."}
+                </p>
+              </div>
               <div className="mt-2.5 flex items-center">
                 <div className="flex items-center rounded-xl border border-[#dbe5df] bg-white">
                   <button
                     type="button"
                     aria-label={`Kurangi ${item.name}`}
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    onClick={() => updateQuantity(item.lineId, item.quantity - 1)}
                     disabled={isRemoving}
                     className={`grid size-8 place-items-center rounded-l-xl text-[#44534c] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
                   >
@@ -805,13 +866,13 @@ export function PosTerminal({
                           : ""
                     }`}
                   >
-                    {item.quantity}
+                    {quantityInThisLine}
                   </span>
                   <button
                     type="button"
                     aria-label={`Tambah ${item.name}`}
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    disabled={isRemoving || (allowInventory && item.trackStock && item.quantity >= item.stock)}
+                    onClick={() => updateQuantity(item.lineId, item.quantity + 1)}
+                    disabled={isRemoving || stockCapped}
                     className={`grid size-8 place-items-center rounded-r-xl text-[#126b4b] hover:bg-[#f2f5f3] disabled:opacity-35 ${styles.quantityButton}`}
                   >
                     <Plus className="size-3.5" />
@@ -822,7 +883,7 @@ export function PosTerminal({
                   aria-label={`Hapus ${item.name} dari pesanan`}
                   title={`Hapus ${item.name}`}
                   disabled={isRemoving}
-                  onClick={() => removeCartItem(item.id)}
+                  onClick={() => removeCartItem(item.lineId)}
                   className={`ml-auto inline-flex items-center gap-1.5 rounded-lg px-1 py-1 text-xs text-[#78857f] hover:text-rose-600 disabled:pointer-events-none ${styles.removeButton}`}
                 >
                   <Trash2 className="size-3.5" /> Hapus

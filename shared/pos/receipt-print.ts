@@ -3,7 +3,7 @@ export type ReceiptPaperSize = "a4" | "58mm" | "80mm";
 export function getReceiptPrintPage(
   paperSize: ReceiptPaperSize,
   itemCount: number,
-  options: { hasDiscount?: boolean; isVoided?: boolean } = {},
+  options: { hasDiscount?: boolean; isVoided?: boolean; hasItemNotes?: boolean } = {},
 ) {
   const safeItemCount = Math.max(1, Math.min(itemCount, 100));
   if (paperSize === "a4") {
@@ -27,7 +27,7 @@ export function getReceiptPrintPage(
   const baseHeightMm = paperSize === "58mm" ? 128 : 120;
   const itemHeightMm = paperSize === "58mm" ? 12 : 10;
   const optionalHeightMm =
-    (options.hasDiscount ? 6 : 0) + (options.isVoided ? 18 : 0);
+    (options.hasDiscount ? 6 : 0) + (options.isVoided ? 18 : 0) + (options.hasItemNotes ? 8 : 0);
 
   return {
     pageWidthMm: widthMm,
