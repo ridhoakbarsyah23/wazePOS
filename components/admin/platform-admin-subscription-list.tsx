@@ -26,6 +26,10 @@ type Pagination = {
   to: number;
 };
 
+function getPlanLabel(plan: PlatformAdminSubscriptionItem["plan"]) {
+  return plan === "bisnis" ? "wazePOS Business" : "wazePOS Growth";
+}
+
 function getDate(value: Date | string | null) {
   if (!value) return null;
   const date = new Date(value);
@@ -153,8 +157,8 @@ export function PlatformAdminSubscriptionList({
               className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua paket</option>
-              <option value="tumbuh">Tumbuh</option>
-              <option value="bisnis">Bisnis</option>
+              <option value="tumbuh">wazePOS Growth</option>
+              <option value="bisnis">wazePOS Business</option>
             </select>
             <Button type="submit" size="sm" className="col-span-2 h-11 w-full gap-2 px-3 text-xs sm:h-10 sm:col-span-4 [&_svg]:size-3.5">
               <ListFilter aria-hidden="true" />
@@ -199,7 +203,7 @@ export function PlatformAdminSubscriptionList({
                         {item.ownerEmail ?? "Owner belum tersedia"}
                       </p>
                     </td>
-                    <td className="px-5 py-4 font-bold capitalize">{item.plan}</td>
+                    <td className="px-5 py-4 font-bold">{getPlanLabel(item.plan)}</td>
                     <td className="px-5 py-4">
                       <Badge className="whitespace-nowrap" variant={platformAdminStateMeta[item.state].variant}>
                         {platformAdminStateMeta[item.state].label}
@@ -237,7 +241,7 @@ export function PlatformAdminSubscriptionList({
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <div className="rounded-xl border border-[#edf2ef] bg-white p-2.5">
                     <dt className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#82928a]">Paket</dt>
-                    <dd className="mt-1 font-extrabold capitalize text-[#15211d]">{item.plan}</dd>
+                    <dd className="mt-1 font-extrabold text-[#15211d]">{getPlanLabel(item.plan)}</dd>
                   </div>
                   <div className="rounded-xl border border-[#edf2ef] bg-white p-2.5">
                     <dt className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#82928a]">Batas waktu</dt>

@@ -97,7 +97,7 @@ export default async function SubscriptionPage({
               </h2>
               <p className="mt-1 text-xs text-rose-700 leading-relaxed">
                 Operasional kasir, katalog produk, dan manajemen stok saat ini dinonaktifkan sementara.
-                Silakan pilih paket langganan di bawah ini (Paket Tumbuh atau Paket Bisnis) dan selesaikan pembayaran via Midtrans untuk mengaktifkan kembali seluruh gerai Anda.
+                Silakan pilih paket langganan di bawah ini (wazePOS Growth atau wazePOS Business) dan selesaikan pembayaran via Midtrans untuk mengaktifkan kembali seluruh gerai Anda.
               </p>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default async function SubscriptionPage({
               Bandingkan paket dan aktifkan langganan tahunan untuk operasional bisnis Anda.
             </p>
           </div>
-          <Badge className="h-fit">Paket {plans[selectedPlan].name}</Badge>
+          <Badge className="h-fit">{plans[selectedPlan].name}</Badge>
         </div>
 
         <Card className="mt-7 bg-[linear-gradient(135deg,#0f6b4c,#198760)] text-white">

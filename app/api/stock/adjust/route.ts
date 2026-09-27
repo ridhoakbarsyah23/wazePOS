@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   if (!canManageBusiness(membership.role)) return NextResponse.json({ message: "Anda tidak memiliki akses untuk menyesuaikan stok." }, { status: 403 });
   if (!hasPlanFeature(context.currentSubscription?.plan, "inventoryStock")) {
     return NextResponse.json(
-      { message: "Manajemen stok hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Manajemen stok hanya tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }

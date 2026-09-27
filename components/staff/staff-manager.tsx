@@ -53,7 +53,7 @@ export function StaffManager({
   currentUserRole,
   currentUserId,
   maxStaff = 2,
-  planName = "Tumbuh",
+  planName = "wazePOS Growth",
 }: {
   initialStaff: StaffMember[];
   currentUserRole: "owner" | "admin" | "cashier";
@@ -243,12 +243,12 @@ export function StaffManager({
                   Kuota {maxStaff} Akun Tim Tercapai ({planName})
                 </p>
                 <p className="m-0 text-xs text-[#627069]">
-                  Kuota menghitung pemilik dan karyawan. Tingkatkan ke <strong>Paket Bisnis</strong> untuk menambah anggota tim.
+                  Kuota menghitung pemilik dan karyawan. Tingkatkan ke <strong>wazePOS Business</strong> untuk menambah anggota tim.
                 </p>
               </div>
             </div>
             <Button asChild variant="default" size="sm">
-              <Link href="/subscription">Upgrade ke Bisnis</Link>
+              <Link href="/subscription">Upgrade ke Business</Link>
             </Button>
           </CardContent>
         </Card>
@@ -259,7 +259,7 @@ export function StaffManager({
           { label: "Total Karyawan", value: employeeCount, helper: "Di luar akun pemilik", icon: Users, tone: "bg-emerald-50 text-emerald-700 border-emerald-100" },
           { label: "Admin Toko", value: adminCount, helper: "Akses operasional", icon: ShieldCheck, tone: "bg-blue-50 text-blue-700 border-blue-100" },
           { label: "Kasir", value: cashierCount, helper: "Akses terminal POS", icon: UserCheck, tone: "bg-amber-50 text-amber-700 border-amber-100" },
-          { label: "Slot Tersedia", value: remainingSlots === null ? "∞" : remainingSlots, helper: `Paket ${planName}`, icon: CircleGauge, tone: "bg-violet-50 text-violet-700 border-violet-100" },
+          { label: "Slot Tersedia", value: remainingSlots === null ? "∞" : remainingSlots, helper: `${planName}`, icon: CircleGauge, tone: "bg-violet-50 text-violet-700 border-violet-100" },
         ].map((item) => {
           const Icon = item.icon;
           return (

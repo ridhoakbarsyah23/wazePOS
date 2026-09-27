@@ -118,8 +118,8 @@ describe("catatan per item khusus Bisnis", () => {
 
     const input = screen.getByLabelText("Catatan untuk Kopi Susu") as HTMLInputElement;
     expect(input.disabled).toBe(true);
-    expect(input.placeholder).toContain("Upgrade ke Bisnis");
-    expect(screen.getByText("Catatan per item khusus Paket Bisnis.")).toBeDefined();
+    expect(input.placeholder).toContain("Upgrade ke Business");
+    expect(screen.getByText("Catatan per item khusus wazePOS Business.")).toBeDefined();
   });
 
   it("Bisnis: input catatan aktif dan terkirim ke API", async () => {

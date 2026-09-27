@@ -40,7 +40,7 @@ export type PlanConfig = {
 
 export const plans: Record<PlanId, PlanConfig> = {
   tumbuh: {
-    name: "Tumbuh",
+    name: "wazePOS Growth",
     description: "Kapasitas operasional inti untuk usaha mandiri dan UMKM.",
     annualPrice: 450_000,
     limits: {
@@ -72,7 +72,7 @@ export const plans: Record<PlanId, PlanConfig> = {
     },
   },
   bisnis: {
-    name: "Bisnis",
+    name: "wazePOS Business",
     description: "Kapasitas lebih besar dan metode pembayaran tambahan untuk usaha berkembang.",
     annualPrice: 950_000,
     limits: {
@@ -189,7 +189,7 @@ export function getMarketingPlanFeatures(plan: PlanId): string[] {
 
   if (plan === "bisnis") {
     return [
-      `Seluruh fitur Paket ${plans.tumbuh.name}`,
+      `Seluruh fitur ${plans.tumbuh.name}`,
       ...(config.features.allPaymentMethods
         ? [
             config.features.qrisPayments
@@ -232,7 +232,7 @@ export function getMarketingPlanCards(): MarketingPlanCard[] {
       price: formatPlanAnnualPrice(id),
       priceNote: "Ditagihkan satu kali setiap tahun",
       features: getMarketingPlanFeatures(id),
-      cta: `Pilih Paket ${config.name}`,
+      cta: `Pilih ${config.name}`,
       popular: id === "bisnis",
     };
   });
@@ -253,10 +253,10 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
       category: "Operasional inti",
       items: [
         { name: "Kasir transaksi tunai", detail: "Melayani transaksi kasir harian dan menghitung kembalian.", availability: availability("cashSales") },
-        { name: "Katalog produk, SKU, & varian", detail: `Hingga ${plans.tumbuh.limits.maxProducts} produk di Paket Tumbuh, tanpa batas di Paket Bisnis.`, availability: availability("productCatalog") },
+        { name: "Katalog produk, SKU, & varian", detail: `Hingga ${plans.tumbuh.limits.maxProducts} produk di ${plans.tumbuh.name}, tanpa batas di ${plans.bisnis.name}.`, availability: availability("productCatalog") },
         {
           name: "Pelanggan & member kasir",
-          detail: `Kelola hingga ${plans.tumbuh.limits.maxCustomers} pelanggan di Paket Tumbuh, tanpa batas di Paket Bisnis, termasuk pencarian dan pendaftaran member saat transaksi.`,
+          detail: `Kelola hingga ${plans.tumbuh.limits.maxCustomers} pelanggan di ${plans.tumbuh.name}, tanpa batas di ${plans.bisnis.name}, termasuk pencarian dan pendaftaran member saat transaksi.`,
           availability: availability("customerLookup"),
         },
         { name: "Stok otomatis & peringatan stok", detail: "Memantau ketersediaan barang tanpa pencatatan berulang.", availability: availability("inventoryStock") },
@@ -268,7 +268,7 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
             bisnis: hasPlanFeature("bisnis", "salesHistory") && hasPlanFeature("bisnis", "receiptPrinting"),
           },
         },
-        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} akun (termasuk Owner) pada Tumbuh, staf tanpa batas pada Bisnis.`, availability: availability("staffManagement") },
+        { name: "Manajemen staf & tim kasir", detail: `Maksimal ${plans.tumbuh.limits.maxStaff} akun (termasuk Owner) pada ${plans.tumbuh.name}, staf tanpa batas pada ${plans.bisnis.name}.`, availability: availability("staffManagement") },
         { name: "Peran hak akses terpisah", detail: "Akses khusus kasir dan admin sesuai tanggung jawab operasional.", availability: availability("roleBasedAccess") },
         {
           name: "Catatan per item di struk",
@@ -290,7 +290,7 @@ export function getPlanFeatureComparison(): PlanFeatureComparisonGroup[] {
     {
       category: "Tim & kapasitas usaha",
       items: [
-        { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada Paket Tumbuh, hingga ${plans.bisnis.limits.maxOutlets} gerai pada Paket Bisnis.`, availability: businessOnlyAvailability("multiOutlet") },
+        { name: "Multi-gerai / cabang usaha", detail: `${plans.tumbuh.limits.maxOutlets} gerai pada ${plans.tumbuh.name}, hingga ${plans.bisnis.limits.maxOutlets} gerai pada ${plans.bisnis.name}.`, availability: businessOnlyAvailability("multiOutlet") },
       ],
     },
     {

@@ -342,7 +342,7 @@ export function ProductManager({
         {!allowInventory && (
           <div className="flex items-center gap-2 rounded-xl border border-[#f0dfae] bg-[#fffaf0] px-3 py-2 text-xs text-[#80652a]">
             <AlertTriangle className="size-4 shrink-0 text-[#9a6a12]" />
-            Manajemen stok dan peringatan stok menipis tersedia pada Paket Bisnis.
+            Manajemen stok dan peringatan stok menipis tersedia pada wazePOS Business.
           </div>
         )}
 

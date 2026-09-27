@@ -36,7 +36,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Paket hanya dapat diganti langsung selama masa trial aktif." }, { status: 409 });
   }
   if (currentSubscription.plan === parsed.data.plan) {
-    return NextResponse.json({ message: `Paket ${plans[parsed.data.plan].name} sudah digunakan.`, plan: parsed.data.plan });
+    return NextResponse.json({ message: `${plans[parsed.data.plan].name} sudah digunakan.`, plan: parsed.data.plan });
   }
 
   const [updated] = await db
@@ -50,5 +50,5 @@ export async function PATCH(request: Request) {
     .returning({ plan: subscription.plan });
 
   if (!updated) return NextResponse.json({ message: "Status subscription berubah. Muat ulang halaman lalu coba kembali." }, { status: 409 });
-  return NextResponse.json({ message: `Uji coba Paket ${plans[updated.plan].name} berhasil diaktifkan.`, plan: updated.plan });
+  return NextResponse.json({ message: `Uji coba ${plans[updated.plan].name} berhasil diaktifkan.`, plan: updated.plan });
 }

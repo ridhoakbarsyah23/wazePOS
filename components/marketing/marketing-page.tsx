@@ -74,7 +74,7 @@ function Icon({ name, size = 22 }: { name: IconName; size?: number }) {
 
 const benefits = [
   { icon: "clock" as const, title: "Transaksi lebih cepat", text: "Percepat proses transaksi agar antrean tetap lancar dan pelanggan terlayani dengan baik." },
-  { icon: "box" as const, title: "Stok lebih terkendali", text: "Fitur Paket Bisnis untuk memantau jumlah dan pergerakan stok tanpa pencatatan berulang." },
+  { icon: "box" as const, title: "Stok lebih terkendali", text: "Fitur wazePOS Business untuk memantau jumlah dan pergerakan stok tanpa pencatatan berulang." },
   { icon: "chart" as const, title: "Laporan lebih praktis", text: "Tinjau ringkasan penjualan tanpa menghabiskan waktu untuk rekapitulasi manual." },
   { icon: "customer" as const, title: "Pelanggan lebih terkelola", text: "Kelola data dan riwayat transaksi pelanggan untuk mendukung pelayanan yang lebih baik." },
   { icon: "people" as const, title: "Mendukung operasional tim", text: "Gunakan akun terpisah untuk membantu pembagian tugas antara pemilik usaha dan kasir." },
@@ -83,7 +83,7 @@ const benefits = [
 
 const featureGroups = [
   { id: "cashier", label: "Kasir", icon: "receipt" as const, title: "Proses transaksi dalam satu alur yang efisien", text: "Kelola keranjang, diskon, pembayaran, struk, dan riwayat transaksi melalui alur kerja yang praktis.", bullets: ["Keranjang dan diskon", "Beragam metode pembayaran", "Struk dan riwayat transaksi"] },
-  { id: "stock", label: "Stok (Paket Bisnis)", icon: "box" as const, title: "Kelola stok dengan lebih terkendali", text: "Paket Bisnis membantu Anda memantau pergerakan stok dan menerima peringatan stok menipis.", bullets: ["Stok masuk dan keluar", "Peringatan stok minimum", "Riwayat perubahan stok"] },
+  { id: "stock", label: "Stok (wazePOS Business)", icon: "box" as const, title: "Kelola stok dengan lebih terkendali", text: "wazePOS Business membantu Anda memantau pergerakan stok dan menerima peringatan stok menipis.", bullets: ["Stok masuk dan keluar", "Peringatan stok minimum", "Riwayat perubahan stok"] },
   { id: "report", label: "Laporan", icon: "chart" as const, title: "Pahami kinerja bisnis tanpa rekapitulasi manual", text: "Tinjau pendapatan, tren penjualan, dan produk terlaris melalui laporan yang mudah dipahami.", bullets: ["Laporan harian dan bulanan", "Produk terlaris", "Ringkasan pendapatan"] },
   { id: "customer", label: "Pelanggan", icon: "customer" as const, title: "Kenali pelanggan bisnis Anda", text: "Kelola informasi dan riwayat transaksi pelanggan untuk mendukung pelayanan yang lebih baik.", bullets: ["Data pelanggan", "Riwayat transaksi", "Pencarian cepat"] },
   { id: "team", label: "Tim", icon: "people" as const, title: "Kelola operasional tim dengan lebih tertata", text: "Gunakan akun terpisah berdasarkan peran pemilik usaha dan kasir sesuai kebutuhan operasional.", bullets: ["Akun untuk beberapa pengguna", "Peran admin dan kasir", "Aktivitas lebih terorganisasi"] },
@@ -260,13 +260,13 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/>
           <div className="container hero-grid">
             <div className="hero-copy reveal">
-              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS Bisnis · Struk 58/80mm</span></span>
+              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS Business · Struk 58/80mm</span></span>
               <h1 className="hero-display">Tutup buku <span>tanpa ribet.</span><br />Kasir jalan, stok aman.</h1>
-              <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, arus kas & stok Paket Bisnis terpantau, laporan kebaca tanpa rekap manual.</p>
+              <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, arus kas & stok wazePOS Business terpantau, laporan kebaca tanpa rekap manual.</p>
               <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
               <dl className="pos-proof">
-                <div><dt className="mono">Kasir</dt><dd>Tunai + QRIS Bisnis</dd></div>
-                <div><dt className="mono">Arus kas</dt><dd>masuk-keluar Bisnis</dd></div>
+                <div><dt className="mono">Kasir</dt><dd>Tunai + QRIS Business</dd></div>
+                <div><dt className="mono">Arus kas</dt><dd>masuk-keluar Business</dd></div>
                 <div><dt className="mono">Stok</dt><dd>peringatan menipis</dd></div>
                 <div><dt className="mono">Laporan</dt><dd>Excel + layar</dd></div>
               </dl>
@@ -327,14 +327,14 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
         <section className="section pricing-section" id="harga">
           <div className="container pricing-heading" data-reveal>
-            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>Tumbuh buat satu gerai yang mau rapi. Bisnis buat yang sudah multi-gerai + butuh arus kas, stok, QRIS, catatan per item, dan ekspor Excel.</p></div>
+            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>wazePOS Growth buat satu gerai yang mau rapi. wazePOS Business buat yang sudah multi-gerai + butuh arus kas, stok, QRIS, catatan per item, dan ekspor Excel.</p></div>
           </div>
           <div className="container pricing-grid">
             {pricingPlans.map((plan) => {
               return (
                 <article className={plan.popular ? "pricing-card popular" : "pricing-card"} key={plan.id} data-reveal>
                   {plan.popular && <span className="pricing-badge">Paling Populer</span>}
-                  <div className="pricing-card-head"><span className="pricing-symbol"><Icon name={plan.id === "tumbuh" ? "chart" : "store"} size={25}/></span><div><span className="plan-type">Jenis paket</span><h3>wazePOS {plan.name}</h3><p>{plan.description}</p></div></div>
+                  <div className="pricing-card-head"><span className="pricing-symbol"><Icon name={plan.id === "tumbuh" ? "chart" : "store"} size={25}/></span><div><span className="plan-type">Jenis paket</span><h3>{plan.name}</h3><p>{plan.description}</p></div></div>
                   <div className="plan-price-block"><span className="price-label">Harga paket</span><div className="plan-price"><strong>{plan.price}</strong><span>/tahun</span></div></div>
                   <small className="annual-note">{plan.priceNote}</small>
                   <div className="plan-divider"/>
@@ -348,7 +348,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container mt-12 rounded-3xl border border-white/15 bg-[#032d22]/30 p-[30px] max-[820px]:mt-8 max-[820px]:rounded-[19px] max-[820px]:px-3.5 max-[820px]:py-5" data-reveal>
             <div className="mb-[22px] flex items-end justify-between gap-6 max-[820px]:mb-4 max-[820px]:block">
               <div><span className="section-kicker light">Bandingkan paket</span><h3 className="mt-2.5 mb-0 text-[25px] tracking-[-0.8px] text-white max-[820px]:text-[21px]">Pilih paket yang paling sesuai.</h3></div>
-              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">Paket Tumbuh mencakup operasional satu gerai, pengelolaan hingga 200 pelanggan, member di kasir, dan manajemen staf hingga 2 akun tanpa manajemen stok. Paket Bisnis menambahkan arus kas uang masuk & keluar realtime, kapasitas pelanggan tanpa batas, manajemen stok, catatan per item di struk, multi-gerai, pengaturan struk kustom, dan fitur untuk tim yang lebih kompleks.</p>
+              <p className="m-0 max-w-[410px] text-xs leading-[1.6] text-[#afd0c2] max-[820px]:mt-2 max-[820px]:text-[11px]">wazePOS Growth mencakup operasional satu gerai, pengelolaan hingga 200 pelanggan, member di kasir, dan manajemen staf hingga 2 akun tanpa manajemen stok. wazePOS Business menambahkan arus kas uang masuk & keluar realtime, kapasitas pelanggan tanpa batas, manajemen stok, catatan per item di struk, multi-gerai, pengaturan struk kustom, dan fitur untuk tim yang lebih kompleks.</p>
             </div>
             <button
               type="button"

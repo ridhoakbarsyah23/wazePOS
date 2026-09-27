@@ -12,7 +12,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
     <AuthPageShell
       eyebrow="Mulai uji coba gratis"
       title="Buat akun wazePOS"
-      description={`Gunakan Google atau isi data akun untuk memulai uji coba Paket ${plans[selectedPlan].name}.`}
+      description={`Gunakan Google atau isi data akun untuk memulai uji coba ${plans[selectedPlan].name}.`}
       footerText="Sudah punya akun?"
       footerLinkLabel="Masuk sekarang"
       footerHref="/login"

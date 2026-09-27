@@ -137,7 +137,7 @@ export function RegisterForm({
                 }}
                 className={`relative cursor-pointer rounded-xl border px-3.5 py-3 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 motion-reduce:transition-none ${selected ? "border-[#198760] bg-[#f0faf5] shadow-[0_0_0_3px_rgba(25,135,96,.08)]" : "border-[#dbe5df] bg-white hover:-translate-y-px hover:border-[#9dcbb7] hover:bg-[#fbfdfc] hover:shadow-[0_8px_20px_rgba(16,65,48,0.08)] motion-reduce:transform-none"}`}
               >
-                <span className={`block pr-5 text-xs font-extrabold ${selected ? "text-[#106348]" : "text-[#34443d]"}`}>Paket {plans[planId].name}</span>
+                <span className={`block pr-5 text-xs font-extrabold ${selected ? "text-[#106348]" : "text-[#34443d]"}`}>{plans[planId].name}</span>
                 <span className="mt-1 block text-[10px] font-medium text-[#77837d]">Rp {plans[planId].annualPrice.toLocaleString("id-ID")} / tahun</span>
                 <span className={`absolute right-3 top-3 grid size-4 place-items-center rounded-full border ${selected ? "border-[#198760] bg-[#198760] text-white" : "border-[#cbd9d2] text-transparent"}`}>
                   <svg aria-hidden="true" viewBox="0 0 24 24" className="size-2.5 fill-none stroke-current" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6" /></svg>

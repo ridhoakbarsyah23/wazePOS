@@ -92,7 +92,7 @@ export function PosTerminal({
   allowNonCashPayments: boolean;
   allowQrisPayments: boolean;
   allowInventory?: boolean;
-  /** Paket Bisnis: kasir bisa mengisi catatan per item (mis. less sugar). Tumbuh: tampil terkunci. */
+  /** wazePOS Business: kasir bisa mengisi catatan per item (mis. less sugar). Growth: tampil terkunci. */
   allowSaleItemNotes?: boolean;
   checkoutDisabledReason: string | null;
   businessName?: string;
@@ -824,7 +824,7 @@ export function PosTerminal({
                     <span>Catatan item</span>
                     {!allowSaleItemNotes && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#f0f5f2] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#627069]">
-                        <Lock className="size-3" /> Bisnis
+                        <Lock className="size-3" /> Business
                       </span>
                     )}
                   </span>
@@ -833,7 +833,7 @@ export function PosTerminal({
                     value={item.note}
                     disabled={!allowSaleItemNotes || isRemoving || isSubmitting}
                     onChange={(event) => updateLineNote(item.lineId, event.target.value)}
-                    placeholder={allowSaleItemNotes ? "Mis. less sugar, pedas level 2" : "Upgrade ke Bisnis untuk catat permintaan"}
+                    placeholder={allowSaleItemNotes ? "Mis. less sugar, pedas level 2" : "Upgrade ke Business untuk catat permintaan"}
                     maxLength={POS_SALE_ITEM_NOTE_MAX_LENGTH}
                     aria-label={`Catatan untuk ${item.name}`}
                     className="h-9 w-full rounded-xl border border-[#dbe5df] bg-[#f8faf9] px-3 text-xs font-medium text-[#17211d] outline-none transition placeholder:text-[#96a19b] focus:border-[#198760] focus:bg-white focus:ring-2 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f1f4f2] disabled:text-[#96a19b]"
@@ -842,7 +842,7 @@ export function PosTerminal({
                 <p className="m-0 text-[11px] leading-4 text-[#78857f]">
                   {allowSaleItemNotes
                     ? `${item.note.trim().length}/${POS_SALE_ITEM_NOTE_MAX_LENGTH} karakter, tampil di struk.`
-                    : "Catatan per item khusus Paket Bisnis."}
+                    : "Catatan per item khusus wazePOS Business."}
                 </p>
               </div>
               <div className="mt-2.5 flex items-center">

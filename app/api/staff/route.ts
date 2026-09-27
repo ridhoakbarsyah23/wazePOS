@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   if (currentCount >= planLimits.maxStaff) {
     return NextResponse.json(
       {
-        message: `Batas kuota ${planLimits.maxStaff} akun staf pada Paket ${planName} telah tercapai. Upgrade ke Paket Bisnis untuk mengelola staf kasir tanpa batas.`,
+        message: `Batas kuota ${planLimits.maxStaff} akun staf pada ${planName} telah tercapai. Upgrade ke wazePOS Business untuk mengelola staf kasir tanpa batas.`,
         code: "PLAN_LIMIT_REACHED",
       },
       { status: 403 }

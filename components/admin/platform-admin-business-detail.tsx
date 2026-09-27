@@ -74,8 +74,8 @@ function getBoundaryLabel(item: PlatformAdminBusiness) {
   return "Batas waktu";
 }
 
-function getPlanLabel(plan: PlatformAdminBusiness["plan"]) {
-  return plan === "bisnis" ? "Bisnis" : plan === "tumbuh" ? "Tumbuh" : "Belum ada paket";
+function getPlanLabel(plan: PlatformAdminBusiness["plan"] | PlatformAdminPaymentDetail["plan"]) {
+  return plan === "bisnis" ? "wazePOS Business" : plan === "tumbuh" ? "wazePOS Growth" : "Belum ada paket";
 }
 
 function getPaymentMeta(status: PlatformAdminPaymentDetail["status"]) {
@@ -155,7 +155,7 @@ function PaymentList({ payments }: { payments: PlatformAdminBusinessDetailData["
               <p className="mt-1 min-w-0 break-all text-xs leading-5 text-[#627069]">{payment.provider} · {payment.providerOrderId}</p>
               <p className="mt-1 break-words text-[11px] leading-4 text-[#82928a]">{formatDateTime(payment.paidAt ?? payment.createdAt)}</p>
             </div>
-            <span className="w-fit shrink-0 rounded-lg bg-white px-2 py-1 text-xs font-bold capitalize text-[#527066] shadow-sm">{payment.plan}</span>
+            <span className="w-fit shrink-0 rounded-lg bg-white px-2 py-1 text-xs font-bold text-[#527066] shadow-sm">{getPlanLabel(payment.plan)}</span>
           </li>
         );
       })}
@@ -377,7 +377,7 @@ export function PlatformAdminBusinessDetail({
                           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-[#198760]"><WalletCards className="size-4" /></span>
-                              <div className="min-w-0"><p className="m-0 break-words text-sm font-extrabold text-[#15211d]">Paket {getPlanLabel(currentBusiness.plan)}</p><p className="m-0 mt-0.5 break-all text-xs leading-5 text-[#627069]">{currentBusiness.subscriptionStatus}</p></div>
+                              <div className="min-w-0"><p className="m-0 break-words text-sm font-extrabold text-[#15211d]">{getPlanLabel(currentBusiness.plan)}</p><p className="m-0 mt-0.5 break-all text-xs leading-5 text-[#627069]">{currentBusiness.subscriptionStatus}</p></div>
                             </div>
                             <Badge className="w-fit shrink-0" variant={currentMeta.variant}>{currentMeta.label}</Badge>
                           </div>

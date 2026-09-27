@@ -33,6 +33,10 @@ const paymentMeta: Record<PlatformAdminPaymentItem["status"], { label: string; v
   refunded: { label: "Dikembalikan", variant: "secondary" },
 };
 
+function getPlanLabel(plan: PlatformAdminPaymentItem["plan"]) {
+  return plan === "bisnis" ? "wazePOS Business" : "wazePOS Growth";
+}
+
 function formatRupiah(value: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -171,8 +175,8 @@ export function PlatformAdminPaymentList({
               className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua paket</option>
-              <option value="tumbuh">Tumbuh</option>
-              <option value="bisnis">Bisnis</option>
+              <option value="tumbuh">wazePOS Growth</option>
+              <option value="bisnis">wazePOS Business</option>
             </select>
             <Button type="submit" size="sm" className="col-span-2 h-11 w-full gap-2 px-3 text-xs sm:h-10 sm:col-span-4 [&_svg]:size-3.5">
               <ListFilter aria-hidden="true" />
@@ -223,7 +227,7 @@ export function PlatformAdminPaymentList({
                         <p className="m-0 truncate font-mono text-xs" title={item.providerOrderId}>{item.providerOrderId}</p>
                         <p className="mt-1 truncate text-xs text-[#627069]">{item.provider}{item.providerPaymentType ? ` · ${item.providerPaymentType}` : ""}</p>
                       </td>
-                      <td className="px-5 py-4 font-bold capitalize">{item.plan}</td>
+                      <td className="px-5 py-4 font-bold">{getPlanLabel(item.plan)}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57]"><DateTimeValue value={item.createdAt} /></td>
                       <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57]"><DateTimeValue value={item.paidAt} /></td>
                     </tr>
@@ -247,7 +251,7 @@ export function PlatformAdminPaymentList({
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3">
                     <p className="m-0 text-sm font-black tabular-nums">{formatRupiah(item.amount)}</p>
-                    <p className="m-0 text-xs capitalize text-[#627069]">{item.plan}</p>
+                    <p className="m-0 text-xs text-[#627069]">{getPlanLabel(item.plan)}</p>
                   </div>
                   <p className="mt-1 text-[11px] text-[#82928a]">{formatDateTime(item.paidAt ?? item.createdAt)}</p>
                 </article>

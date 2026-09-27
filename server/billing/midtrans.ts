@@ -45,7 +45,7 @@ export async function createSnapTransaction(input: SnapTransactionInput) {
     },
     body: JSON.stringify({
       transaction_details: { order_id: input.orderId, gross_amount: input.amount },
-      item_details: [{ id: `wazepos-${input.orderId}`, price: input.amount, quantity: 1, name: `wazePOS Paket ${input.planName} - 1 tahun` }],
+      item_details: [{ id: `wazepos-${input.orderId}`, price: input.amount, quantity: 1, name: `${input.planName} - 1 tahun` }],
       customer_details: { first_name: input.customerName.slice(0, 50), email: input.customerEmail },
       callbacks: { finish: input.finishUrl },
       credit_card: { secure: true },

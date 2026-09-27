@@ -43,7 +43,7 @@ export default async function CashflowPage({
           businessName={membership.businessName}
           role={membership.role}
           featureName="Arus kas"
-          description="Catat uang keluar (belanja, gaji, sewa, operasional) dan pantau saldo bersih realtime tersedia di Paket Bisnis."
+          description="Catat uang keluar (belanja, gaji, sewa, operasional) dan pantau saldo bersih realtime tersedia di wazePOS Business."
         />
       </AppHeader>
     );

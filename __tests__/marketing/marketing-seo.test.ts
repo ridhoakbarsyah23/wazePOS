@@ -9,8 +9,8 @@ describe("SEO landing page", () => {
 
     expect(application.url).toBe("https://wazepos.example/");
     expect(application.offers).toEqual([
-      expect.objectContaining({ name: "Paket Tumbuh", price: String(plans.tumbuh.annualPrice), priceCurrency: "IDR" }),
-      expect.objectContaining({ name: "Paket Bisnis", price: String(plans.bisnis.annualPrice), priceCurrency: "IDR" }),
+      expect.objectContaining({ name: plans.tumbuh.name, price: String(plans.tumbuh.annualPrice), priceCurrency: "IDR" }),
+      expect.objectContaining({ name: plans.bisnis.name, price: String(plans.bisnis.annualPrice), priceCurrency: "IDR" }),
     ]);
     expect(faqPage.mainEntity).toHaveLength(marketingFaqs.length);
     expect(faqPage.mainEntity[0]).toEqual(

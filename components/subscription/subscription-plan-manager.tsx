@@ -143,7 +143,7 @@ export function SubscriptionPlanManager({
                     </Badge>
                   )}
                 </div>
-                <CardTitle className="mt-3">Paket {plan.name}</CardTitle>
+                <CardTitle className="mt-3">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
               <CardContent className="pt-5">
@@ -182,7 +182,7 @@ export function SubscriptionPlanManager({
                     ? "Paket ini dipilih"
                     : isPaidActive
                     ? "Paket aktif tidak dapat diubah"
-                    : `Pilih Paket ${plan.name}`}
+                    : `Pilih ${plan.name}`}
                 </Button>
                 {active && !isPaidActive && (
                   <Button
@@ -198,7 +198,7 @@ export function SubscriptionPlanManager({
                     {checkoutPending
                       ? "Menyiapkan checkout..."
                       : paymentConfigured
-                      ? `Aktifkan & Bayar Paket ${plan.name}`
+                      ? `Aktifkan & Bayar ${plan.name}`
                       : "Midtrans belum dikonfigurasi"}
                   </Button>
                 )}

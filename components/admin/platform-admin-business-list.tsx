@@ -69,6 +69,10 @@ function DateValue({ value }: { value: Date | string | null }) {
   return <time dateTime={date.toISOString()}>{date.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</time>;
 }
 
+function getPlanLabel(plan: PlatformAdminBusiness["plan"]) {
+  return plan === "bisnis" ? "wazePOS Business" : plan === "tumbuh" ? "wazePOS Growth" : "-";
+}
+
 function getBoundaryDate(item: PlatformAdminBusiness) {
   return item.state.startsWith("trial") ? item.trialEndsAt : item.currentPeriodEnd;
 }
@@ -121,7 +125,7 @@ function BusinessMeta({
         <Icon className="size-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </dt>
-      <dd className="mt-1 truncate text-sm font-extrabold capitalize text-[#15211d]" title={title}>
+      <dd className="mt-1 truncate text-sm font-extrabold text-[#15211d]" title={title}>
         {value}
       </dd>
     </div>
@@ -235,8 +239,8 @@ export function PlatformAdminBusinessList({
               className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua paket</option>
-              <option value="tumbuh">Tumbuh</option>
-              <option value="bisnis">Bisnis</option>
+              <option value="tumbuh">wazePOS Growth</option>
+              <option value="bisnis">wazePOS Business</option>
               <option value="missing">Tanpa paket</option>
             </select>
             <select
@@ -339,7 +343,7 @@ export function PlatformAdminBusinessList({
                         {item.ownerEmail ?? "Owner belum tersedia"}
                       </p>
                     </td>
-                    <td className="px-5 py-4 font-bold capitalize">{item.plan ?? "-"}</td>
+                    <td className="px-5 py-4 font-bold">{getPlanLabel(item.plan)}</td>
                     <td className="px-5 py-4">
                       <Badge className="whitespace-nowrap" variant={platformAdminStateMeta[item.state].variant}>
                         {platformAdminStateMeta[item.state].label}
@@ -390,7 +394,7 @@ export function PlatformAdminBusinessList({
                   </div>
 
                   <dl className="mt-3 grid grid-cols-2 gap-2">
-                    <BusinessMeta icon={Package} label="Paket" value={item.plan ?? "-"} />
+                    <BusinessMeta icon={Package} label="Paket" value={getPlanLabel(item.plan)} />
                     <BusinessMeta icon={CalendarDays} label={getBoundaryLabel(item)} value={formatDate(getBoundaryDate(item))} />
                     <BusinessMeta icon={MapPin} label="Outlet" value={item.outletCount} />
                     <BusinessMeta icon={UsersRound} label="Anggota" value={item.memberCount} />

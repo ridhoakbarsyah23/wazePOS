@@ -18,7 +18,7 @@ export function getMarketingStructuredData(siteUrl: string) {
       url: rootUrl,
       offers: planIds.map((planId) => ({
         "@type": "Offer",
-        name: `Paket ${plans[planId].name}`,
+        name: plans[planId].name,
         price: String(plans[planId].annualPrice),
         priceCurrency: "IDR",
         url: `${rootUrl}#harga`,

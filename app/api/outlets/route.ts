@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   }
   if (!hasPlanFeature(context.currentSubscription?.plan, "multiOutlet")) {
     return NextResponse.json(
-      { message: "Menambah gerai hanya tersedia pada Paket Bisnis. Upgrade paket untuk mengelola multi-gerai.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Menambah gerai hanya tersedia pada wazePOS Business. Upgrade paket untuk mengelola multi-gerai.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const plan = getPlanConfig(context.currentSubscription?.plan);
     if (existingOutlets.length >= plan.limits.maxOutlets) {
       return NextResponse.json(
-        { message: `Batas ${plan.limits.maxOutlets} gerai pada Paket ${plan.name} telah tercapai.`, code: "PLAN_LIMIT_REACHED" },
+        { message: `Batas ${plan.limits.maxOutlets} gerai pada ${plan.name} telah tercapai.`, code: "PLAN_LIMIT_REACHED" },
         { status: 409 },
       );
     }

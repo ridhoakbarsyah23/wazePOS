@@ -20,7 +20,7 @@ export async function PATCH(request: Request) {
   }
   if (!hasPlanFeature(context.currentSubscription?.plan, "receiptSettings")) {
     return NextResponse.json(
-      { message: "Pengaturan struk kustom hanya tersedia pada Paket Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Pengaturan struk kustom hanya tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }

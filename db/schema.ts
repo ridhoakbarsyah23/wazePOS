@@ -469,7 +469,7 @@ export const saleItem = pgTable(
     unitPrice: integer("unit_price").notNull(),
     unitCost: integer("unit_cost"),
     subtotal: integer("subtotal").notNull(),
-    /** Catatan dapur per item khusus Paket Bisnis, mis. "less sugar". */
+    /** Catatan dapur per item khusus wazePOS Business, mis. "less sugar". */
     note: text("note"),
     /**
      * Snapshot apakah stok gerai benar-benar dikurangi saat penjualan ini dibuat.

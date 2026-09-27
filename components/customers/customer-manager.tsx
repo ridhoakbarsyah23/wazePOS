@@ -325,7 +325,7 @@ export function CustomerManager({
       {isQuotaReached && (
         <p className="m-0 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
           <Users className="size-4 shrink-0" />
-          Kapasitas pelanggan untuk paket Anda sudah penuh. Upgrade ke Paket Bisnis untuk daftar tanpa batas.
+          Kapasitas pelanggan untuk paket Anda sudah penuh. Upgrade ke wazePOS Business untuk daftar tanpa batas.
         </p>
       )}
 

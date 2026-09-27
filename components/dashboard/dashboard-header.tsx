@@ -12,6 +12,7 @@ import {
   Store,
 } from "lucide-react";
 import { DashboardClock } from "@/components/dashboard/dashboard-clock";
+import { isPlanId, plans } from "@/shared/billing/plans";
 
 export type PeriodKey = "today" | "7d" | "30d";
 
@@ -67,6 +68,7 @@ export function DashboardHeader({
       : selectedOutletId !== "all"
         ? `/pos?outlet=${encodeURIComponent(selectedOutletId)}`
       : "/pos";
+  const planLabel = isPlanId(currentPlan) ? plans[currentPlan].name : currentPlan.toUpperCase();
 
   return (
     <div className="dash-warung space-y-4 animate-page-enter">
@@ -99,13 +101,13 @@ export function DashboardHeader({
                   <span className="inline-flex items-center gap-1 font-bold text-amber-900">
                     <Crown className="size-3.5 text-amber-600" aria-hidden="true" />
                     <span>
-                      Trial {currentPlan.toUpperCase()} · sisa {trialDaysRemaining} hari
+                      Trial {planLabel} · sisa {trialDaysRemaining} hari
                     </span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 font-bold text-emerald-800">
                     <CheckCircle2 className="size-3.5 text-emerald-600" aria-hidden="true" />
-                    <span>Paket {currentPlan.toUpperCase()} aktif</span>
+                    <span>{planLabel} aktif</span>
                   </span>
                 )}
               </p>

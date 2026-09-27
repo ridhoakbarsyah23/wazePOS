@@ -41,7 +41,7 @@ export function SubscriptionLockout({
           <p className="m-0 font-bold mb-1">Cara Mengaktifkan Kembali:</p>
           {isOwner ? (
             <p className="m-0 leading-5">
-              Sebagai <strong>Pemilik Usaha</strong>, Anda dapat memilih paket langganan (Tumbuh atau Bisnis) dan melakukan pembayaran langsung via Midtrans.
+              Sebagai <strong>Pemilik Usaha</strong>, Anda dapat memilih paket langganan (wazePOS Growth atau wazePOS Business) dan melakukan pembayaran langsung via Midtrans.
             </p>
           ) : (
             <p className="m-0 leading-5">

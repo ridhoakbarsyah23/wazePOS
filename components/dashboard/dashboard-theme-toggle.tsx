@@ -66,7 +66,7 @@ export function DashboardThemeToggle({
       role={asMenuItem ? "menuitemcheckbox" : undefined}
       aria-checked={asMenuItem ? isDark : undefined}
       aria-label={isDark ? "Gunakan mode terang" : "Gunakan mode gelap"}
-      title={isDark ? "Gunakan mode terang" : "Gunakan mode gelap (Paket Bisnis)"}
+      title={isDark ? "Gunakan mode terang" : "Gunakan mode gelap (wazePOS Business)"}
       className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#dbe5df] bg-white text-[#198760] transition hover:border-[#9ac3b0] hover:bg-[#eef6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30"
     >
       {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}

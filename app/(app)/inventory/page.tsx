@@ -68,7 +68,7 @@ export default async function InventoryPage({
           businessName={membership.businessName}
           role={membership.role}
           featureName="Manajemen stok"
-          description="Pantau stok, atur stok awal, dan terima peringatan stok menipis tersedia di Paket Bisnis."
+          description="Pantau stok, atur stok awal, dan terima peringatan stok menipis tersedia di wazePOS Business."
         />
       </AppHeader>
     );

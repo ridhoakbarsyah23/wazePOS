@@ -13,7 +13,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       <section className="w-full max-w-xl rounded-[28px] border border-[#dceae3] bg-white p-8 shadow-[0_26px_70px_rgba(10,67,48,.14)] sm:p-12">
         <span className="section-kicker">Langkah pertama</span>
         <h1 className="mt-4 mb-3 text-3xl leading-tight tracking-[-1.3px] text-[#15211d] sm:text-4xl">Siapkan profil usaha Anda</h1>
-        <p className="m-0 text-sm leading-7 text-[#627069]">Informasi ini digunakan untuk membuat ruang kerja dan gerai pertama Anda dengan Paket {plans[selectedPlan].name}.</p>
+        <p className="m-0 text-sm leading-7 text-[#627069]">Informasi ini digunakan untuk membuat ruang kerja dan gerai pertama Anda dengan {plans[selectedPlan].name}.</p>
         <OnboardingForm selectedPlan={selectedPlan} />
       </section>
     </main>

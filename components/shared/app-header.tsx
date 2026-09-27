@@ -71,7 +71,7 @@ const navItems: NavItem[] = [
     icon: Wallet,
     roles: ["owner", "admin"],
     planFeature: "cashflow",
-    badge: "Bisnis",
+    badge: "Business",
   },
   {
     href: "/transactions",
