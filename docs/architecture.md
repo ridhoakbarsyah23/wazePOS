@@ -53,6 +53,7 @@ __tests__/
 - `@/server/admin/*`, `@/server/auth/*`, dan DAL server lainnya harus mempertahankan `server-only`.
 - `@/db/schema` adalah boundary data; query domain sebaiknya berada di `server/<domain>` atau service layer.
 - Route Handler harus tipis: validasi request, panggil domain service/DAL, lalu bentuk response.
+- Batas di atas ditegakkan otomatis oleh aturan `no-restricted-imports` di `eslint.config.mjs` (zona `shared/`, `server/`, dan `components/ui/`). Tambahkan domain baru di daftar pola bila membuat direktori domain `components/` baru.
 
 ## Checklist fitur baru
 
@@ -68,4 +69,4 @@ __tests__/
 
 - `db/schema.ts` dapat dipecah per domain setelah migration dan adapter boundary dirancang ulang.
 - Service layer dapat ditambahkan untuk domain yang sudah memiliki banyak query atau aturan bisnis.
-- Aturan batas server/klien dapat ditegakkan otomatis dengan `eslint-plugin-boundaries` atau aturan `no-restricted-imports`.
+- ~~Aturan batas server/klien dapat ditegakkan otomatis~~ — sudah ditegakkan via `no-restricted-imports` di `eslint.config.mjs`.
