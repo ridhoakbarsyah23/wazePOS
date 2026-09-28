@@ -10,7 +10,21 @@ export function PwaRegister() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
-    if (process.env.NODE_ENV !== "production") return;
+
+    if (process.env.NODE_ENV !== "production") {
+      // SW produksi yang tersisa dari sesi `npm start` di port yang sama akan
+      // terus menyajikan aset/HTML dari cache dan memicu hydration mismatch
+      // saat dev. Bersihkan otomatis agar dev selalu dimulai dari nol.
+      void navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => void registration.unregister());
+      });
+      if ("caches" in window) {
+        void caches.keys().then((keys) => {
+          keys.filter((key) => key.startsWith("wazepos-")).forEach((key) => void caches.delete(key));
+        });
+      }
+      return;
+    }
 
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch((error) => {
