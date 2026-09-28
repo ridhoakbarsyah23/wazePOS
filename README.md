@@ -104,7 +104,7 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 
 ### Persyaratan
 
-- Node.js **20.9 atau lebih baru**
+- Node.js **22.12 atau lebih baru** (CI memakai Node.js 22).
 - npm
 - Docker (untuk PostgreSQL lokal)
 
@@ -297,7 +297,7 @@ Catatan penting:
 - Compose membaca file `.env` lokal bila ada. `DATABASE_URL` di `.env` menunjuk ke `127.0.0.1:5434` (valid dari host) tetapi **tidak valid dari dalam container**. Karena itu service `app` memakai `APP_DATABASE_URL` yang default-nya menunjuk ke host `postgres:5432`. **Jangan isi `APP_DATABASE_URL` di `.env` lokal.**
 - Password database dengan karakter `@:/?#` harus percent-encode bila diisi eksplisit lewat `APP_DATABASE_URL`.
 - Kosongkan `BETTER_AUTH_URL` agar mengikuti `NEXT_PUBLIC_SITE_URL`.
-- Image di-pin ke `node:20.20.2-alpine` dan `postgres:17.11-alpine` agar build reproducible.
+- Image di-pin ke `node:22.23.2-alpine` dan `postgres:17.11-alpine` agar build reproducible.
 
 ---
 

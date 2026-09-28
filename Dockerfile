@@ -6,15 +6,15 @@
 # - runner: image final non-root yang menjalankan server.js
 #
 # Versi base di-pin agar build reproducible. Update manual setelah uji:
-# `docker pull node:20.20.2-alpine` dan `docker pull postgres:17.11-alpine`.
+# `docker pull node:22.23.2-alpine` dan `docker pull postgres:17.11-alpine`.
 
-FROM node:20.20.2-alpine AS deps
+FROM node:22.23.2-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:20.20.2-alpine AS builder
+FROM node:22.23.2-alpine AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NEXT_OUTPUT_STANDALONE=1
@@ -33,12 +33,12 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_WHATSAPP_NUMBER=$NEXT_PUBLIC_WHATSAPP_NUMBER
 RUN npm run build
 
-FROM node:20.20.2-alpine AS prod-deps
+FROM node:22.23.2-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
-FROM node:20.20.2-alpine AS runner
+FROM node:22.23.2-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
