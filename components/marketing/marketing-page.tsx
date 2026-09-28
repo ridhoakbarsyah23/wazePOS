@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMarketingMotion } from "@/components/marketing/use-marketing-motion";
 import { trackEvent } from "@/shared/marketing/analytics";
 import { marketingFaqs } from "@/shared/marketing/marketing-content";
 import { formatPlanAnnualPrice, getMarketingPlanCards, getPlanFeatureComparison } from "@/shared/billing/plans";
@@ -160,88 +161,23 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [showMobileComparison, setShowMobileComparison] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const progressRef = useRef<HTMLDivElement>(null);
-  const heroVisualRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  useMarketingMotion({ root: pageRef, feature: activeFeature.id, showcase: activeShowcase, comparisonOpen: showMobileComparison });
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const finePointer = window.matchMedia("(pointer: fine)").matches;
-    const updateHeader = () => {
-      setScrolled(window.scrollY > 18);
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-      if (progressRef.current) {
-        progressRef.current.style.transform = reduceMotion ? "scaleX(1)" : `scaleX(${ratio.toFixed(4)})`;
-      }
-    };
-
+    const updateHeader = () => setScrolled(window.scrollY > 18);
     updateHeader();
     window.addEventListener("scroll", updateHeader, { passive: true });
-
-    if (reduceMotion) {
-      return () => window.removeEventListener("scroll", updateHeader);
-    }
-
-    const root = document.documentElement;
-    const revealElements = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
-    root.classList.add("motion-ready");
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -7% 0px" },
-    );
-
-    revealElements.forEach((element) => observer.observe(element));
-
-    // Tilt hero mockup: transform-only, pointer fine, tanpa reduced-motion.
-    const heroVisual = heroVisualRef.current;
-    let raf = 0;
-    const resetTilt = () => {
-      if (heroVisual) heroVisual.style.setProperty("--hero-tilt", "rotateX(0deg) rotateY(0deg)");
-    };
-    const handleMove = (event: PointerEvent) => {
-      if (!heroVisual || reduceMotion || raf) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-        const rect = heroVisual.getBoundingClientRect();
-        const px = (event.clientX - rect.left) / Math.max(1, rect.width) - 0.5;
-        const py = (event.clientY - rect.top) / Math.max(1, rect.height) - 0.5;
-        heroVisual.style.setProperty(
-          "--hero-tilt",
-          `rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 6).toFixed(2)}deg)`,
-        );
-      });
-    };
-
-    if (heroVisual && finePointer && !reduceMotion) {
-      heroVisual.addEventListener("pointermove", handleMove);
-      heroVisual.addEventListener("pointerleave", resetTilt);
-    }
-
-    return () => {
-      observer.disconnect();
-      root.classList.remove("motion-ready");
-      window.removeEventListener("scroll", updateHeader);
-      if (raf) window.cancelAnimationFrame(raf);
-      heroVisual?.removeEventListener("pointermove", handleMove);
-      heroVisual?.removeEventListener("pointerleave", resetTilt);
-    };
+    return () => window.removeEventListener("scroll", updateHeader);
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <>
+    <div ref={pageRef} className="marketing-page">
       <a className="skip-link" href="#konten">Lewati ke konten</a>
       <header className={scrolled ? "site-header scrolled" : "site-header"}>
-        <div className="site-progress" aria-hidden="true"><div ref={progressRef} className="site-progress-bar" /></div>
+        <div className="site-progress" aria-hidden="true"><div className="site-progress-bar" /></div>
         <div className="container nav-wrap">
           <Brand />
           <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Navigasi utama">
@@ -272,7 +208,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
               </dl>
               <div className="supporting-values"><span><Icon name="check" size={16}/> Mudah digunakan</span><span><Icon name="check" size={16}/> Sesuai untuk beragam usaha</span><span><Icon name="check" size={16}/> Program uji coba tersedia</span></div>
             </div>
-            <div className="hero-visual reveal delay-1" ref={heroVisualRef}><div className="visual-backdrop"/><div className="hero-tilt"><DashboardMockup/><div className="receipt-edge" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div></div><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
+            <div className="hero-visual reveal delay-1"><div className="visual-backdrop"/><div className="hero-tilt"><DashboardMockup/><div className="receipt-edge" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div></div><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
           </div>
           <div className="business-strip">
             <span className="business-strip-label"><span className="mono">Cocok untuk</span></span>
@@ -301,7 +237,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
             <div className="container benefits-grid">{benefits.map((item) => <article className="benefit-card" key={item.title} data-reveal><span className="icon-box"><Icon name={item.icon}/></span><h3>{item.title}</h3><p>{item.text}</p><a href="#fitur" className="card-link" onClick={() => trackEvent("click_feature", { source: "benefit", benefit: item.title })}>Lihat fitur <Icon name="arrow" size={16}/></a></article>)}</div>
         </section>
 
-        <section className="section feature-section" id="fitur">
+        <section className="section feature-section" id="fitur" data-motion="fitur">
           <div className="container section-heading centered" data-reveal><span className="section-kicker">Meja kasir, versi rapi</span><h2 className="section-display">Lima layar yang dipakai <span>setiap hari.</span></h2><p>Tanpa menu pajangan. Semua yang di bawah ini kepakai saat toko rame.</p></div>
           <div className="container feature-tabs" role="tablist" aria-label="Kategori fitur" data-reveal>{featureGroups.map((feature) => <button key={feature.id} role="tab" aria-selected={activeFeature.id === feature.id} className={activeFeature.id === feature.id ? "active" : ""} onClick={() => { setActiveFeature(feature); trackEvent("click_feature", { feature: feature.id }); }}><Icon name={feature.icon} size={19}/>{feature.label}</button>)}</div>
           <div className="container feature-panel" role="tabpanel" data-reveal>
@@ -315,7 +251,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container business-grid">{businessTypes.map((item) => <article className="business-card" key={item.title} data-reveal><span className="business-icon"><Icon name={item.icon}/></span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
         </section>
 
-        <section className="section steps-section" id="cara-kerja">
+        <section className="section steps-section" id="cara-kerja" data-motion="cara-kerja">
           <div className="container steps-layout"><div className="steps-intro" data-reveal><span className="section-kicker light">Jumat daftar, Senin jalan</span><h2 className="section-display">Berjualan dalam <span>tiga langkah.</span></h2><p>Tanpa instalasi aneh-aneh. Browser jalan, printer thermal nyambung, kasir siap.</p><TrackedLink href={trialUrl} event="click_try_free" className="button button-light button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink></div><div className="steps-list">{[{n:"01",i:"customer" as const,t:"Daftar Gratis",d:"Buat akun wazePOS untuk memulai uji coba."},{n:"02",i:"box" as const,t:"Siapkan Bisnis",d:"Tambahkan produk, harga, dan informasi usaha."},{n:"03",i:"receipt" as const,t:"Mulai Berjualan",d:"Gunakan wazePOS untuk melayani transaksi dan mengelola bisnis."}].map((step) => <article key={step.n} data-reveal><span className="step-number">{step.n}</span><span className="step-icon"><Icon name={step.i}/></span><div><h3>{step.t}</h3><p>{step.d}</p></div></article>)}</div></div>
         </section>
 
@@ -325,7 +261,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div id="showcase-panel" className="container showcase-frame" role="tabpanel" aria-labelledby={`showcase-tab-${showcaseTabs.indexOf(activeShowcase)}`} data-reveal><DashboardMockup key={activeShowcase} mode="showcase" active={activeShowcase}/></div>
         </section>
 
-        <section className="section pricing-section" id="harga">
+        <section className="section pricing-section" id="harga" data-motion="harga">
           <div className="container pricing-heading" data-reveal>
             <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>wazePOS Growth buat satu gerai yang mau rapi. wazePOS Business buat yang sudah multi-gerai + butuh arus kas, stok, QRIS, catatan per item, dan ekspor Excel.</p></div>
           </div>
@@ -390,8 +326,8 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="container pricing-footnote" data-reveal><Icon name="shield" size={17}/><span>Harga berlaku untuk satu tahun. Silakan konfirmasikan ketentuan pajak dan ketersediaan fitur sebelum berlangganan.</span></div>
         </section>
 
-        <section className="section faq-section" id="faq">
-          <div className="container faq-layout"><div className="faq-intro" data-reveal><span className="section-kicker">Pertanyaan yang sering diajukan</span><h2>Temukan informasi yang <span>Anda perlukan.</span></h2><p>Belum menemukan jawaban yang sesuai?</p><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Hubungi tim kami <Icon name="arrow" size={17}/></TrackedLink></div><div className="faq-list">{marketingFaqs.map((faq, index) => { const isOpen = openFaq === index; return <article className={isOpen ? "faq-item open" : "faq-item"} key={faq.question}><h3><button id={`faq-question-${index}`} type="button" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}>{faq.question}<span><Icon name="chevron"/></span></button></h3><div id={`faq-answer-${index}`} className="faq-answer" role="region" aria-labelledby={`faq-question-${index}`} aria-hidden={!isOpen}><p>{faq.answer}</p></div></article>; })}</div></div>
+        <section className="section faq-section" id="faq" data-motion="faq">
+          <div className="container faq-layout"><div className="faq-intro" data-reveal><span className="section-kicker">Pertanyaan yang sering diajukan</span><h2>Temukan informasi yang <span>Anda perlukan.</span></h2><p>Belum menemukan jawaban yang sesuai?</p><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Hubungi tim kami <Icon name="arrow" size={17}/></TrackedLink></div><div className="faq-list">{marketingFaqs.map((faq, index) => { const isOpen = openFaq === index; return <article className={isOpen ? "faq-item open" : "faq-item"} data-reveal key={faq.question}><h3><button id={`faq-question-${index}`} type="button" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}>{faq.question}<span><Icon name="chevron"/></span></button></h3><div id={`faq-answer-${index}`} className="faq-answer" role="region" aria-labelledby={`faq-question-${index}`} aria-hidden={!isOpen}><p>{faq.answer}</p></div></article>; })}</div></div>
         </section>
 
         <section className="final-cta"><div className="container final-cta-inner" data-reveal><div><span className="section-kicker light">Mulai hari ini</span><h2>Siap mengelola bisnis dengan lebih mudah?</h2><p>Tinggalkan pencatatan manual dan kelola transaksi, stok, serta laporan bisnis secara lebih praktis bersama wazePOS.</p></div><div><TrackedLink href={trialUrl} event="click_try_free" className="button button-light button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={18}/></TrackedLink><TrackedLink href={whatsappTrialUrl} event="click_whatsapp" className="button button-outline-light button-large" external><Icon name="whatsapp" size={20}/> Konsultasi via WhatsApp</TrackedLink></div></div></section>
@@ -418,6 +354,6 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
       </footer>
 
       <TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="floating-whatsapp" external><Icon name="whatsapp" size={25}/><span>Hubungi kami</span></TrackedLink>
-    </>
+    </div>
   );
 }

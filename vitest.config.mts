@@ -9,5 +9,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    // GSAP ScrollTrigger + ~50 tweens koreografi memakan ±5 dtk per test di jsdom.
+    testTimeout: 15_000,
   },
 });
