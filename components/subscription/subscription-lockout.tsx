@@ -34,14 +34,14 @@ export function SubscriptionLockout({
 
         <p className="mt-3 text-xs leading-relaxed text-[#627069]">
           {reason ||
-            `Masa uji coba gratis 14 hari atau langganan aktif untuk ${businessName} telah berakhir. Operasional kasir dan manajemen data saat ini dikunci.`}
+            `Masa uji coba gratis 7 hari atau langganan aktif untuk ${businessName} telah berakhir. Operasional kasir dan manajemen data saat ini dikunci.`}
         </p>
 
         <div className="mt-6 rounded-2xl border border-[#fed7aa]/60 bg-[#fffbf6] p-4 text-left text-xs text-[#8c5b24]">
           <p className="m-0 font-bold mb-1">Cara Mengaktifkan Kembali:</p>
           {isOwner ? (
             <p className="m-0 leading-5">
-              Sebagai <strong>Pemilik Usaha</strong>, Anda dapat memilih paket langganan (wazePOS Growth atau wazePOS Business) dan melakukan pembayaran langsung via Midtrans.
+              Sebagai <strong>Pemilik Usaha</strong>, Anda dapat memilih paket langganan (wazePOS Growth atau wazePOS Business), transfer ke rekening resmi, lalu unggah bukti pembayaran untuk diverifikasi admin.
             </p>
           ) : (
             <p className="m-0 leading-5">

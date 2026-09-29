@@ -2,6 +2,9 @@ export const planIds = ["tumbuh", "bisnis"] as const;
 
 export type PlanId = (typeof planIds)[number];
 
+/** Durasi masa trial untuk bisnis baru, dalam hari kalender. */
+export const TRIAL_DURATION_DAYS = 7;
+
 export type PlanLimits = {
   maxOutlets: number;
   maxStaff: number;
@@ -378,7 +381,7 @@ export function getSubscriptionStatusDetails(subscription: SubscriptionData): Su
         isActive: false,
         isExpired: true,
         daysRemaining: 0,
-        message: "Masa uji coba (trial) gratis 14 hari Anda telah berakhir.",
+        message: `Masa uji coba (trial) gratis ${TRIAL_DURATION_DAYS} hari Anda telah berakhir.`,
       };
     }
 

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -25,7 +25,7 @@ import {
 import { db } from "@/db";
 import { subscriptionPayment } from "@/db/schema";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
-import { isMidtransConfigured } from "@/server/billing/midtrans";
+import { getBankTransferDestination, isBankTransferConfigured } from "@/shared/billing/bank-transfer";
 import { normalizePlan, plans } from "@/shared/billing/plans";
 
 const statusLabels = {
@@ -36,9 +36,9 @@ const statusLabels = {
 } as const;
 
 const paymentStatusLabels = {
-  pending: "Menunggu",
+  pending: "Menunggu verifikasi",
   paid: "Berhasil",
-  failed: "Gagal",
+  failed: "Ditolak / Gagal",
   expired: "Kedaluwarsa",
   refunded: "Dikembalikan",
 } as const;
@@ -60,6 +60,8 @@ export default async function SubscriptionPage({
       plan: subscriptionPayment.plan,
       amount: subscriptionPayment.amount,
       status: subscriptionPayment.status,
+      proofUploaded: subscriptionPayment.transferProofData,
+      verificationNote: subscriptionPayment.verificationNote,
       createdAt: subscriptionPayment.createdAt,
     })
     .from(subscriptionPayment)
@@ -67,9 +69,31 @@ export default async function SubscriptionPage({
     .orderBy(desc(subscriptionPayment.createdAt))
     .limit(8);
 
+  const pendingPayment = currentSubscription
+    ? (await db
+        .select({
+          id: subscriptionPayment.id,
+          orderId: subscriptionPayment.providerOrderId,
+          plan: subscriptionPayment.plan,
+          amount: subscriptionPayment.amount,
+          proofUploaded: subscriptionPayment.transferProofData,
+          senderBank: subscriptionPayment.senderBank,
+          senderAccountName: subscriptionPayment.senderAccountName,
+        })
+        .from(subscriptionPayment)
+        .where(
+          and(
+            eq(subscriptionPayment.subscriptionId, currentSubscription.id),
+            eq(subscriptionPayment.status, "pending"),
+          ),
+        )
+        .limit(1))[0] ?? null
+    : null;
+
   const selectedPlan = normalizePlan(currentSubscription?.plan);
   const trialIsActive = currentSubscription?.status === "trialing" && currentSubscription.trialEndsAt > new Date();
   const statusLabel = currentSubscription ? statusLabels[currentSubscription.status] : "Tidak tersedia";
+  const destination = getBankTransferDestination();
 
   return (
     <AppHeader
@@ -96,8 +120,8 @@ export default async function SubscriptionPage({
                 Masa Layanan Uji Coba (Trial) Telah Berakhir
               </h2>
               <p className="mt-1 text-xs text-rose-700 leading-relaxed">
-                Operasional kasir, katalog produk, dan manajemen stok saat ini dinonaktifkan sementara.
-                Silakan pilih paket langganan di bawah ini (wazePOS Growth atau wazePOS Business) dan selesaikan pembayaran via Midtrans untuk mengaktifkan kembali seluruh gerai Anda.
+                Operasional kasir, katalog produk, dan manajemen data saat ini dinonaktifkan sementara.
+                Silakan pilih paket langganan di bawah ini (wazePOS Growth atau wazePOS Business), transfer ke rekening resmi, lalu unggah bukti pembayaran untuk diverifikasi admin.
               </p>
             </div>
           </div>
@@ -155,13 +179,13 @@ export default async function SubscriptionPage({
         </Card>
 
         <section className="mt-7">
-          {query.payment === "finish" && (
+          {pendingPayment && (
             <div
               role="status"
               className="mb-5 flex items-start gap-2.5 rounded-xl border border-[#cae8d9] bg-[#eaf7f0] px-4 py-3 text-sm font-semibold text-[#106348]"
             >
               <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-              Pembayaran sedang diverifikasi. Status paket akan diperbarui otomatis setelah konfirmasi Midtrans diterima.
+              Pesanan {pendingPayment.orderId} menunggu verifikasi admin. Lengkapi bukti transfer di bawah bila belum diunggah.
             </div>
           )}
 
@@ -169,7 +193,21 @@ export default async function SubscriptionPage({
             initialPlan={selectedPlan}
             canChangePlan={Boolean(trialIsActive)}
             subscriptionStatus={currentSubscription?.status ?? "missing"}
-            paymentConfigured={isMidtransConfigured()}
+            paymentConfigured={isBankTransferConfigured()}
+            destination={destination}
+            initialPending={
+              pendingPayment
+                ? {
+                    paymentId: pendingPayment.id,
+                    orderId: pendingPayment.orderId,
+                    plan: pendingPayment.plan,
+                    amount: pendingPayment.amount,
+                    proofUploaded: Boolean(pendingPayment.proofUploaded),
+                    senderBank: pendingPayment.senderBank,
+                    senderAccountName: pendingPayment.senderAccountName,
+                  }
+                : null
+            }
           />
 
           {currentSubscription?.status === "active" && (
@@ -187,7 +225,7 @@ export default async function SubscriptionPage({
               </span>
               <div>
                 <h2 className="text-lg font-extrabold text-[#15211d]">Riwayat pembayaran</h2>
-                <p className="m-0 text-xs text-[#627069]">Delapan checkout subscription terbaru.</p>
+                <p className="m-0 text-xs text-[#627069]">Delapan pembayaran transfer bank terbaru.</p>
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -204,7 +242,17 @@ export default async function SubscriptionPage({
                 <TableBody>
                   {payments.map((payment) => (
                     <TableRow key={payment.id}>
-                      <TableCell className="font-mono text-xs text-[#52645c]">{payment.orderId}</TableCell>
+                      <TableCell className="font-mono text-xs text-[#52645c]">
+                        {payment.orderId}
+                        {payment.status === "pending" && !payment.proofUploaded && (
+                          <span className="mt-1 block font-sans font-semibold text-amber-700">Belum ada bukti</span>
+                        )}
+                        {payment.status === "failed" && payment.verificationNote && (
+                          <span className="mt-1 block max-w-[220px] whitespace-normal font-sans text-rose-700">
+                            {payment.verificationNote}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="font-semibold text-[#15211d]">{plans[payment.plan].name}</TableCell>
                       <TableCell className="text-[#627069]">
                         {payment.createdAt.toLocaleDateString("id-ID", { dateStyle: "medium" })}
