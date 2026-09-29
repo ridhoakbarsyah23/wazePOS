@@ -14,6 +14,7 @@ import {
 import { PlatformAdminInsights } from "@/components/admin/platform-admin-insights";
 import { PlatformAdminTodayFollowUps } from "@/components/admin/platform-admin-today-follow-ups";
 import { PlatformAdminClock } from "@/components/admin/platform-admin-clock";
+import { PlatformAdminGrowthChart } from "@/components/admin/platform-admin-growth-chart";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlatformAdminOverviewData } from "@/server/admin/platform-admin-dashboard";
 
@@ -107,6 +108,10 @@ export default async function PlatformAdminOverviewPage() {
       <p className="mt-3 text-xs leading-5 text-[#627069]">
         Total akun mencakup seluruh pengguna terdaftar, termasuk akun admin, staf, serta akun yang belum memverifikasi email atau membuat usaha. Jumlah diperbarui saat halaman dimuat ulang.
       </p>
+
+      <div className="mt-6 sm:mt-7">
+        <PlatformAdminGrowthChart data={data.growthChart} />
+      </div>
 
       <section aria-labelledby="attention-title" className="mt-6 rounded-2xl border border-[#dfe8e3] bg-white p-4 sm:mt-7 sm:p-5">
         <h2 id="attention-title" className="admin-display m-0 flex items-center gap-2 text-lg">
