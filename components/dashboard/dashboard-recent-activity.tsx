@@ -3,8 +3,8 @@
 import { Receipt, TrendingUp, PackageMinus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-// Tipe data tiruan untuk aktivitas
-type ActivityItem = {
+// Tipe data untuk aktivitas
+export type ActivityItem = {
   id: string;
   type: "transaction" | "alert" | "insight";
   title: string;
@@ -54,7 +54,9 @@ function formatMoney(value: number) {
   }).format(value);
 }
 
-export function DashboardRecentActivity() {
+export function DashboardRecentActivity({ activities = mockActivities }: { activities?: ActivityItem[] }) {
+  const displayActivities = activities && activities.length > 0 ? activities : mockActivities;
+
   return (
     <Card className="flex flex-col h-full border-[#dbe5df] bg-white shadow-sm dark:border-[#2d3a33] dark:bg-[#1a231f]">
       <CardHeader className="pb-3">
@@ -72,7 +74,7 @@ export function DashboardRecentActivity() {
 
       <CardContent className="flex-1 overflow-y-auto pr-2">
         <div className="space-y-4">
-          {mockActivities.map((activity) => (
+          {displayActivities.map((activity) => (
             <div key={activity.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-slate-50 transition-colors dark:hover:bg-[#25302a]">
               {/* Ikon berdasarkan tipe */}
               <div className={`mt-0.5 rounded-full p-2 shrink-0 ${activity.type === 'transaction' ? 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400' :

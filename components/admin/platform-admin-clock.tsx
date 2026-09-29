@@ -8,9 +8,12 @@ export function PlatformAdminClock() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timeout = window.setTimeout(() => setMounted(true), 0);
     const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(id);
+    };
   }, []);
 
   if (!mounted) {
