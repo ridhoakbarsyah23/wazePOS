@@ -4,10 +4,10 @@ Aplikasi Point of Sale (POS) berbasis web untuk UMKM, lengkap dengan:
 
 - **Website promosi** — landing page marketing dan lead generation.
 - **Aplikasi POS** — dashboard pemilik, kasir, produk, stok, pelanggan, laporan, dan struk.
-- **Billing subscription** — paket Tumbuh dan Bisnis dengan pembayaran Midtrans.
+- **Billing subscription** — paket Tumbuh dan Bisnis dengan pembayaran transfer bank manual.
 - **Platform Admin** — dashboard internal untuk memantau pelanggan dan subscription.
 
-Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle ORM, PostgreSQL, Better Auth, dan Midtrans Snap.
+Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle ORM, PostgreSQL, Better Auth, dan Resend.
 
 ![Halaman utama wazePOS](docs/images/landing-hero.webp)
 
@@ -93,7 +93,7 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 | Tailwind CSS | Styling |
 | Drizzle ORM + PostgreSQL | Database dan migrasi |
 | Better Auth | Register, login, session, Google OAuth, rate limiting |
-| Midtrans Snap | Pembayaran subscription |
+| Transfer bank manual | Pembayaran subscription |
 | Resend | Email transaksional (reset password, pengingat trial) |
 | Vitest + Testing Library | Pengujian |
 | Docker | PostgreSQL lokal dan build production |
@@ -213,12 +213,12 @@ Semua konfigurasi ada di `.env.local` (lokal) atau environment variables deploym
 | `GOOGLE_CLIENT_ID` | Untuk login Google | OAuth Client ID dari Google Cloud Console. |
 | `GOOGLE_CLIENT_SECRET` | Untuk login Google | OAuth Client Secret — hanya server, tidak boleh masuk Git atau berawalan `NEXT_PUBLIC_`. |
 
-### Email (reset password & pengingat trial)
+### Email (reset password, pengingat trial, & verifikasi pembayaran)
 
 | Variabel | Wajib? | Penjelasan |
 | --- | --- | --- |
-| `RESEND_API_KEY` | Untuk reset password dan pengingat trial | API key Resend. Gunakan alamat pengirim dari domain yang sudah diverifikasi. |
-| `RESEND_FROM_EMAIL` | Untuk reset password dan pengingat trial | Alamat pengirim, contoh: `wazePOS <no-reply@domain-anda.com>`. |
+| `RESEND_API_KEY` | Untuk OTP verifikasi, reset password, pengingat trial, dan email approve/reject pembayaran | API key Resend. Nilai kosong membuat email verifikasi pembayaran di-skip (verifikasi tetap tersimpan). |
+| `RESEND_FROM_EMAIL` | Untuk OTP verifikasi, reset password, pengingat trial, dan email approve/reject pembayaran | Alamat pengirim. Selama memakai `onboarding@resend.dev` (domain testing), Resend hanya mengantar ke alamat email pemilik akun Resend; untuk mengirim ke semua owner, verifikasi domain sendiri di resend.com/domains lalu ganti pengirim ke domain tersebut. |
 | `CRON_SECRET` | Untuk pengingat trial | Secret acak untuk melindungi endpoint cron `/api/billing/trial-reminders`. Vercel mengirimkannya otomatis sebagai header `Authorization: Bearer` pada Vercel Cron. |
 
 ### Cron pengingat trial
@@ -238,13 +238,13 @@ Aktivasi produksi:
 
 Referensi: [batas cron Vercel](https://vercel.com/docs/cron-jobs/usage-and-pricing), [pengelolaan cron](https://vercel.com/docs/cron-jobs/manage-cron-jobs), [idempotensi Resend](https://resend.com/docs/dashboard/emails/idempotency-keys).
 
-### Midtrans (pembayaran)
+### Transfer bank (pembayaran)
 
 | Variabel | Wajib? | Penjelasan |
 | --- | --- | --- |
-| `MIDTRANS_SERVER_KEY` | Untuk checkout | Server Key Midtrans — hanya boleh tersedia di server. |
-| `MIDTRANS_IS_PRODUCTION` | Untuk checkout | `false` untuk sandbox. Ubah ke `true` hanya setelah pengujian dan konfigurasi production selesai. |
-| `MIDTRANS_NOTIFICATION_URL` | Untuk checkout | URL publik webhook `POST /api/payments/midtrans/webhook`. Kosongkan saat localhost belum diekspos ke internet. |
+| `BANK_TRANSFER_BANK` | Untuk checkout | Nama bank rekening tujuan, contoh: `BCA`. |
+| `BANK_TRANSFER_ACCOUNT_NUMBER` | Untuk checkout | Nomor rekening tujuan. Ganti contoh dengan rekening resmi sebelum production. |
+| `BANK_TRANSFER_ACCOUNT_NAME` | Untuk checkout | Nama pemilik rekening tujuan. |
 
 ### Platform Admin
 
@@ -382,9 +382,12 @@ Response yang sehat memiliki `"ok": true`, `"connected": true`, dan `"authTables
 ## Autentikasi dan onboarding
 
 - Better Auth menangani register, login, logout, password hashing, session cookie, rate limiting dasar, dan reset password via email.
-- Pengguna memilih Paket Tumbuh atau Bisnis pada halaman harga atau formulir registrasi. Pilihan tervalidasi diteruskan ke `/onboarding`.
-- Setelah register berhasil, session dibuat otomatis dan pengguna diarahkan ke `/onboarding` dengan paket pilihannya.
-- Onboarding membuat bisnis, membership dengan role `owner`, gerai pertama, dan subscription trial 14 hari untuk paket yang dipilih — semuanya dalam satu transaksi database.
+- Pengguna memilih Paket Tumbuh atau Bisnis pada halaman harga atau formulir registrasi. Pilihan tervalidasi diteruskan ke `/onboarding` (via `/verify-email` untuk pendaftar manual).
+- Tombol **Buat akun** dan **Lanjutkan dengan Google** di `/register` aktif hanya setelah user mencentang persetujuan Kebijakan Privasi (`/privacy`, dibuka di tab baru). Persetujuan tervalidasi via `privacyAccepted: z.literal(true)` di client dan server.
+- Pendaftar manual (nama, email, kata sandi + konfirmasi) menerima kode OTP 6 digit via email (plugin `emailOTP` better-auth, tabel `verification` existing, berlaku 10 menit) dan wajib verifikasi di `/verify-email` sebelum onboarding. Waktu persetujuan privasi dicatat di `user.privacy_accepted_at` (migrasi `0028`).
+- Pendaftar Google melewati OTP (email sudah diverifikasi Google) tetapi tetap wajib mencentang privasi — di form register untuk mengaktifkan tombol SSO, dan di form onboarding yang mencatat `privacy_accepted_at` dalam transaksi yang sama dengan pembuatan usaha.
+- Login email yang belum verifikasi ditolak server (`403 EMAIL_NOT_VERIFIED`) dan diarahkan ke `/verify-email`; guard `emailVerified` juga ada di halaman `/onboarding`, `POST /api/onboarding`, `/auth/continue`, dan `requireDashboardAccess`.
+- Onboarding membuat bisnis, membership dengan role `owner`, gerai pertama, dan subscription trial 7 hari (`TRIAL_DURATION_DAYS` di `shared/billing/plans.ts`) untuk paket yang dipilih — semuanya dalam satu transaksi database.
 - Pengguna yang belum menyelesaikan onboarding diarahkan dari `/dashboard` ke `/onboarding`.
 - `proxy.ts` melakukan pemeriksaan cookie awal, sedangkan session dan membership tetap diverifikasi ulang di server sebelum data dashboard dibaca.
 
@@ -392,11 +395,10 @@ Response yang sehat memiliki `"ok": true`, `"connected": true`, dan `"authTables
 
 ## Paket dan pembayaran subscription
 
-- Checkout paket dibuat oleh server melalui Midtrans Snap menggunakan harga di `shared/billing/plans.ts`; nominal dari browser tidak pernah dipercaya.
-- Midtrans mengarahkan pelanggan ke halaman pembayaran yang di-host Midtrans.
-- Paket baru aktif hanya setelah webhook memiliki signature SHA-512, nominal, mata uang, status transaksi, dan fraud status yang valid.
+- Checkout paket dibuat oleh server via transfer bank manual menggunakan harga di `shared/billing/plans.ts`; nominal dari browser tidak pernah dipercaya.
+- Owner mentransfer ke rekening `BANK_TRANSFER_*` lalu mengunggah bukti JPG/PNG/WebP maksimal 4 MB.
+- Paket baru aktif hanya setelah Platform Admin menyetujui bukti transfer di `/admin/payments`.
 - `provider_order_id` unik dan pembaruan pembayaran bersifat idempotent untuk mencegah aktivasi ganda.
-- Gunakan kredensial sandbox (`MIDTRANS_IS_PRODUCTION=false`) sampai alur checkout, webhook, redirect, dan status subscription selesai diuji.
 
 ---
 
@@ -486,7 +488,7 @@ Struktur folder dipisahkan berdasarkan domain agar mudah dipelihara:
 | --- | --- |
 | `app/` | Routing Next.js: route group `(marketing)` halaman publik, `(auth)` login/register, `(app)` aplikasi inti, `admin/` platform admin, dan `api/` route handlers |
 | `components/` | Komponen UI dikelompokkan per domain; `components/ui/` khusus primitive reusable |
-| `server/` | Kode server-only: akses database, session/auth, entitlement, audit, Midtrans, email — tidak boleh masuk bundle klien |
+| `server/` | Kode server-only: akses database, session/auth, entitlement, audit, transfer bank, email — tidak boleh masuk bundle klien |
 | `shared/` | Kode isomorphic (aman klien dan server): schema validasi Zod, plan/entitlement, kalkulasi POS, util murni |
 | `db/` | Satu-satunya tempat schema dan koneksi database (Drizzle) |
 | `__tests__/` | Test, dikelompokkan per domain |
@@ -504,5 +506,5 @@ Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; ko
 - [ ] Testimoni pelanggan asli beserta izin publikasi.
 - [ ] URL webhook backend/CRM untuk penyimpanan lead yang persisten (`LEAD_WEBHOOK_URL`).
 - [ ] Kebijakan privasi dan detail klaim keamanan produk yang telah disetujui.
-- [ ] `MIDTRANS_IS_PRODUCTION=true` beserta Server Key production, setelah seluruh alur pembayaran diuji di sandbox.
+- [ ] Rekening resmi `BANK_TRANSFER_*` sudah terisi dan bukti transfer terverifikasi end-to-end.
 - [ ] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal yang terverifikasi.

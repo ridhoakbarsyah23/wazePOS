@@ -6,7 +6,7 @@ Dokumen ini menjadi acuan untuk menambah dan memindahkan kode tanpa membuat depe
 
 - `app/` hanya berisi routing Next.js, Server Components route, Route Handlers, metadata, dan konfigurasi runtime. URL publik didefinisikan route group `(marketing)`, `(auth)`, dan `(app)` tanpa mengubah path.
 - `components/` dikelompokkan berdasarkan domain. `components/ui/` hanya untuk primitive presentational yang reusable.
-- `server/` berisi kode yang **tidak boleh masuk bundle klien**: akses database, session/auth, entitlement server, audit, Midtrans, email, dan state server (rate limit). Modul di sini memakai `server-only` atau `@/db`/`node:*`.
+- `server/` berisi kode yang **tidak boleh masuk bundle klien**: akses database, session/auth, entitlement server, audit, billing transfer bank, email, dan state server (rate limit). Modul di sini memakai `server-only` atau `@/db`/`node:*`.
 - `shared/` berisi kode **isomorphic** yang aman dipakai klien maupun server: schema validasi, plan/entitlement, label, kalkulasi POS, util murni, dan tipe/UI helper admin.
 - `db/` adalah satu-satunya tempat untuk schema dan koneksi database. Drizzle migrations tidak dipindahkan.
 - `__tests__/` mengikuti domain agar test mudah ditemukan di dekat feature-nya.
@@ -28,7 +28,7 @@ server/
   access/        Route guards untuk workspace
   admin/         Platform Admin DAL, audit, dan dashboard query
   auth/          Better Auth dan session
-  billing/       Midtrans (Snap + signature)
+  billing/       Transfer bank (rekening tujuan + verifikasi admin)
   email/         Email delivery
   pos/           Invoice number, reporting, sale filters (query DB)
   rate-limit.ts  Rate limiter in-memory

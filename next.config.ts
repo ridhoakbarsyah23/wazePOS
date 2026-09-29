@@ -4,7 +4,6 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Aplikasi ini tidak memuat script/style/font/iframe eksternal:
 // - Font Google di-self-host oleh next/font
-// - Midtrans Snap dibuka via redirect (bukan iframe/popup script)
 // - `unsafe-inline` untuk script/style tetap diperlukan oleh hydration Next.js
 // - `unsafe-eval` + websocket hanya untuk HMR di dev
 const contentSecurityPolicy = [
