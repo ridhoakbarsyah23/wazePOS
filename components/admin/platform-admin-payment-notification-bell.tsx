@@ -74,7 +74,7 @@ export function PlatformAdminPaymentNotificationBell({
         onClick={() => setIsModalOpen(!isModalOpen)}
         aria-label={`Notifikasi pembayaran: ${label}`}
         title={label}
-        className="relative grid size-10 shrink-0 place-items-center rounded-xl border border-[#dfe8e3] bg-white text-[#527066] transition-colors hover:border-[#9ac3b0] hover:text-[#106348] cursor-pointer"
+        className="relative grid size-10 shrink-0 place-items-center rounded-xl border border-[#dfe8e3] bg-white text-[#527066] transition-colors hover:border-[#9ac3b0] hover:text-[#106348] cursor-pointer dark:border-[#2d3a33] dark:bg-[#1a231f] dark:text-[#a0b0a8] dark:hover:border-[#198760] dark:hover:text-[#9ac3b0]"
       >
         <Bell className="size-4" aria-hidden="true" />
         {pending > 0 && (
@@ -91,41 +91,41 @@ export function PlatformAdminPaymentNotificationBell({
       </button>
 
       {isModalOpen && (
-        <div className="absolute right-0 top-14 z-50 w-80 rounded-2xl bg-white p-5 shadow-2xl border border-slate-200">
-          <div className="absolute -top-2 right-4 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-white"></div>
+        <div className="absolute right-0 top-14 z-50 w-80 rounded-2xl bg-white p-5 shadow-2xl border border-slate-200 dark:border-[#2d3a33] dark:bg-[#15211d]">
+          <div className="absolute -top-2 right-4 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-white dark:border-[#2d3a33] dark:bg-[#15211d]"></div>
           
           <div className="relative z-10">
             <div className="mb-4 flex flex-row items-center gap-3 text-left">
-              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-600">
+              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
                 <Receipt className="size-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 m-0 leading-none">
+              <h3 className="text-lg font-bold text-slate-900 m-0 leading-none dark:text-white">
                 Notifikasi Pembayaran
               </h3>
             </div>
             
             <div className="mb-6 space-y-3">
-              <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-[#2d3a33] dark:bg-[#1a231f]">
                 <div className="flex items-center gap-3">
-                  <CreditCard className="size-5 text-slate-500" />
-                  <span className="text-sm font-semibold text-slate-700">Total Menunggu</span>
+                  <CreditCard className="size-5 text-slate-500 dark:text-[#a0b0a8]" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Total Menunggu</span>
                 </div>
-                <span className="text-lg font-black text-slate-900">{pending}</span>
+                <span className="text-lg font-black text-slate-900 dark:text-white">{pending}</span>
               </div>
               
-              <div className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 p-3">
+              <div className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-500/10">
                 <div className="flex items-center gap-3">
-                  <ShieldAlert className="size-5 text-amber-500" />
-                  <span className="text-sm font-semibold text-amber-700">Siap Verifikasi</span>
+                  <ShieldAlert className="size-5 text-amber-500 dark:text-amber-400" />
+                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-500">Siap Verifikasi</span>
                 </div>
-                <span className="text-lg font-black text-amber-600">{ready}</span>
+                <span className="text-lg font-black text-amber-600 dark:text-amber-400">{ready}</span>
               </div>
             </div>
 
             <div className="flex flex-row gap-3 w-full">
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 cursor-pointer rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="flex-1 cursor-pointer rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors dark:border-[#2d3a33] dark:bg-[#1a231f] dark:text-[#a0b0a8] dark:hover:bg-[#25302a] dark:hover:text-white"
               >
                 Tutup
               </button>
