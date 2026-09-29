@@ -7,6 +7,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const session = await requireSession();
   if (await getMembership(session.user.id)) redirect("/dashboard");
   const selectedPlan = normalizePlan((await searchParams).plan);
+  // Pendaftar manual wajib menyelesaikan OTP sebelum membuat profil usaha.
+  // User Google/OAuth dilewati karena emailnya sudah diverifikasi Google.
+  // Plan dipertahankan agar pilihan paket tidak hilang setelah verifikasi.
+  if (!session.user.emailVerified) {
+    redirect(`/verify-email?email=${encodeURIComponent(session.user.email)}&plan=${selectedPlan}`);
+  }
 
   return (
     <main className="grid min-h-dvh place-items-center bg-[radial-gradient(circle_at_8%_8%,rgba(116,219,168,.24),transparent_32%),linear-gradient(145deg,#eaf8f1,#f8fcfa)] px-4 py-10">

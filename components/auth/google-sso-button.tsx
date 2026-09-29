@@ -10,18 +10,30 @@ export function GoogleSsoButton({
   flow,
   selectedPlan,
   disabled = false,
+  privacyAccepted,
+  showEmailDivider = true,
 }: {
   flow: SocialAuthFlow;
   selectedPlan?: PlanId;
   disabled?: boolean;
+  /** Wajib true pada alur register agar tombol aktif (gate Kebijakan Privasi). */
+  privacyAccepted?: boolean;
+  showEmailDivider?: boolean;
 }) {
   const searchParams = useSearchParams();
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const callbackError = searchParams.get("oauth") === "error" || Boolean(searchParams.get("error"));
+  const needsPrivacyGate = flow === "register";
+  const blockedByPrivacy = needsPrivacyGate && privacyAccepted !== true;
+  const buttonDisabled = disabled || isPending || blockedByPrivacy;
 
   async function continueWithGoogle() {
     setErrorMessage("");
+    if (blockedByPrivacy) {
+      setErrorMessage("Centang persetujuan Kebijakan Privasi terlebih dahulu.");
+      return;
+    }
     setIsPending(true);
 
     try {
@@ -45,8 +57,9 @@ export function GoogleSsoButton({
       <button
         type="button"
         onClick={() => void continueWithGoogle()}
-        disabled={disabled || isPending}
+        disabled={buttonDisabled}
         aria-busy={isPending}
+        title={blockedByPrivacy ? "Centang persetujuan Kebijakan Privasi terlebih dahulu" : undefined}
         className="flex h-12 w-full min-w-0 cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-[#cfdcd5] bg-white px-4 text-sm font-bold text-[#263c33] shadow-[0_1px_2px_rgba(16,65,48,.05)] transition duration-200 hover:-translate-y-px hover:border-[#94c5ad] hover:bg-[#f9fcfa] hover:shadow-[0_8px_20px_rgba(16,65,48,0.1)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none"
       >
         {isPending ? (
@@ -59,7 +72,7 @@ export function GoogleSsoButton({
             <path fill="#EA4335" d="M12 6.01c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.62 9.62 0 0 0 12 2a10 10 0 0 0-8.96 5.52l3.35 2.62C7.18 7.77 9.39 6.01 12 6.01Z" />
           </svg>
         )}
-        {isPending ? "Menghubungkan ke Google..." : "Lanjutkan dengan Google"}
+        {isPending ? "Menghubungkan ke Google..." : flow === "register" ? "Daftar dengan Google" : "Lanjutkan dengan Google"}
       </button>
 
       {(errorMessage || callbackError) && (
@@ -68,11 +81,11 @@ export function GoogleSsoButton({
         </p>
       )}
 
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3" aria-hidden="true">
+      {showEmailDivider && <div className="flex min-w-0 items-center gap-2 sm:gap-3" aria-hidden="true">
         <span className="h-px min-w-0 flex-1 bg-[#e3ebe7]" />
         <span className="shrink-0 px-1 text-center text-[10px] font-bold uppercase tracking-[0.13em] text-[#8a9992]">atau gunakan email</span>
         <span className="h-px min-w-0 flex-1 bg-[#e3ebe7]" />
-      </div>
+      </div>}
     </div>
   );
 }

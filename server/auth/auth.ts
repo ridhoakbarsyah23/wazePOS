@@ -1,10 +1,16 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { emailOTP } from "better-auth/plugins/email-otp";
+import { eq } from "drizzle-orm";
 import { after } from "next/server";
 import { db } from "@/db";
-import { schema } from "@/db/schema";
+import { schema, user } from "@/db/schema";
+import { sendVerificationOtpEmail } from "@/server/email/otp-email";
 import { sendPasswordResetEmail } from "@/server/email/password-reset-email";
+
+/** Masa berlaku kode OTP verifikasi email (10 menit, dalam detik). */
+export const EMAIL_OTP_EXPIRES_IN_SECONDS = 600;
 
 const configuredOrigin =
   process.env.BETTER_AUTH_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -40,20 +46,27 @@ export const auth = betterAuth({
     schema,
     transaction: true,
   }),
+  user: {
+    additionalFields: {
+      privacyAcceptedAt: {
+        type: "date",
+        required: false,
+        input: false,
+      },
+    },
+  },
   account: {
     encryptOAuthTokens: true,
-    // Pengguna dapat mendaftar via email/kata sandi tanpa verifikasi email
-    // (requireEmailVerification: false), sehingga penautan otomatis akun Google
+    // Pendaftaran email/kata sandi mewajibkan verifikasi OTP
+    // (requireEmailVerification: true), sehingga penautan otomatis akun Google
     // ke user yang sama emailnya harus diizinkan secara eksplisit melalui
     // trustedProviders — tanpa ini, login Google mengembalikan account_not_linked.
     accountLinking: {
       enabled: true,
       trustedProviders: ["google"],
-      // Signup aplikasi ini tidak mewajibkan verifikasi email (lihat
-      // emailAndPassword.requireEmailVerification), sehingga user lokal dapat
-      // berstatus email_verified=false. Default better-auth 1.7 menolak
-      // penautan ke user lokal yang belum terverifikasi — dinonaktifkan karena
-      // email akun Google sendiri sudah diverifikasi oleh Google.
+      // User lokal yang belum verifikasi tetap boleh ditautkan ke akun Google:
+      // email akun Google sendiri sudah diverifikasi oleh Google, dan user
+      // manual tidak bisa mencapai onboarding sebelum OTP terverifikasi.
       requireLocalEmailVerified: false,
     },
   },
@@ -61,9 +74,10 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
-    // Signup pelanggan tetap tidak memerlukan verifikasi; akses Platform Admin
-    // kembali memeriksa emailVerified + allowlist di server.
-    requireEmailVerification: false,
+    // Pendaftaran email/kata sandi mewajibkan verifikasi OTP sebelum akun
+    // dapat dipakai masuk (diblokir di sign-in bila emailVerified=false).
+    // User Google/OAuth dilewati karena emailnya sudah diverifikasi Google.
+    requireEmailVerification: true,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
@@ -82,6 +96,11 @@ export const auth = betterAuth({
         }
       });
     },
+  },
+  emailVerification: {
+    // Setelah OTP terverifikasi, sesi langsung dibuat agar pendaftar manual
+    // bisa lanjut ke onboarding tanpa login ulang.
+    autoSignInAfterVerification: true,
   },
   socialProviders:
     googleClientId && googleClientSecret
@@ -105,5 +124,43 @@ export const auth = betterAuth({
       "/reset-password": { window: 60, max: 5 },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    // Kode OTP 6 digit untuk verifikasi email pendaftar manual, disimpan di
+    // tabel `verification` yang sudah ada (tanpa migrasi tambahan).
+    emailOTP({
+      otpLength: 6,
+      expiresIn: EMAIL_OTP_EXPIRES_IN_SECONDS,
+      sendVerificationOnSignUp: true,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        if (type !== "email-verification") return;
+        let recipientName: string | null = null;
+        try {
+          const [recipient] = await db
+            .select({ name: user.name })
+            .from(user)
+            .where(eq(user.email, email.toLowerCase()))
+            .limit(1);
+          recipientName = recipient?.name ?? null;
+        } catch {
+          recipientName = null;
+        }
+        after(async () => {
+          try {
+            await sendVerificationOtpEmail({
+              recipient: email,
+              recipientName,
+              otp,
+              expiresInMinutes: Math.round(EMAIL_OTP_EXPIRES_IN_SECONDS / 60),
+            });
+          } catch (error) {
+            console.error(
+              "[VERIFICATION_OTP_EMAIL_ERROR]",
+              error instanceof Error ? error.message : "Unknown email delivery error",
+            );
+          }
+        });
+      },
+    }),
+  ],
 });

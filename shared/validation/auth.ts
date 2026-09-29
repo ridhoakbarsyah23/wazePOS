@@ -14,11 +14,22 @@ export const registerSchema = loginSchema
   .extend({
     name: z.string().trim().min(2, "Nama minimal 2 karakter.").max(80, "Nama maksimal 80 karakter."),
     confirmPassword: z.string(),
+    privacyAccepted: z.literal(true, {
+      error: "Centang persetujuan Kebijakan Privasi untuk melanjutkan.",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Konfirmasi kata sandi tidak sama.",
     path: ["confirmPassword"],
   });
+
+export const verifyOtpSchema = z.object({
+  email: z.email("Masukkan alamat email yang valid.").trim().toLowerCase(),
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Kode verifikasi terdiri dari 6 digit angka."),
+});
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Masukkan alamat email yang valid.").trim().toLowerCase(),

@@ -25,6 +25,7 @@ export default function robots(): MetadataRoute.Robots {
         "/staff",
         "/subscription",
         "/transactions",
+        "/verify-email",
       ],
     },
     sitemap: `${siteConfig.siteUrl}/sitemap.xml`,

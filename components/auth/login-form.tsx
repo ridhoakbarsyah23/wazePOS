@@ -59,6 +59,16 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
       });
 
       if (response.error) {
+        // Akun manual yang belum verifikasi OTP diblokir server dengan
+        // 403 EMAIL_NOT_VERIFIED — arahkan ke halaman verifikasi agar user
+        // bisa menyelesaikan OTP, bukan pesan kredensial salah.
+        const code = (response.error as { code?: string }).code;
+        if (response.error.status === 403 && code === "EMAIL_NOT_VERIFIED") {
+          startNavigation(() => {
+            router.replace(`/verify-email?email=${encodeURIComponent(result.data.email)}`);
+          });
+          return;
+        }
         setErrorMessage("Email atau kata sandi tidak sesuai.");
         return;
       }

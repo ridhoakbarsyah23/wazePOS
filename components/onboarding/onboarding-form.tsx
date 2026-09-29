@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { businessTypes, onboardingSchema } from "@/shared/validation/onboarding";
 import { plans, type PlanId } from "@/shared/billing/plans";
 
@@ -9,6 +10,7 @@ export function OnboardingForm({ selectedPlan }: { selectedPlan: PlanId }) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,6 +23,7 @@ export function OnboardingForm({ selectedPlan }: { selectedPlan: PlanId }) {
       outletName: formData.get("outletName"),
       address: formData.get("address") || undefined,
       plan: selectedPlan,
+      privacyAccepted: formData.get("privacyAccepted") === "on",
     });
 
     if (!result.success) {
@@ -56,8 +59,25 @@ export function OnboardingForm({ selectedPlan }: { selectedPlan: PlanId }) {
       <label className="grid gap-2 text-sm font-bold text-[#34443d]">Jenis usaha<select className="h-12 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-4 outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10" name="businessType" required defaultValue="" disabled={isPending}><option value="" disabled>Pilih jenis usaha</option>{businessTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
       <label className="grid gap-2 text-sm font-bold text-[#34443d]">Nama gerai pertama<input className="h-12 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-4 outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10" name="outletName" required maxLength={100} placeholder="Contoh: Gerai Utama" disabled={isPending} /></label>
       <label className="grid gap-2 text-sm font-bold text-[#34443d]">Alamat <span className="font-normal text-[#7b8982]">(opsional)</span><textarea className="min-h-24 resize-y rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-4 py-3 outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10" name="address" maxLength={300} placeholder="Alamat gerai" disabled={isPending} /></label>
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-4 py-3 text-sm font-semibold leading-6 text-[#34443d]">
+        <input
+          type="checkbox"
+          name="privacyAccepted"
+          checked={privacyAccepted}
+          disabled={isPending}
+          onChange={(event) => setPrivacyAccepted(event.target.checked)}
+          className="mt-1 size-4 shrink-0 accent-[#198760]"
+        />
+        <span>
+          Saya telah membaca dan menyetujui{" "}
+          <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-[#198760] underline underline-offset-2">
+            Kebijakan Privasi
+          </Link>{" "}
+          wazePOS.
+        </span>
+      </label>
       {errorMessage && <p className="m-0 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{errorMessage}</p>}
-      <button className="button button-primary button-large full-width" type="submit" disabled={isPending}>{isPending ? "Menyiapkan usaha..." : "Simpan dan buka dashboard"}</button>
+      <button className="button button-primary button-large full-width" type="submit" disabled={isPending || !privacyAccepted}>{isPending ? "Menyiapkan usaha..." : "Simpan dan buka dashboard"}</button>
     </form>
   );
 }

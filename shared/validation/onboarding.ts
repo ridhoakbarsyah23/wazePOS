@@ -9,4 +9,7 @@ export const onboardingSchema = z.object({
   outletName: z.string().trim().min(2, "Nama gerai minimal 2 karakter.").max(100, "Nama gerai maksimal 100 karakter."),
   address: z.string().trim().max(300, "Alamat maksimal 300 karakter.").optional(),
   plan: z.enum(planIds, { error: "Pilih paket wazePOS yang tersedia." }),
+  privacyAccepted: z.literal(true, {
+    error: "Centang persetujuan Kebijakan Privasi untuk melanjutkan.",
+  }),
 });

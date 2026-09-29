@@ -28,7 +28,9 @@ beforeEach(() => {
   mocks.redirect.mockReset();
   mocks.requireSession.mockReset();
   mocks.getWorkspaceContext.mockReset();
-  mocks.requireSession.mockResolvedValue({ user: { id: "user-1", name: "Admin" } });
+  mocks.requireSession.mockResolvedValue({
+    user: { id: "user-1", name: "Admin", email: "admin@example.com", emailVerified: true },
+  });
   mocks.redirect.mockImplementation((destination: string) => {
     throw new Error(`REDIRECT:${destination}`);
   });

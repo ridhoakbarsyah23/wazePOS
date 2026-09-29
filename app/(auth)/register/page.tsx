@@ -1,26 +1,19 @@
 import { redirect } from "next/navigation";
-import { AuthPageShell } from "@/components/auth/auth-page-shell";
+import { RegisterPageShell } from "@/components/auth/register-page-shell";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getCurrentSession } from "@/server/auth/auth-session";
-import { normalizePlan, plans } from "@/shared/billing/plans";
+import { normalizePlan } from "@/shared/billing/plans";
 
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   if (await getCurrentSession()) redirect("/dashboard");
   const selectedPlan = normalizePlan((await searchParams).plan);
 
   return (
-    <AuthPageShell
-      eyebrow="Mulai uji coba gratis"
-      title="Buat akun wazePOS"
-      description={`Gunakan Google atau isi data akun untuk memulai uji coba ${plans[selectedPlan].name}.`}
-      footerText="Sudah punya akun?"
-      footerLinkLabel="Masuk sekarang"
-      footerHref="/login"
-    >
+    <RegisterPageShell>
       <RegisterForm
         selectedPlan={selectedPlan}
         googleSsoEnabled={Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)}
       />
-    </AuthPageShell>
+    </RegisterPageShell>
   );
 }

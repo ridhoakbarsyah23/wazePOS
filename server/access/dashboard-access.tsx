@@ -62,6 +62,11 @@ export const requireDashboardAccess = cache(
     const { rule = "anyAuthenticated", enforceSubscription = true } = options;
 
     const session = await requireSession();
+    // Pendaftar manual wajib menyelesaikan OTP sebelum menyentuh area dashboard.
+    // User Google/OAuth lolos karena emailnya sudah diverifikasi Google.
+    if (!session.user.emailVerified) {
+      redirect(`/verify-email?email=${encodeURIComponent(session.user.email)}`);
+    }
     const { membership, currentSubscription } = await getWorkspaceContext(session.user.id);
     if (!membership) redirect("/onboarding");
 

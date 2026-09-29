@@ -9,6 +9,12 @@ export default async function AuthContinuePage() {
     redirect("/login");
   }
 
+  // Pendaftar manual yang belum menyelesaikan OTP tidak boleh lolos ke
+  // dashboard/onboarding — kembalikan ke halaman verifikasi.
+  if (!session.user.emailVerified) {
+    redirect(`/verify-email?email=${encodeURIComponent(session.user.email)}`);
+  }
+
   redirect(
     getPostLoginDestination(session.user, process.env.PLATFORM_ADMIN_EMAILS),
   );
