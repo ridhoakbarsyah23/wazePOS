@@ -148,6 +148,7 @@ export const subscription = pgTable(
     plan: text("plan").$type<"tumbuh" | "bisnis">().default("tumbuh").notNull(),
     status: text("status").$type<"trialing" | "active" | "past_due" | "cancelled">().default("trialing").notNull(),
     trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }).notNull(),
+    trialReminderSentAt: timestamp("trial_reminder_sent_at", { withTimezone: true }),
     currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
     cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false).notNull(),
