@@ -28,6 +28,8 @@ const auditActions: readonly string[] = [
   "business_export",
   "subscription_export",
   "payment_export",
+  "payment_verified",
+  "payment_disbursed",
 ];
 
 function getFirst(value: SearchParam): string | undefined {
@@ -62,7 +64,9 @@ export async function getPlatformAdminAuditData(input: PlatformAdminAuditInput =
           | "business_detail_view"
           | "business_export"
           | "subscription_export"
-          | "payment_export",
+          | "payment_export"
+          | "payment_verified"
+          | "payment_disbursed",
       ),
     );
   if (filters.query) {

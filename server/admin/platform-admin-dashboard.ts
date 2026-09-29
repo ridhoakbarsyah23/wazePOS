@@ -421,6 +421,7 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
     db
       .select({
         pendingPayments: sql<number>`count(*) filter (where ${subscriptionPayment.status} = 'pending')::int`,
+        pendingReady: sql<number>`count(*) filter (where ${subscriptionPayment.status} = 'pending' and ${subscriptionPayment.transferProofData} is not null)::int`,
         paidPayments: sql<number>`count(*) filter (where ${subscriptionPayment.status} = 'paid')::int`,
         paidRevenue: sql<number>`coalesce(sum(${subscriptionPayment.amount}) filter (where ${subscriptionPayment.status} = 'paid'), 0)::bigint`,
       })
@@ -446,7 +447,7 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
     pastDue: 0,
     cancelled: 0,
   };
-  const payments = paymentRows[0] ?? { pendingPayments: 0, paidPayments: 0, paidRevenue: 0 };
+  const payments = paymentRows[0] ?? { pendingPayments: 0, pendingReady: 0, paidPayments: 0, paidRevenue: 0 };
   const analyticsRowsResult = analyticsRows[0] ?? {
     totalSubscriptions: 0,
     currentActiveSubscriptions: 0,
@@ -487,6 +488,7 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
     },
     payments: {
       pendingPayments: Number(payments.pendingPayments),
+      pendingReady: Number((payments as { pendingReady?: number }).pendingReady ?? 0),
       paidPayments: Number(payments.paidPayments),
       paidRevenue: Number(payments.paidRevenue),
     },

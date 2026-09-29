@@ -8,7 +8,9 @@ type PlatformAdminAuditAction =
   | "business_detail_view"
   | "business_export"
   | "subscription_export"
-  | "payment_export";
+  | "payment_export"
+  | "payment_verified"
+  | "payment_disbursed";
 
 export async function recordPlatformAdminAudit(input: {
   action: PlatformAdminAuditAction;
@@ -16,7 +18,7 @@ export async function recordPlatformAdminAudit(input: {
   actorEmail: string;
   actorName?: string | null;
   businessId?: string | null;
-  entityType: "business" | "business_directory" | "subscription_directory" | "payment_directory";
+  entityType: "business" | "business_directory" | "subscription_directory" | "payment_directory" | "payment";
   entityId?: string | null;
   metadata?: Record<string, unknown>;
 }) {

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, CreditCard, History, LayoutDashboard, Repeat2 } from "lucide-react";
+import { Building2, CreditCard, History, LayoutDashboard, Repeat2, Users } from "lucide-react";
 import { cn } from "@/shared/utils";
 
 const links = [
   { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, exact: true },
+  { href: "/admin/users", label: "Daftar akun", icon: Users, exact: false },
   { href: "/admin/businesses", label: "Daftar usaha", icon: Building2, exact: false },
   { href: "/admin/subscriptions", label: "Langganan", icon: Repeat2, exact: false },
   { href: "/admin/payments", label: "Pembayaran", icon: CreditCard, exact: false },

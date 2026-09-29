@@ -48,7 +48,7 @@ export default async function PlatformAdminPaymentsPage({
           Daftar pembayaran
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069]">
-          {data.summary.paidPayments} pembayaran berhasil dengan total {formatRupiah(data.summary.paidRevenue)}. {data.summary.pendingPayments} menunggu pembayaran. Halaman ini read-only.
+          {data.summary.paidPayments} pembayaran berhasil dengan total {formatRupiah(data.summary.paidRevenue)}. {data.summary.pendingPayments} menunggu verifikasi transfer bank. {data.summary.pendingDisbursementPayments} berhasil ({formatRupiah(data.summary.pendingDisbursementRevenue)}) siap dicairkan ke rekening pribadi, {data.summary.disbursedPayments} sudah dicairkan ({formatRupiah(data.summary.disbursedRevenue)}).
         </p>
       </section>
 

@@ -3,7 +3,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PlatformAdminNav } from "@/components/admin/platform-admin-nav";
+import { PlatformAdminPaymentNotificationBell } from "@/components/admin/platform-admin-payment-notification-bell";
 import { PlatformAdminThemeToggle } from "@/components/admin/platform-admin-theme";
+import { getPendingPaymentNotificationCounts } from "@/server/admin/platform-admin-payment-notifications";
+
+async function PaymentNotificationBellSlot() {
+  let initial = { pendingTotal: 0, pendingReady: 0 };
+  try {
+    const counts = await getPendingPaymentNotificationCounts();
+    initial = { pendingTotal: counts.pendingTotal, pendingReady: counts.pendingReady };
+  } catch {
+    // Bell tetap tampil dengan angka nol bila query gagal.
+  }
+  return <PlatformAdminPaymentNotificationBell initial={initial} />;
+}
 
 export function PlatformAdminShell({
   adminEmail,
@@ -38,6 +51,7 @@ export function PlatformAdminShell({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <PaymentNotificationBellSlot />
             <PlatformAdminThemeToggle />
             <LogoutButton
               compact

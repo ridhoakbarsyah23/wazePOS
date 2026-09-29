@@ -42,7 +42,7 @@ describe("Ringkasan platform admin", () => {
     expect(screen.getByRole("link", { name: /Menunggu pembayaran/ }).getAttribute("href")).toBe("/admin/payments?status=pending");
     expect(screen.getByRole("heading", { name: "Persentase langganan aktif" })).toBeDefined();
     expect(screen.getByText("3 dari 10 langganan masih aktif.")).toBeDefined();
-    expect(screen.queryByRole("link", { name: /total akun/i })).toBeNull();
+    expect(screen.getByRole("link", { name: /total akun/i }).getAttribute("href")).toBe("/admin/users");
   });
 
   it("menjelaskan kategori kosong tanpa peringatan palsu", async () => {

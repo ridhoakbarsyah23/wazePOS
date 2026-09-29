@@ -20,6 +20,13 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("PlatformAdminNav", () => {
+  it("menandai daftar akun sebagai halaman aktif", () => {
+    mocks.pathname = "/admin/users";
+    render(<PlatformAdminNav />);
+    expect(screen.getByRole("link", { name: "Daftar akun" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: "Daftar akun" }).getAttribute("href")).toBe("/admin/users");
+  });
+
   it("menandai ringkasan sebagai halaman aktif pada /admin", () => {
     mocks.pathname = "/admin";
     render(<PlatformAdminNav />);

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, CreditCard, Download, ListFilter, Search } from "lucide-react";
 import { PlatformAdminFilterResetButton } from "@/components/admin/platform-admin-filter-reset-button";
+import { PlatformAdminPaymentDisburseButton } from "@/components/admin/platform-admin-payment-disburse-button";
+import { PlatformAdminPaymentVerifyButton } from "@/components/admin/platform-admin-payment-verify-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getPageNumbers, pageDisabledClass, pageLinkClass } from "@/shared/pagination";
@@ -206,6 +208,7 @@ export function PlatformAdminPaymentList({
                   <th scope="col" className="px-5 py-3 font-extrabold">Paket</th>
                   <th scope="col" className="px-5 py-3 font-extrabold">Dibuat</th>
                   <th scope="col" className="px-5 py-3 font-extrabold">Dibayar</th>
+                  <th scope="col" className="px-5 py-3 font-extrabold">Verifikasi</th>
                 </tr>
               </thead>
               <tbody>
@@ -225,11 +228,22 @@ export function PlatformAdminPaymentList({
                       </td>
                       <td className="max-w-[220px] px-5 py-4">
                         <p className="m-0 truncate font-mono text-xs" title={item.providerOrderId}>{item.providerOrderId}</p>
-                        <p className="mt-1 truncate text-xs text-[#627069]">{item.provider}{item.providerPaymentType ? ` · ${item.providerPaymentType}` : ""}</p>
+                        <p className="mt-1 truncate text-xs text-[#627069]">transfer bank{item.senderBank ? ` · ${item.senderBank}` : ""}</p>
+                        {item.proofUploaded ? (
+                          <p className="mt-1 text-xs font-bold text-[#106348]">Bukti terlampir</p>
+                        ) : item.status === "pending" ? (
+                          <p className="mt-1 text-xs font-bold text-amber-700">Belum ada bukti</p>
+                        ) : null}
                       </td>
                       <td className="px-5 py-4 font-bold">{getPlanLabel(item.plan)}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57]"><DateTimeValue value={item.createdAt} /></td>
                       <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57]"><DateTimeValue value={item.paidAt} /></td>
+                      <td className="px-5 py-4">
+                        <div className="grid gap-2">
+                          <PlatformAdminPaymentVerifyButton payment={item} />
+                          <PlatformAdminPaymentDisburseButton payment={item} />
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -254,6 +268,10 @@ export function PlatformAdminPaymentList({
                     <p className="m-0 text-xs text-[#627069]">{getPlanLabel(item.plan)}</p>
                   </div>
                   <p className="mt-1 text-[11px] text-[#82928a]">{formatDateTime(item.paidAt ?? item.createdAt)}</p>
+                  <div className="mt-3 grid gap-2">
+                    <PlatformAdminPaymentVerifyButton payment={item} />
+                    <PlatformAdminPaymentDisburseButton payment={item} />
+                  </div>
                 </article>
               );
             })}
@@ -308,6 +326,8 @@ export function PlatformAdminPaymentList({
         <span>Pending: <strong>{summary.pendingPayments}</strong></span>
         <span>Berhasil: <strong>{summary.paidPayments}</strong></span>
         <span>Pendapatan: <strong>{formatRupiah(summary.paidRevenue)}</strong></span>
+        <span>Sudah dicairkan: <strong>{summary.disbursedPayments}</strong> ({formatRupiah(summary.disbursedRevenue)})</span>
+        <span>Siap dicairkan: <strong>{summary.pendingDisbursementPayments}</strong> ({formatRupiah(summary.pendingDisbursementRevenue)})</span>
         <span className="ml-auto hidden text-[#82928a] sm:inline">Urutan terbaru lebih dulu</span>
       </div>
     </section>

@@ -32,8 +32,13 @@ function formatRupiah(value: number) {
 
 export default async function PlatformAdminOverviewPage() {
   const data = await getPlatformAdminOverviewData();
+  const pendingReady = (data.payments as { pendingReady?: number }).pendingReady ?? 0;
+  const pendingPaymentsDetail =
+    pendingReady > 0
+      ? `${pendingReady} pembayaran sudah ada bukti dan siap diverifikasi.`
+      : "Pembayaran masih berstatus menunggu konfirmasi.";
   const metrics = [
-    { label: "Total akun", value: data.overview.totalUsers, icon: Users, tone: "bg-sky-50 text-sky-700", bar: "bg-sky-500", href: null },
+    { label: "Total akun", value: data.overview.totalUsers, icon: Users, tone: "bg-sky-50 text-sky-700", bar: "bg-sky-500", href: "/admin/users" },
     { label: "Total usaha", value: data.overview.totalBusinesses, icon: Building2, tone: "bg-violet-50 text-violet-700", bar: "bg-violet-500", href: "/admin/businesses" },
     { label: "Trial aktif", value: data.overview.trialActive, icon: Clock3, tone: "bg-amber-50 text-amber-700", bar: "bg-amber-400", href: "/admin/subscriptions?state=trial_active" },
     { label: "Langganan aktif", value: data.overview.activeSubscriptions, icon: ShieldCheck, tone: "bg-emerald-50 text-emerald-700", bar: "bg-emerald-500", href: "/admin/subscriptions?state=active" },
@@ -59,7 +64,7 @@ export default async function PlatformAdminOverviewPage() {
               Ringkasan pelanggan wazePOS
             </h1>
             <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-emerald-50/85">
-              Pantau usaha, masa trial, langganan, dan pembayaran. Halaman ini hanya membaca data dan tidak mengubah akun pelanggan.
+              Pantau jumlah akun, usaha, masa trial, langganan, dan pembayaran. Halaman ini hanya membaca data dan tidak mengubah akun pelanggan.
             </p>
           </div>
 
@@ -85,7 +90,7 @@ export default async function PlatformAdminOverviewPage() {
                   <CardContent className="flex min-h-[86px] min-w-0 max-w-full items-center gap-2.5 p-3 pt-4 sm:gap-3 sm:p-4 sm:pt-5">
                     <span className={`grid size-9 shrink-0 place-items-center rounded-xl sm:size-10 ${metric.tone}`}><Icon className="size-4 sm:size-5" aria-hidden="true" /></span>
                     <div className="min-w-0 flex-1">
-                      <p className="admin-mono m-0 min-w-0 break-words text-lg font-bold leading-none sm:text-2xl"><span className="sr-only">{`Metrik ${index + 1} dari ${metrics.length}: `}</span>{metric.value}</p>
+                      <p className="admin-mono m-0 min-w-0 break-words text-lg font-bold leading-none sm:text-2xl"><span className="sr-only">{`Metrik ${index + 1} dari ${metrics.length}: `}</span>{metric.value.toLocaleString("id-ID")}</p>
                       <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-[#627069] sm:text-xs">{metric.label}</p>
                     </div>
                   </CardContent>
@@ -96,6 +101,10 @@ export default async function PlatformAdminOverviewPage() {
           );
         })}
       </ul>
+
+      <p className="mt-3 text-xs leading-5 text-[#627069]">
+        Total akun mencakup seluruh pengguna terdaftar, termasuk akun admin, staf, serta akun yang belum memverifikasi email atau membuat usaha. Jumlah diperbarui saat halaman dimuat ulang.
+      </p>
 
       <section aria-labelledby="attention-title" className="mt-6 rounded-2xl border border-[#dfe8e3] bg-white p-4 sm:mt-7 sm:p-5">
         <h2 id="attention-title" className="admin-display m-0 flex items-center gap-2 text-lg">
@@ -108,7 +117,7 @@ export default async function PlatformAdminOverviewPage() {
             { label: "Trial segera berakhir", value: data.analytics.trialEndingSoon, detail: "Masa trial berakhir dalam 7 hari ke depan.", empty: "Tidak ada trial yang berakhir dalam 7 hari.", href: "/admin/subscriptions?state=trial_ending" },
             { label: "Trial sudah berakhir", value: data.overview.trialExpired, detail: "Masa trial sudah habis dan masih berstatus trial.", empty: "Tidak ada trial yang sudah berakhir.", href: "/admin/subscriptions?state=trial_expired" },
             { label: "Langganan kedaluwarsa", value: data.overview.expiredSubscriptions, detail: "Masa langganan berbayar telah berakhir.", empty: "Tidak ada langganan kedaluwarsa.", href: "/admin/subscriptions?state=subscription_expired" },
-            { label: "Menunggu pembayaran", value: data.payments.pendingPayments, detail: "Pembayaran masih berstatus menunggu konfirmasi.", empty: "Tidak ada pembayaran yang menunggu.", href: "/admin/payments?status=pending" },
+            { label: "Menunggu pembayaran", value: data.payments.pendingPayments, detail: pendingPaymentsDetail, empty: "Tidak ada pembayaran yang menunggu.", href: "/admin/payments?status=pending" },
           ].map((item) => (
             <li key={item.href} className="min-w-0">
               <Link href={item.href} className="flex h-full items-start gap-3 rounded-xl border border-[#e5eee9] p-4 transition hover:border-[#9ac3b0] hover:bg-[#f7faf8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20">

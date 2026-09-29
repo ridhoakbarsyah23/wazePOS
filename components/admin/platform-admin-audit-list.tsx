@@ -27,6 +27,8 @@ function getActionLabel(action: string) {
   if (action === "business_export") return "Daftar usaha diekspor";
   if (action === "subscription_export") return "Langganan diekspor";
   if (action === "payment_export") return "Pembayaran diekspor";
+  if (action === "payment_verified") return "Pembayaran diverifikasi";
+  if (action === "payment_disbursed") return "Pembayaran dicairkan";
   return action;
 }
 
@@ -138,6 +140,8 @@ export function PlatformAdminAuditList({
               <option value="business_export">Daftar usaha diekspor</option>
               <option value="subscription_export">Langganan diekspor</option>
               <option value="payment_export">Pembayaran diekspor</option>
+              <option value="payment_verified">Pembayaran diverifikasi</option>
+              <option value="payment_disbursed">Pembayaran dicairkan</option>
             </select>
             <Button type="submit" size="sm" className="h-11 w-full gap-2 px-3 text-xs sm:h-10 [&_svg]:size-3.5">
               <ListFilter aria-hidden="true" />
