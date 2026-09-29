@@ -9,7 +9,7 @@ export type GrowthDataPoint = {
   pendaftar: number;
 };
 
-export function PlatformAdminGrowthChart({ data }: { data: GrowthDataPoint[] }) {
+export function PlatformAdminGrowthChart({ data = [] }: { data?: GrowthDataPoint[] }) {
   const [days, setDays] = useState<number>(30);
 
   const displayData = useMemo(() => {
