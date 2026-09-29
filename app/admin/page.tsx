@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PlatformAdminInsights } from "@/components/admin/platform-admin-insights";
 import { PlatformAdminTodayFollowUps } from "@/components/admin/platform-admin-today-follow-ups";
+import { PlatformAdminClock } from "@/components/admin/platform-admin-clock";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlatformAdminOverviewData } from "@/server/admin/platform-admin-dashboard";
 
@@ -56,6 +57,7 @@ export default async function PlatformAdminOverviewPage() {
             <span className="admin-live-dot" aria-hidden="true" />
             Data saat halaman dimuat
           </span>
+          <PlatformAdminClock />
         </div>
 
         <div className="mt-4 grid w-full min-w-0 gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:items-end">
