@@ -12,6 +12,8 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  /** Waktu user menyetujui Kebijakan Privasi (checkbox register/onboarding). */
+  privacyAcceptedAt: timestamp("privacy_accepted_at", { withTimezone: true }),
   ...timestamps,
 });
 
@@ -166,14 +168,29 @@ export const subscriptionPayment = pgTable(
     plan: text("plan").$type<"tumbuh" | "bisnis">().notNull(),
     amount: integer("amount").notNull(),
     currency: text("currency").default("IDR").notNull(),
-    provider: text("provider").default("midtrans").notNull(),
+    provider: text("provider").default("bank_transfer").notNull(),
     providerOrderId: text("provider_order_id").notNull(),
-    providerTransactionId: text("provider_transaction_id"),
-    providerPaymentType: text("provider_payment_type"),
     status: text("status").$type<"pending" | "paid" | "failed" | "expired" | "refunded">().default("pending").notNull(),
-    snapToken: text("snap_token"),
-    redirectUrl: text("redirect_url"),
+    /** Bank pengirim dana (diisi owner saat upload bukti transfer). */
+    senderBank: text("sender_bank"),
+    /** Nama pemilik rekening pengirim (diisi owner saat upload bukti). */
+    senderAccountName: text("sender_account_name"),
+    /** Bukti transfer sebagai base64 (tanpa prefix data URL), maks ~4MB. */
+    transferProofData: text("transfer_proof_data"),
+    transferProofMime: text("transfer_proof_mime"),
+    transferProofUploadedAt: timestamp("transfer_proof_uploaded_at", { withTimezone: true }),
+    /** Email admin yang memverifikasi (approve/reject). */
+    verifiedBy: text("verified_by"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verificationNote: text("verification_note"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    /** Penanda dana sudah dicairkan ke rekening pribadi (hanya untuk status paid). */
+    disbursedAt: timestamp("disbursed_at", { withTimezone: true }),
+    /** Email admin yang mencatat pencairan. */
+    disbursedBy: text("disbursed_by"),
+    /** Referensi pencairan (mis. ID mutasi / bukti transfer keluar). */
+    disbursementReference: text("disbursement_reference"),
+    disbursementNote: text("disbursement_note"),
     ...timestamps,
   },
   (table) => [
@@ -201,10 +218,12 @@ export const platformAdminAuditLog = pgTable(
         | "subscription_export"
         | "payment_export"
         | "business_follow_up_created"
+        | "payment_verified"
+        | "payment_disbursed"
       >()
       .notNull(),
     entityType: text("entity_type")
-      .$type<"business" | "business_directory" | "subscription_directory" | "payment_directory">()
+      .$type<"business" | "business_directory" | "subscription_directory" | "payment_directory" | "payment">()
       .notNull(),
     entityId: text("entity_id"),
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
