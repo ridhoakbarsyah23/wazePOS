@@ -94,7 +94,7 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 | Drizzle ORM + PostgreSQL | Database dan migrasi |
 | Better Auth | Register, login, session, Google OAuth, rate limiting |
 | Midtrans Snap | Pembayaran subscription |
-| Resend | Email transaksional (reset password) |
+| Resend | Email transaksional (reset password, pengingat trial) |
 | Vitest + Testing Library | Pengujian |
 | Docker | PostgreSQL lokal dan build production |
 
@@ -213,12 +213,30 @@ Semua konfigurasi ada di `.env.local` (lokal) atau environment variables deploym
 | `GOOGLE_CLIENT_ID` | Untuk login Google | OAuth Client ID dari Google Cloud Console. |
 | `GOOGLE_CLIENT_SECRET` | Untuk login Google | OAuth Client Secret — hanya server, tidak boleh masuk Git atau berawalan `NEXT_PUBLIC_`. |
 
-### Email (reset password)
+### Email (reset password & pengingat trial)
 
 | Variabel | Wajib? | Penjelasan |
 | --- | --- | --- |
-| `RESEND_API_KEY` | Untuk reset password | API key Resend. Gunakan alamat pengirim dari domain yang sudah diverifikasi. |
-| `RESEND_FROM_EMAIL` | Untuk reset password | Alamat pengirim, contoh: `wazePOS <no-reply@domain-anda.com>`. |
+| `RESEND_API_KEY` | Untuk reset password dan pengingat trial | API key Resend. Gunakan alamat pengirim dari domain yang sudah diverifikasi. |
+| `RESEND_FROM_EMAIL` | Untuk reset password dan pengingat trial | Alamat pengirim, contoh: `wazePOS <no-reply@domain-anda.com>`. |
+| `CRON_SECRET` | Untuk pengingat trial | Secret acak untuk melindungi endpoint cron `/api/billing/trial-reminders`. Vercel mengirimkannya otomatis sebagai header `Authorization: Bearer` pada Vercel Cron. |
+
+### Cron pengingat trial
+
+Pengingat dikirim ke email owner saat status masih `trialing`, trial belum berakhir, dan tersisa maksimal 24 jam. Email mencantumkan waktu berakhir dalam WIB dan tautan `/subscription`. Penanda `trial_reminder_sent_at` disimpan setelah transaksi pengiriman berhasil; kegagalan menggulung balik penanda agar bisa dicoba ulang. Kunci idempotensi Resend membantu mencegah duplikasi ketika respons pengiriman terputus (berlaku 24 jam).
+
+Endpoint: `GET /api/billing/trial-reminders`. Jadwal `vercel.json` adalah `0 2 * * *` (09:00 WIB). Pada **Vercel Hobby**, cron hanya dapat berjalan sekali sehari dan dapat dieksekusi kapan saja antara 09:00–09:59 WIB. Pengingat mengikuti pemeriksaan ini, **bukan tepat 24 jam sebelum kedaluwarsa**. Pergeseran jadwal, downtime, atau kegagalan pengiriman dapat membuat pengingat terlewat; cron Vercel tidak otomatis mengulang permintaan yang gagal. Untuk pemeriksaan setiap jam, gunakan scheduler eksternal dengan header otorisasi yang sama atau Vercel Pro dengan jadwal `0 * * * *`.
+
+Aktivasi produksi:
+
+1. Di Vercel → Project → Settings → Environment Variables, isi untuk **Production**: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NEXT_PUBLIC_SITE_URL` (URL HTTPS produksi), dan `CRON_SECRET`.
+2. Buat secret acak secara lokal: `node -p "require('node:crypto').randomBytes(32).toString('hex')"`. Simpan hasilnya sebagai `CRON_SECRET`; jangan masukkan ke Git atau variabel `NEXT_PUBLIC_`.
+3. Dengan `DATABASE_URL` yang menunjuk ke database produksi, jalankan `npm run db:migrate:production` **sebelum** men-deploy kode yang memakai kolom baru. Migration `0024` menambah `subscription.trial_reminder_sent_at` tanpa menghapus data.
+4. Deploy ke production dan periksa Vercel → Project → Cron Jobs. Cron tidak berjalan otomatis lewat `npm run dev` atau preview deployment.
+5. Jalankan cron secara manual dari dashboard Vercel untuk memeriksa hasil. Ini benar-benar mengirim email ke owner yang memenuhi syarat. Respons sukses berisi `ok`, `sent`, `failed`, dan `skipped`; `sent: 0` dapat berarti belum ada trial yang jatuh tempo atau sudah dikirimi pengingat.
+6. Periksa log Resend untuk status delivery dan inbox/spam penerima. `sent` berarti API Resend menerima permintaan, bukan bukti email sudah masuk inbox. Jika respons `502`, periksa Resend lalu ulangi saat trial masih aktif; `503` berarti konfigurasi belum lengkap, dan `500` berarti pemrosesan/database gagal.
+
+Referensi: [batas cron Vercel](https://vercel.com/docs/cron-jobs/usage-and-pricing), [pengelolaan cron](https://vercel.com/docs/cron-jobs/manage-cron-jobs), [idempotensi Resend](https://resend.com/docs/dashboard/emails/idempotency-keys).
 
 ### Midtrans (pembayaran)
 
