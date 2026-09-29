@@ -404,7 +404,11 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
   trialWindowEnd.setDate(trialWindowEnd.getDate() + TRIAL_ENDING_WINDOW_DAYS);
   const trialWindowEndParam = trialWindowEnd.toISOString();
 
-  const [overviewRows, paymentRows, analyticsRows] = await Promise.all([
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+  const [overviewRows, paymentRows, analyticsRows, growthRows] = await Promise.all([
     db
       .select({
         totalUsers: sql<number>`(select count(*)::int from "user")`,
@@ -435,6 +439,10 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
         trialEndingSoon: sql<number>`count(*) filter (where ${subscription.status} = 'trialing' and ${subscription.trialEndsAt} > ${nowParam} and ${subscription.trialEndsAt} <= ${trialWindowEndParam})::int`,
       })
       .from(subscription),
+    db
+      .select({ createdAt: business.createdAt })
+      .from(business)
+      .where(gte(business.createdAt, thirtyDaysAgo)),
   ]);
 
   const overview = overviewRows[0] ?? {
@@ -474,6 +482,28 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
     cancelled: Number(overview.cancelled),
   };
 
+  const growthChart = [];
+  const growthMap = new Map<string, number>();
+
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" });
+    growthMap.set(dateStr, 0);
+  }
+
+  growthRows.forEach((row) => {
+    if (!row.createdAt) return;
+    const dateStr = new Date(row.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" });
+    if (growthMap.has(dateStr)) {
+      growthMap.set(dateStr, growthMap.get(dateStr)! + 1);
+    }
+  });
+
+  for (const [date, count] of growthMap.entries()) {
+    growthChart.push({ date, pendaftar: count });
+  }
+
   return {
     overview: {
       ...overview,
@@ -493,6 +523,7 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
       paidRevenue: Number(payments.paidRevenue),
     },
     analytics,
+    growthChart,
   };
 }
 
