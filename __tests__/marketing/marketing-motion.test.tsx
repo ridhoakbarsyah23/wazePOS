@@ -11,7 +11,7 @@ const matches = (query: string) => query.includes("prefers-reduced-motion: reduc
   : query.includes("prefers-reduced-motion: no-preference") ? !reduced
   : query.includes("max-width") ? false : true;
 
-beforeEach(() => {
+beforeEach(() => { vi.useFakeTimers();
   reduced = false;
   listeners = [];
   vi.stubGlobal("matchMedia", (query: string) => ({
@@ -25,7 +25,7 @@ beforeEach(() => {
   vi.stubGlobal("scrollTo", vi.fn());
 });
 
-afterEach(() => { vi.unstubAllGlobals(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 const page = <MarketingPage trialUrl="/register" whatsappGeneralUrl="https://example.com/contact" whatsappTrialUrl="https://example.com/trial" />;
 
