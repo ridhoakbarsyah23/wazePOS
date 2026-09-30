@@ -11,6 +11,7 @@ type PlatformAdminAccountDetailDialogProps = {
   roleLabel: string;
   privacyLabel: string;
   updatedLabel: string;
+  lastActiveLabel: string;
 };
 
 function showDialog(dialog: HTMLDialogElement | null) {
@@ -41,6 +42,7 @@ export function PlatformAdminAccountDetailDialog({
   roleLabel,
   privacyLabel,
   updatedLabel,
+  lastActiveLabel,
 }: PlatformAdminAccountDetailDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -107,9 +109,13 @@ export function PlatformAdminAccountDetailDialog({
               <dt className="text-xs text-[#627069]">Persetujuan kebijakan privasi</dt>
               <dd className="mt-1 font-semibold">{privacyLabel}</dd>
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <dt className="text-xs text-[#627069]">Terakhir diperbarui</dt>
               <dd className="mt-1 font-semibold">{updatedLabel}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-[#627069]">Aktivitas terakhir (Login)</dt>
+              <dd className="mt-1 font-semibold">{lastActiveLabel}</dd>
             </div>
           </dl>
         </div>

@@ -75,6 +75,7 @@ export default async function PlatformAdminUsersPage({ searchParams }: {
                     roleLabel={item.role ? roleLabels[item.role] : "Belum memiliki peran"}
                     privacyLabel={item.privacyAcceptedAt ? `${formatDate(item.privacyAcceptedAt)} WIB` : "Belum tercatat"}
                     updatedLabel={`${formatDate(item.updatedAt)} WIB`}
+                    lastActiveLabel={item.lastActiveAt ? `${formatDate(item.lastActiveAt)} WIB` : "Belum pernah login"}
                   />
                 </div>
               </li>

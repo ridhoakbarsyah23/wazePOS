@@ -1,8 +1,8 @@
 import "server-only";
 
-import { count, desc, eq, ilike, or } from "drizzle-orm";
+import { count, desc, eq, ilike, or, max, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { business, businessMember, user } from "@/db/schema";
+import { business, businessMember, user, session } from "@/db/schema";
 import { requirePlatformAdmin } from "@/server/admin/platform-admin";
 import { isPlatformAdminUser } from "@/shared/admin/platform-admin-access";
 
@@ -43,11 +43,31 @@ export async function getPlatformAdminUsers(input: { q?: SearchParam; page?: Sea
     .limit(PAGE_SIZE)
     .offset(offset);
 
+  const userIds = users.map((u) => u.id);
+  const lastActiveMap = new Map<string, Date>();
+
+  if (userIds.length > 0) {
+    const activeSessions = await db.select({
+      userId: session.userId,
+      lastActiveAt: max(session.updatedAt),
+    })
+      .from(session)
+      .where(inArray(session.userId, userIds))
+      .groupBy(session.userId);
+
+    for (const s of activeSessions) {
+      if (s.lastActiveAt) {
+        lastActiveMap.set(s.userId, new Date(s.lastActiveAt as string | Date));
+      }
+    }
+  }
+
   return {
     query,
     users: users.map((item) => ({
       ...item,
       isPlatformAdmin: isPlatformAdminUser(item, process.env.PLATFORM_ADMIN_EMAILS),
+      lastActiveAt: lastActiveMap.get(item.id) ?? null,
     })),
     pagination: { total, page, totalPages, from: total ? offset + 1 : 0, to: Math.min(offset + PAGE_SIZE, total) },
   };
