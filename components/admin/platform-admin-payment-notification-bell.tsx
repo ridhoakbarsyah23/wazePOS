@@ -8,7 +8,7 @@ export type PaymentNotificationCounts = {
   pendingReady: number;
 };
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 120_000;
 
 function toCount(value: unknown): number {
   const parsed = Number(value);
@@ -31,8 +31,8 @@ async function fetchCounts(): Promise<PaymentNotificationCounts | null> {
 
 /**
  * Bell notifikasi pembayaran di header dashboard admin.
- * Menampilkan badge jumlah pembayaran pending; polling tiap 30 detik
- * dan refresh saat tab kembali fokus agar admin tahu ada yang harus di-approve.
+ * Menampilkan badge jumlah pembayaran pending; polling tiap 120 detik
+ * (hanya saat tab terlihat) dan refresh saat tab kembali fokus.
  */
 export function PlatformAdminPaymentNotificationBell({
   initial,
@@ -47,17 +47,24 @@ export function PlatformAdminPaymentNotificationBell({
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      // Hanya fetch saat tab terlihat agar tidak membanjiri API.
+      if (document.hidden) return;
       const next = await fetchCounts();
       if (next && !cancelled) setCounts(next);
     };
     void load();
     const interval = window.setInterval(() => void load(), POLL_INTERVAL_MS);
     const onFocus = () => void load();
+    const onVisibility = () => {
+      if (!document.hidden) void load();
+    };
     window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
       window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

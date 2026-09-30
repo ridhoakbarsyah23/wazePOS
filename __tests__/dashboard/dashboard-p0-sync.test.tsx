@@ -59,7 +59,9 @@ describe("P0 dashboard: sinkron angka dan grafik", () => {
       }),
     );
 
+    // Fetch awal di-skip (SSR sudah kirim initial* fresh); refresh manual memicu fetch.
     await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /perbarui/i }));
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 

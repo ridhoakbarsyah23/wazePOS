@@ -1,31 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Calendar, Clock } from "lucide-react";
 
-export function DashboardClock() {
+const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
+const timeFormatter = new Intl.DateTimeFormat("id-ID", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "Asia/Jakarta",
+});
+
+export const DashboardClock = memo(function DashboardClock() {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
+    // Detik tidak kritis untuk kas; interval 30 detik cukup + hemat render.
+    const id = window.setInterval(() => setNow(new Date()), 30000);
     return () => window.clearInterval(id);
   }, []);
 
-  const todayFormatted = new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(now);
-
-  const timeFormatted = new Intl.DateTimeFormat("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Jakarta",
-  }).format(now);
+  const todayFormatted = dateFormatter.format(now);
+  const timeFormatted = timeFormatter.format(now);
 
   return (
     <>
@@ -45,4 +48,4 @@ export function DashboardClock() {
       </span>
     </>
   );
-}
+});

@@ -1,15 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Calendar, Clock } from "lucide-react";
 
-export function PlatformAdminClock() {
+const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
+const timeFormatter = new Intl.DateTimeFormat("id-ID", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "Asia/Jakarta",
+});
+
+export const PlatformAdminClock = memo(function PlatformAdminClock() {
   const [now, setNow] = useState(() => new Date());
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setMounted(true), 0);
-    const id = window.setInterval(() => setNow(new Date()), 1000);
+    // Detik tidak kritis; 30 detik cukup + hemat render hero admin.
+    const id = window.setInterval(() => setNow(new Date()), 30000);
     return () => {
       window.clearTimeout(timeout);
       window.clearInterval(id);
@@ -20,21 +36,8 @@ export function PlatformAdminClock() {
     return null;
   }
 
-  const todayFormatted = new Intl.DateTimeFormat("id-ID", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(now);
-
-  const timeFormatted = new Intl.DateTimeFormat("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Jakarta",
-  }).format(now);
+  const todayFormatted = dateFormatter.format(now);
+  const timeFormatted = timeFormatter.format(now);
 
   return (
     <>
@@ -51,4 +54,4 @@ export function PlatformAdminClock() {
       </span>
     </>
   );
-}
+});

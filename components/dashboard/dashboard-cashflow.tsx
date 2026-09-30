@@ -82,8 +82,9 @@ export function DashboardCashflow({
   initialExpenseUnavailable?: boolean;
 }) {
   const router = useRouter();
+  // SSR sudah kirim initial* yang fresh; polling hanya penyegar, bukan loading awal.
   const [summary, setSummary] = useState<CashflowSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -110,8 +111,9 @@ export function DashboardCashflow({
   const schedulePolling = useCallback(() => {
     stopPolling();
     // Backoff saat error beruntun agar tidak membanjiri API:
-    // 15s normal, 30s setelah 1 gagal, 60s setelah 2+ gagal.
-    const delay = errorCountRef.current <= 0 ? 15000 : errorCountRef.current === 1 ? 30000 : 60000;
+    // 60s normal, 90s setelah 1 gagal, 120s setelah 2+ gagal.
+    // SSR page sudah kirim initial*, jadi polling hanya penyegar lambat.
+    const delay = errorCountRef.current <= 0 ? 60000 : errorCountRef.current === 1 ? 90000 : 120000;
     intervalRef.current = window.setInterval(() => {
       void fetchSummaryRef.current("auto");
     }, delay);
@@ -119,7 +121,7 @@ export function DashboardCashflow({
 
   const fetchSummary = useCallback(
     async (mode: "auto" | "manual" = "auto") => {
-      // Mode auto (polling 15 detik) dibuat senyap agar angka tidak berkedip;
+      // Mode auto (polling 60 detik) dibuat senyap agar angka tidak berkedip;
       // hanya refresh manual yang menampilkan spinner.
       if (mode === "manual") {
         setRefreshing(true);
@@ -128,9 +130,13 @@ export function DashboardCashflow({
       try {
         const params = new URLSearchParams({ period: selectedPeriod });
         if (selectedOutletId !== "all") params.set("outlet", selectedOutletId);
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 15000);
         const response = await fetch(`/api/cashflow/summary?${params.toString()}`, {
           cache: "no-store",
+          signal: controller.signal,
         });
+        window.clearTimeout(timeout);
         if (!response.ok) throw new Error("fetch-failed");
         const data = (await response.json()) as CashflowSummary;
         setSummary(data);
@@ -161,12 +167,8 @@ export function DashboardCashflow({
   }, [fetchSummary]);
 
   useEffect(() => {
-    // Tunda fetch awal ke callback timer agar tidak dianggap setState
-    // sinkron di badan effect (react-hooks/set-state-in-effect).
-    // Polling dijeda saat tab disembunyikan agar hemat baterai/kuota.
-    const timeout = window.setTimeout(() => {
-      void fetchSummaryRef.current("auto");
-    }, 0);
+    // Skip fetch awal: SSR page sudah kirim initial* yang fresh.
+    // Polling hanya penyegar lambat + refresh saat tab kembali terlihat.
     schedulePolling();
 
     const handleVisibility = () => {
@@ -179,7 +181,6 @@ export function DashboardCashflow({
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
-      window.clearTimeout(timeout);
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
@@ -257,7 +258,7 @@ export function DashboardCashflow({
             Uang masuk & keluar
           </h2>
           <p className="m-0 mt-1 text-xs leading-5 text-[#627069]">
-            {loading ? "Memuat angka terbaru..." : updatedLabel ? `Diperbarui ${updatedLabel} WIB · tiap 15 detik` : "Diperbarui tiap 15 detik"}
+            {updatedLabel ? `Diperbarui ${updatedLabel} WIB · tiap 60 detik` : "Angka awal dari server · diperbarui tiap 60 detik"}
             {error ? ` · ${error}` : ""}
           </p>
         </div>
