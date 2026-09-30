@@ -93,7 +93,7 @@ export function RegisterForm({
         // menampilkannya ulang bila penyimpanan gagal.
       }
 
-      router.replace(`/verify-email?email=${encodeURIComponent(result.data.email)}&plan=${plan}`);
+      router.replace(`/onboarding?plan=${plan}`);
       router.refresh();
     } catch {
       setErrorMessage("Tidak dapat terhubung ke server. Silakan coba lagi.");
@@ -201,9 +201,12 @@ export function RegisterForm({
             disabled={isPending}
             aria-invalid={Boolean(fieldErrors.privacyAccepted)}
             aria-describedby={fieldErrors.privacyAccepted ? "register-privacy-error" : undefined}
-            onChange={(event) => {
-              setPrivacyAccepted(event.target.checked);
-              clearError("privacyAccepted");
+            readOnly
+            onClick={(e) => {
+              if (!privacyAccepted) {
+                e.preventDefault();
+                setPrivacyOpen(true);
+              }
             }}
             className="mt-0.5 size-4 shrink-0 accent-[#198760]"
           />
@@ -212,7 +215,7 @@ export function RegisterForm({
             <button type="button" aria-haspopup="dialog" onClick={() => setPrivacyOpen(true)} className="cursor-pointer rounded-sm font-bold text-[#198760] underline underline-offset-2 hover:text-[#116b4c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]">
               Kebijakan Privasi
             </button>{" "}
-            wazePOS.
+            wazePOS. (Buka dan baca hingga akhir untuk mencentang)
           </span>
         </label>
         {fieldErrors.privacyAccepted && <span id="register-privacy-error" className="text-xs font-semibold text-red-600">{fieldErrors.privacyAccepted}</span>}
@@ -223,9 +226,19 @@ export function RegisterForm({
           {isPending && <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           {isPending ? "Membuat akun..." : "Buat akun"}
         </button>
-        {googleSsoEnabled && <GoogleSsoButton flow="register" selectedPlan={plan} disabled={isPending || !privacyAccepted} privacyAccepted={privacyAccepted} showEmailDivider={false} />}
+        {googleSsoEnabled && <GoogleSsoButton flow="register" selectedPlan={plan} disabled={isPending} privacyAccepted={privacyAccepted} showEmailDivider={false} onRequestPrivacyDialog={() => setPrivacyOpen(true)} />}
       </div>
-      {privacyOpen && <PrivacyPolicyDialog onClose={() => setPrivacyOpen(false)} />}
+      {privacyOpen && (
+        <PrivacyPolicyDialog 
+          onClose={() => setPrivacyOpen(false)} 
+          onScrolledToBottom={() => {
+            if (!privacyAccepted) {
+              setPrivacyAccepted(true);
+              clearError("privacyAccepted");
+            }
+          }}
+        />
+      )}
     </form>
   );
 }

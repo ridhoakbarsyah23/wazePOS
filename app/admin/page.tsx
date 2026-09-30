@@ -11,28 +11,12 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import dynamic from "next/dynamic";
+import { PlatformAdminGrowthChart } from "@/components/admin/platform-admin-growth-chart-dynamic";
 import { PlatformAdminInsights } from "@/components/admin/platform-admin-insights";
 import { PlatformAdminTodayFollowUps } from "@/components/admin/platform-admin-today-follow-ups";
 import { PlatformAdminClock } from "@/components/admin/platform-admin-clock";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlatformAdminOverviewData } from "@/server/admin/platform-admin-dashboard";
-
-// recharts (~100KB) hanya untuk chart below-fold: lazy + tanpa SSR agar
-// tidak membebani critical path overview admin.
-const PlatformAdminGrowthChart = dynamic(
-  () => import("@/components/admin/platform-admin-growth-chart").then((m) => m.PlatformAdminGrowthChart),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-[420px] animate-pulse flex-col gap-4 rounded-3xl border border-[#dfe8e3] bg-white p-6" aria-hidden="true">
-        <div className="h-5 w-48 rounded-lg bg-[#eef2f0]" />
-        <div className="h-3 w-64 rounded-lg bg-[#eef2f0]" />
-        <div className="mt-4 h-[300px] rounded-2xl bg-[#f4f8f6]" />
-      </div>
-    ),
-  },
-);
 
 export const metadata: Metadata = {
   title: "Platform Admin | wazePOS",

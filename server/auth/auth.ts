@@ -74,10 +74,9 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
-    // Pendaftaran email/kata sandi mewajibkan verifikasi OTP sebelum akun
-    // dapat dipakai masuk (diblokir di sign-in bila emailVerified=false).
-    // User Google/OAuth dilewati karena emailnya sudah diverifikasi Google.
-    requireEmailVerification: true,
+    // OTP Verifikasi Email dimatikan atas permintaan pengguna agar bisa
+    // langsung masuk ke onboarding tanpa harus cek email.
+    requireEmailVerification: false,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
@@ -98,9 +97,8 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
-    // Setelah OTP terverifikasi, sesi langsung dibuat agar pendaftar manual
-    // bisa lanjut ke onboarding tanpa login ulang.
-    autoSignInAfterVerification: true,
+    // Karena requireEmailVerification false, autoSignIn otomatis berfungsi
+    // tanpa perlu plugin verifikasi tambahan di tahap ini.
   },
   socialProviders:
     googleClientId && googleClientSecret
@@ -131,7 +129,8 @@ export const auth = betterAuth({
     emailOTP({
       otpLength: 6,
       expiresIn: EMAIL_OTP_EXPIRES_IN_SECONDS,
-      sendVerificationOnSignUp: true,
+      // OTP saat Sign-Up dimatikan agar user langsung bisa masuk aplikasi
+      sendVerificationOnSignUp: false,
       sendVerificationOTP: async ({ email, otp, type }) => {
         if (type !== "email-verification") return;
         let recipientName: string | null = null;

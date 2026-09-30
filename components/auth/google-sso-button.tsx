@@ -12,13 +12,14 @@ export function GoogleSsoButton({
   disabled = false,
   privacyAccepted,
   showEmailDivider = true,
+  onRequestPrivacyDialog,
 }: {
   flow: SocialAuthFlow;
   selectedPlan?: PlanId;
   disabled?: boolean;
-  /** Wajib true pada alur register agar tombol aktif (gate Kebijakan Privasi). */
   privacyAccepted?: boolean;
   showEmailDivider?: boolean;
+  onRequestPrivacyDialog?: () => void;
 }) {
   const searchParams = useSearchParams();
   const [isPending, setIsPending] = useState(false);
@@ -26,12 +27,16 @@ export function GoogleSsoButton({
   const callbackError = searchParams.get("oauth") === "error" || Boolean(searchParams.get("error"));
   const needsPrivacyGate = flow === "register";
   const blockedByPrivacy = needsPrivacyGate && privacyAccepted !== true;
-  const buttonDisabled = disabled || isPending || blockedByPrivacy;
+  const buttonDisabled = disabled || isPending;
 
   async function continueWithGoogle() {
     setErrorMessage("");
     if (blockedByPrivacy) {
-      setErrorMessage("Centang persetujuan Kebijakan Privasi terlebih dahulu.");
+      if (onRequestPrivacyDialog) {
+        onRequestPrivacyDialog();
+      } else {
+        setErrorMessage("Centang persetujuan Kebijakan Privasi terlebih dahulu.");
+      }
       return;
     }
     setIsPending(true);
@@ -59,7 +64,7 @@ export function GoogleSsoButton({
         onClick={() => void continueWithGoogle()}
         disabled={buttonDisabled}
         aria-busy={isPending}
-        title={blockedByPrivacy ? "Centang persetujuan Kebijakan Privasi terlebih dahulu" : undefined}
+        title={blockedByPrivacy ? "Baca persetujuan Kebijakan Privasi terlebih dahulu" : undefined}
         className="flex h-12 w-full min-w-0 cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-[#cfdcd5] bg-white px-4 text-sm font-bold text-[#263c33] shadow-[0_1px_2px_rgba(16,65,48,.05)] transition duration-200 hover:-translate-y-px hover:border-[#94c5ad] hover:bg-[#f9fcfa] hover:shadow-[0_8px_20px_rgba(16,65,48,0.1)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/15 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none"
       >
         {isPending ? (

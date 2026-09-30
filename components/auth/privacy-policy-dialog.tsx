@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type UIEvent } from "react";
 import { X } from "lucide-react";
 import { PrivacyPolicyContent } from "@/components/shared/privacy-policy-content";
 
-export function PrivacyPolicyDialog({ onClose }: { onClose: () => void }) {
+export function PrivacyPolicyDialog({ onClose, onScrolledToBottom }: { onClose: () => void, onScrolledToBottom?: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -17,6 +17,16 @@ export function PrivacyPolicyDialog({ onClose }: { onClose: () => void }) {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
+
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    // Beri toleransi 10px dari bawah
+    if (target.scrollHeight - target.scrollTop - target.clientHeight < 10) {
+      if (onScrolledToBottom) {
+        onScrolledToBottom();
+      }
+    }
+  };
 
   return (
     <dialog
@@ -44,7 +54,10 @@ export function PrivacyPolicyDialog({ onClose }: { onClose: () => void }) {
             <X aria-hidden="true" className="size-5" />
           </button>
         </header>
-        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">
+        <div 
+          className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6"
+          onScroll={handleScroll}
+        >
           <PrivacyPolicyContent />
         </div>
       </div>

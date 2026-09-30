@@ -20,3 +20,6 @@ backups/
 # Local-only working docs and agent skills (not part of deployable app).
 .opencode/
 design-system/
+
+job_log.txt
+logs.zip

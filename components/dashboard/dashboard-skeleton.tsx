@@ -1,6 +1,6 @@
-export default function DashboardLoading() {
+export function DashboardSkeleton() {
   return (
-    <main className="min-h-dvh bg-[#f4faf7] p-4 sm:p-8">
+    <div className="min-h-dvh bg-transparent p-4 sm:p-8">
       <div className="mx-auto w-full max-w-[1240px] animate-pulse space-y-6">
         <div className="h-52 rounded-3xl bg-white sm:h-44" />
         <div className="h-16 rounded-2xl bg-white" />
@@ -15,6 +15,6 @@ export default function DashboardLoading() {
           <div className="h-96 rounded-3xl bg-white" />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
