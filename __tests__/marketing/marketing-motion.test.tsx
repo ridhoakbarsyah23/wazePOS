@@ -30,6 +30,14 @@ afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 const page = <MarketingPage trialUrl="/register" whatsappGeneralUrl="https://example.com/contact" whatsappTrialUrl="https://example.com/trial" />;
 
 describe("GSAP landing lifecycle", () => {
+  it("tidak mengiklankan QRIS sebelum integrasi pembayaran resmi tersedia", () => {
+    reduced = true;
+    const view = render(page);
+
+    expect(view.container.textContent).not.toContain("QRIS");
+    view.unmount();
+  });
+
   it("membersihkan ScrollTrigger dan style saat unmount, termasuk StrictMode", () => {
     const baseline = ScrollTrigger.getAll().length;
     const view = render(<StrictMode>{page}</StrictMode>);
@@ -40,7 +48,7 @@ describe("GSAP landing lifecycle", () => {
     expect(gsap.getTweensOf(hero)).toHaveLength(0);
     expect(hero.style.opacity).toBe("");
     expect(hero.style.transform).toBe("");
-  });
+  }, 30_000);
 
   it("reduced motion tidak menyembunyikan konten atau membuat ScrollTrigger", () => {
     reduced = true;

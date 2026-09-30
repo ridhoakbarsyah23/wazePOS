@@ -196,12 +196,12 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/>
           <div className="container hero-grid">
             <div className="hero-copy reveal">
-              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · QRIS Business · Struk 58/80mm</span></span>
+              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · Multi-gerai · Struk 58/80mm</span></span>
               <h1 className="hero-display">Tutup buku <span>tanpa ribet.</span><br />Kasir jalan, stok aman.</h1>
               <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, arus kas & stok wazePOS Business terpantau, laporan kebaca tanpa rekap manual.</p>
               <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
               <dl className="pos-proof">
-                <div><dt className="mono">Kasir</dt><dd>Tunai + QRIS Business</dd></div>
+                <div><dt className="mono">Kasir</dt><dd>Tunai + kartu EDC Business</dd></div>
                 <div><dt className="mono">Arus kas</dt><dd>masuk-keluar Business</dd></div>
                 <div><dt className="mono">Stok</dt><dd>peringatan menipis</dd></div>
                 <div><dt className="mono">Laporan</dt><dd>Excel + layar</dd></div>
@@ -263,7 +263,7 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
 
         <section className="section pricing-section" id="harga" data-motion="harga">
           <div className="container pricing-heading" data-reveal>
-            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>wazePOS Growth buat satu gerai yang mau rapi. wazePOS Business buat yang sudah multi-gerai + butuh arus kas, stok, QRIS, catatan per item, dan ekspor Excel.</p></div>
+            <div><span className="section-kicker light">Harga jujur, tahunan</span><h2 className="section-display">Dua paket. <span>Tanpa biaya siluman.</span></h2><p>wazePOS Growth buat satu gerai yang mau rapi. wazePOS Business buat yang sudah multi-gerai + butuh arus kas, stok, kartu EDC, catatan per item, dan ekspor Excel.</p></div>
           </div>
           <div className="container pricing-grid">
             {pricingPlans.map((plan) => {

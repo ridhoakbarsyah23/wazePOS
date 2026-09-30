@@ -28,7 +28,6 @@ const terminalProps = {
   outlets: [{ id: "outlet-1", name: "Gerai Utama" }],
   initialOutletId: "outlet-1",
   allowNonCashPayments: false,
-  allowQrisPayments: false,
   checkoutDisabledReason: null,
 };
 
@@ -46,6 +45,13 @@ describe("PosTerminal", () => {
     refresh.mockClear();
     vi.restoreAllMocks();
     sessionStorage.clear();
+  });
+
+  it("tidak menawarkan QRIS sebelum integrasi pembayaran resmi tersedia", () => {
+    renderTerminal();
+
+    expect(screen.queryByRole("button", { name: /QRIS/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /^Tunai$/i })).toBeDefined();
   });
 
   it("meminta konfirmasi sebelum mengosongkan seluruh pesanan", async () => {

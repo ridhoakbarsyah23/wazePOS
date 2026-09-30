@@ -119,14 +119,13 @@ export async function POST(request: Request) {
   }
 
   const allowsAllPayments = hasPlanFeature(currentSubscription?.plan, "allPaymentMethods");
-  const allowsQrisPayments = hasPlanFeature(currentSubscription?.plan, "qrisPayments");
   const canManageInventory = hasPlanFeature(currentSubscription?.plan, "inventoryStock");
   const allowsSaleItemNotes = hasPlanFeature(currentSubscription?.plan, "saleItemNotes");
 
   if ((parsed.data.paymentMethod === "debit" || parsed.data.paymentMethod === "credit") && !allowsAllPayments) {
     return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
   }
-  if (parsed.data.paymentMethod === "qris" && !allowsQrisPayments) {
+  if (parsed.data.paymentMethod === "qris") {
     return NextResponse.json(
       {
         message: "Pembayaran QRIS belum tersedia sampai integrasi penyedia pembayaran resmi selesai.",

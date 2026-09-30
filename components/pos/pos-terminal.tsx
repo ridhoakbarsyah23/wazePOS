@@ -19,7 +19,6 @@ import {
   Lock,
   Minus,
   Plus,
-  QrCode,
   ScanBarcode,
   Search,
   ShoppingBasket,
@@ -67,7 +66,6 @@ const money = (value: number) => `Rp ${value.toLocaleString("id-ID")}`;
 
 const PAYMENT_METHODS = [
   { id: "cash", label: "Tunai", icon: Banknote, hint: "Uang tunai & kembalian" },
-  { id: "qris", label: "QRIS", icon: QrCode, hint: "Satu kode untuk semua e-wallet" },
   { id: "debit", label: "Debit", icon: CreditCard, hint: "Kartu debit via mesin EDC" },
   { id: "credit", label: "Kredit", icon: CreditCard, hint: "Kartu kredit via mesin EDC" },
 ] as const;
@@ -78,7 +76,6 @@ export function PosTerminal({
   initialOutletId,
   allowCustomerLookup = false,
   allowNonCashPayments,
-  allowQrisPayments,
   allowInventory = true,
   allowSaleItemNotes = false,
   checkoutDisabledReason,
@@ -90,7 +87,6 @@ export function PosTerminal({
   initialOutletId: string;
   allowCustomerLookup?: boolean;
   allowNonCashPayments: boolean;
-  allowQrisPayments: boolean;
   allowInventory?: boolean;
   /** wazePOS Business: kasir bisa mengisi catatan per item (mis. less sugar). Growth: tampil terkunci. */
   allowSaleItemNotes?: boolean;
@@ -110,7 +106,7 @@ export function PosTerminal({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Semua");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "qris" | "debit" | "credit">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "debit" | "credit">("cash");
   const [paidAmount, setPaidAmount] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
@@ -389,14 +385,6 @@ export function PosTerminal({
       setMessage({ type: "error", text: checkoutDisabledReason });
       return;
     }
-    if (paymentMethod === "qris" && !allowQrisPayments) {
-      setPaymentMethod("cash");
-      setMessage({
-        type: "error",
-        text: "QRIS belum tersedia sampai integrasi pembayaran resmi selesai.",
-      });
-      return;
-    }
     if (paymentMethod !== "cash" && paid < total) {
       // Tidak pernah seharusnya terjadi (non-tunai otomatis dianggap lunas),
       // tapi tetap dijaga agar total selalu tertutup.
@@ -468,11 +456,9 @@ export function PosTerminal({
       setMessage({
         type: "success",
         text:
-          paymentMethod === "qris"
-            ? "Pembayaran QRIS berhasil dikonfirmasi (Lunas)."
-            : paymentMethod === "cash"
-              ? `Transaksi berhasil. Kembalian ${money(result.changeAmount)}.`
-              : `Transaksi ${paymentMethod === "debit" ? "kartu debit" : "kartu kredit"} berhasil (Lunas).`,
+          paymentMethod === "cash"
+            ? `Transaksi berhasil. Kembalian ${money(result.changeAmount)}.`
+            : `Transaksi ${paymentMethod === "debit" ? "kartu debit" : "kartu kredit"} berhasil (Lunas).`,
       });
       setInvoiceId(result.saleId);
       setCart([]);
@@ -515,10 +501,8 @@ export function PosTerminal({
         e.preventDefault();
         setPaymentMethod((prev) => {
           if (prev === "cash") {
-            if (allowQrisPayments) return "qris";
             return allowNonCashPayments ? "debit" : "cash";
           }
-          if (prev === "qris") return allowNonCashPayments ? "debit" : "cash";
           if (prev === "debit") return "credit";
           return "cash";
         });
@@ -596,7 +580,7 @@ export function PosTerminal({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [products, cart, total, allowNonCashPayments, allowQrisPayments, paymentMethod, showReceiptModal, search, addProductFromEntry]);
+  }, [products, cart, total, allowNonCashPayments, paymentMethod, showReceiptModal, search, addProductFromEntry]);
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const activeOutletName = outlets.find((outlet) => outlet.id === outletId)?.name ?? "Gerai";
@@ -1112,13 +1096,12 @@ export function PosTerminal({
 
           <div className="mt-4 rounded-2xl border border-[#e5ede8] bg-white p-3">
             <p className="mb-2 text-xs font-bold text-[#44534c]">Metode pembayaran</p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {PAYMENT_METHODS.map((method) => {
                 const Icon = method.icon;
                 const isSelected = paymentMethod === method.id;
                 const isLocked =
-                  (method.id === "qris" && !allowQrisPayments) ||
-                  ((method.id === "debit" || method.id === "credit") && !allowNonCashPayments);
+                  (method.id === "debit" || method.id === "credit") && !allowNonCashPayments;
                 return (
                   <button
                     key={method.id}
@@ -1229,9 +1212,7 @@ export function PosTerminal({
           >
             {isSubmitting
               ? "Menyimpan transaksi..."
-              : paymentMethod === "qris"
-                ? `Bayar QRIS · ${money(total)}`
-                : paymentMethod === "cash"
+              : paymentMethod === "cash"
                   ? `Bayar tunai · ${money(total)}`
                   : `Selesaikan transaksi · ${money(total)}`}
           </button>

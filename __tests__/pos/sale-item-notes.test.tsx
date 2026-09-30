@@ -31,7 +31,6 @@ const baseProps = {
   outlets: [{ id: "outlet-1", name: "Gerai Utama" }],
   initialOutletId: "outlet-1",
   allowNonCashPayments: false,
-  allowQrisPayments: false,
   checkoutDisabledReason: null,
 };
 

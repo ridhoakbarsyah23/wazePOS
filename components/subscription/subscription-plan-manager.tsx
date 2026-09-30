@@ -21,7 +21,7 @@ const includedFeatures: Record<PlanId, string[]> = {
     "Kelola hingga 200 pelanggan + member di kasir",
   ],
   bisnis: [
-    "Pembayaran Tunai, QRIS, Kartu Debit & Kredit EDC",
+    "Pembayaran Tunai, Kartu Debit & Kredit EDC",
     "Arus Kas uang masuk & keluar (realtime)",
     "Manajemen stok & peringatan stok menipis",
     "Catatan per item di struk",

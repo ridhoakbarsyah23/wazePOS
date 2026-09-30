@@ -137,47 +137,14 @@ describe("POST /api/sales", () => {
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
-  it("menerima QRIS pada Paket Bisnis dan mencatat lunas tanpa kembalian", async () => {
+  it("menolak QRIS pada Paket Bisnis sampai integrasi resmi tersedia", async () => {
     mocks.getBusinessSubscription.mockResolvedValue(activeSubscription("bisnis"));
-    const queryResults = [
-      [{ id: outletId }],
-      [{
-        id: productId,
-        name: "Kopi Susu",
-        sellingPrice: 10_000,
-        costPrice: 6_000,
-        trackStock: true,
-        stockId: "stock-1",
-        quantity: 5,
-      }],
-    ];
-    const insertedValues: unknown[] = [];
-    const updateBuilder = {
-      set: vi.fn(),
-      where: vi.fn(),
-      returning: vi.fn(async () => [{ id: "stock-1" }]),
-    };
-    updateBuilder.set.mockReturnValue(updateBuilder);
-    updateBuilder.where.mockReturnValue(updateBuilder);
-
-    const tx = {
-      select: vi.fn(() => selectBuilder(queryResults.shift() ?? [])),
-      update: vi.fn(() => updateBuilder),
-      insert: makeTxInsert(insertedValues),
-    };
-    mocks.transaction.mockImplementation(async (callback) => callback(tx));
-
     const response = await POST(saleRequest({ paymentMethod: "qris", paidAmount: 20_000 }));
     const body = await response.json();
 
-    expect(response.status).toBe(201);
-    expect(body).toMatchObject({ total: 20_000, changeAmount: 0 });
-    const saleInsert = insertedValues.find(
-      (value) => typeof value === "object" && value !== null && "paymentMethod" in value,
-    );
-    expect(saleInsert).toEqual(
-      expect.objectContaining({ paymentMethod: "qris", changeAmount: 0 }),
-    );
+    expect(response.status).toBe(403);
+    expect(body.code).toBe("PAYMENT_METHOD_UNAVAILABLE");
+    expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
   it("membatasi kartu debit dan kredit ke Paket Bisnis", async () => {
