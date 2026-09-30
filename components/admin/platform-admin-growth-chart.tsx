@@ -99,7 +99,7 @@ export function PlatformAdminGrowthChart({ data = [] }: { data?: GrowthDataPoint
               strokeWidth={3}
               fillOpacity={1}
               fill="url(#colorPendaftar)"
-              animationDuration={1500}
+              animationDuration={300}
             />
           </AreaChart>
         </ResponsiveContainer>

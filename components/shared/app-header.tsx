@@ -181,8 +181,6 @@ function SidebarNavLinks({
             key={item.href}
             href={itemHref}
             onPointerEnter={() => onWarm(itemHref)}
-            onFocus={() => onWarm(itemHref)}
-            onPointerDown={() => onWarm(itemHref)}
             onClick={() => {
               if (!isActive) onNavigate(item.href);
               if (onItemClick) onItemClick();
@@ -277,6 +275,9 @@ export function AppHeader({
   }
 
   function warmRoute(href: string) {
+    // Prefetch selektif: hanya /pos (rute kasir paling sering dibuka).
+    // Prefetch semua nav menjalankan query server tiap hover = beban sia-sia.
+    if (href !== "/pos" && !href.startsWith("/pos/") && !href.startsWith("/pos?")) return;
     if (warmedRoutes.current.has(href)) return;
     warmedRoutes.current.add(href);
     router.prefetch(href);
