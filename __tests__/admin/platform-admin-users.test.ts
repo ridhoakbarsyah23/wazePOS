@@ -19,10 +19,12 @@ function mockDatabase(total: number) {
   const where = vi.fn<(condition: unknown) => { orderBy: typeof orderBy }>(() => ({ orderBy }));
   const joins = { leftJoin: vi.fn(), where };
   joins.leftJoin.mockReturnValue(joins);
+  const sessionWhere = vi.fn().mockReturnValue({ groupBy: vi.fn().mockResolvedValue([{ userId: "user-1", lastActiveAt: new Date() }]) });
   mocks.select
     .mockReturnValueOnce({ from: vi.fn(() => ({ where: countWhere })) })
-    .mockReturnValueOnce({ from: vi.fn(() => joins) });
-  return { countWhere, offset, limit, where };
+    .mockReturnValueOnce({ from: vi.fn(() => joins) })
+    .mockReturnValueOnce({ from: vi.fn(() => ({ where: sessionWhere })) });
+  return { countWhere, offset, limit, where, sessionWhere };
 }
 
 describe("Direktori akun Dashboard Admin", () => {
