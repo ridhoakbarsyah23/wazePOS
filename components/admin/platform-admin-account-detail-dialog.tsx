@@ -58,6 +58,8 @@ export function PlatformAdminAccountDetailDialog({
 
       <dialog
         ref={dialogRef}
+        data-admin-portal
+        data-dashboard-portal
         aria-labelledby={titleId}
         onClose={() => {
           document.body.style.overflow = "";

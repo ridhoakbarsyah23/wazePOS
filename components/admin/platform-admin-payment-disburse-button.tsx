@@ -87,7 +87,7 @@ export function PlatformAdminPaymentDisburseButton({ payment }: { payment: Platf
       </Button>
 
       {open && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Tandai pencairan ${payment.providerOrderId}`}>
+        <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Tandai pencairan ${payment.providerOrderId}`}>
           <div className="w-full max-w-md overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)]">
             <div className="border-b border-[#e8efeb] p-4 sm:p-5">
               <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078]">Pencairan ke rekening pribadi</p>

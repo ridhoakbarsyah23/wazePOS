@@ -1,6 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Manual dark mode is driven by data attributes, not prefers-color-scheme.
+ * Dashboard user: html[data-dashboard-theme="dark"].
+ * Admin: [data-admin-shell][data-admin-theme="dark"] + html[data-admin-theme="dark"].
+ * Matching `html[dark] *` (not just descendants of the shell) keeps
+ * createPortal/Radix portals (rendered under document.body) in sync.
+ * This makes every existing `dark:` utility follow the manual toggles. */
+@custom-variant dark (&:where([data-admin-shell][data-admin-theme="dark"], [data-admin-shell][data-admin-theme="dark"] *, html[data-admin-theme="dark"] *, html[data-dashboard-theme="dark"] *));
+
 /* The admin detail tabs stay horizontally scrollable on narrow screens without
  * showing a bulky native scrollbar. */
 .platform-admin-tabs-scroll {
@@ -230,9 +238,11 @@ html[data-admin-theme="dark"] [data-admin-portal] {
   html[data-admin-theme="dark"] [data-admin-portal]
 ) :is(
   [class~="bg-[#f7faf8]"],
+  [class~="bg-[#f8faf9]"],
   [class~="bg-[#f9fcfa]"],
   [class~="bg-[#fbfdfc]"],
-  [class~="bg-[#fafbfa]"]
+  [class~="bg-[#fafbfa]"],
+  [class~="bg-[#fafcfb]"]
 ) {
   background-color: #151515 !important;
 }
@@ -241,13 +251,28 @@ html[data-admin-theme="dark"] [data-admin-portal] {
   [data-admin-shell][data-admin-theme="dark"],
   html[data-admin-theme="dark"] [data-admin-portal]
 ) :is(
+  [class~="bg-[#d7e6de]"],
+  [class~="bg-[#d9f0e4]"],
+  [class~="bg-[#dcebe3]"],
+  [class~="bg-[#dfeae4]"],
+  [class~="bg-[#e2ece6]"],
   [class~="bg-[#e7f0eb]"],
   [class~="bg-[#eaf7f0]"],
   [class~="bg-[#dfe8e3]"],
   [class~="bg-[#edf3ef]"],
   [class~="bg-[#eef2f0]"],
+  [class~="bg-[#eef4f0]"],
+  [class~="bg-[#eef6f1]"],
   [class~="bg-[#eef6f2]"],
   [class~="bg-[#f0f4f2]"],
+  [class~="bg-[#f0f6f3]"],
+  [class~="bg-[#f0faf5]"],
+  [class~="bg-[#f1f6f3]"],
+  [class~="bg-[#f1fbf6]"],
+  [class~="bg-[#f2faf6]"],
+  [class~="bg-[#fef6f6]"],
+  [class~="bg-[#fff2f1]"],
+  [class~="bg-[#fff8ef]"],
   [class~="bg-[#feeceb]"]
 ) {
   background-color: #1a1a1a !important;
@@ -258,12 +283,22 @@ html[data-admin-theme="dark"] [data-admin-portal] {
   html[data-admin-theme="dark"] [data-admin-portal]
 ) :is(
   [class~="bg-sky-50"],
+  [class~="bg-sky-100"],
   [class~="bg-violet-50"],
   [class~="bg-amber-50"],
+  [class~="bg-amber-100"],
   [class~="bg-rose-50"],
+  [class~="bg-rose-100"],
   [class~="bg-emerald-50"],
+  [class~="bg-emerald-100"],
+  [class~="bg-slate-50"],
+  [class~="bg-slate-100"],
   [class~="bg-orange-50"],
-  [class~="bg-[#fff0e5]"]
+  [class~="bg-[#fff0e5]"],
+  [class~="bg-[#fff8ef]"],
+  [class~="bg-[#fff2f1]"],
+  [class~="bg-[#fef6f6]"],
+  [class~="bg-[#f2faf6]"]
 ) {
   background-color: #202020 !important;
 }
@@ -631,8 +666,55 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] [class~="bg-rose-50"],
-html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-rose-50"]:hover {
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="hover:bg-rose-50"]:hover,
+html[data-dashboard-theme="dark"] [data-dashboard-portal][class~="bg-rose-50"],
+html[data-dashboard-theme="dark"] [data-testid="logout-dialog"] [class~="bg-rose-50"] {
   background-color: #2a1215 !important;
+}
+
+/* Badge pastel dashboard (metrics/cashflow/setup): samakan dengan admin. */
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="bg-emerald-50"],
+  [class~="bg-emerald-100"],
+  [class~="bg-amber-50"],
+  [class~="bg-amber-100"],
+  [class~="bg-sky-50"],
+  [class~="bg-sky-100"],
+  [class~="bg-slate-50"],
+  [class~="bg-orange-50"],
+  [class~="bg-violet-50"],
+  [class~="bg-rose-100"],
+  [class~="bg-[#fff0e5]"],
+  [class~="bg-[#fff8ef]"],
+  [class~="bg-[#fff2f1]"],
+  [class~="bg-[#fef6f6]"],
+  [class~="bg-[#f2faf6]"],
+  [class~="bg-[#eaf7f0]"]
+),
+html[data-dashboard-theme="dark"] [data-dashboard-portal]:is(
+  [class~="bg-white"],
+  [class~="bg-emerald-50"],
+  [class~="bg-rose-50"],
+  [class~="bg-amber-50"]
+),
+html[data-dashboard-theme="dark"] [data-testid="logout-dialog"] :is(
+  [class~="bg-white"],
+  [class~="bg-rose-50"]
+),
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-content"] :is(
+  [class~="bg-rose-50"],
+  [class~="bg-emerald-50"]
+) {
+  background-color: #202020 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="bg-[#fff8ef]"],
+  [class~="bg-[#fff2f1]"],
+  [class~="bg-[#fef6f6]"],
+  [class~="bg-[#f2faf6]"]
+) {
+  background-color: #202020 !important;
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
@@ -697,9 +779,55 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
-  [class~="text-slate-700"]
+  [class~="text-slate-700"],
+  [class~="text-emerald-800"],
+  [class~="text-rose-700"],
+  [class~="text-amber-800"],
+  [class~="text-amber-900"],
+  [class~="text-sky-600"]
 ) {
   color: #d4d4d4 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="text-emerald-600"],
+  [class~="text-[#198760]"],
+  [class~="text-[#106348]"]
+),
+html[data-dashboard-theme="dark"] :is([data-dashboard-portal], [data-testid="logout-dialog"], [data-slot="alert-dialog-content"]) :is(
+  [class~="text-emerald-600"],
+  [class~="text-[#198760]"],
+  [class~="text-[#106348]"]
+) {
+  color: #62d6a5 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="text-rose-600"]
+),
+html[data-dashboard-theme="dark"] :is([data-dashboard-portal], [data-testid="logout-dialog"], [data-slot="alert-dialog-content"]) :is(
+  [class~="text-rose-600"],
+  [class~="text-rose-700"]
+) {
+  color: #fda4af !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class~="text-amber-600"]
+),
+html[data-dashboard-theme="dark"] :is([data-dashboard-portal], [data-testid="logout-dialog"]) :is(
+  [class~="text-amber-600"],
+  [class~="text-amber-800"],
+  [class~="text-[#8c5b24]"],
+  [class~="text-[#a35f12]"]
+) {
+  color: #fcd34d !important;
+}
+
+html[data-admin-theme="dark"] :is([data-admin-portal], [data-slot="alert-dialog-content"]) :is(
+  [class~="text-[#8c5b24]"]
+) {
+  color: #fcd34d !important;
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#d"],
@@ -708,8 +836,23 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#b"],
 html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#c"],
 html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#7"],
 html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-[#9"],
-html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-slate-"] {
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-slate-"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-emerald-"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-rose-"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-amber-"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-sky-"],
+html[data-dashboard-theme="dark"] [data-dashboard-shell] [class*="border-orange-"] {
   border-color: #303030 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
+  [class*="from-emerald-"],
+  [class*="to-emerald-"],
+  [class*="from-amber-"],
+  [class*="to-orange-"]
+) {
+  background-image: none !important;
+  background-color: #202020 !important;
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select) {
@@ -759,17 +902,88 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(
   color: #737373 !important;
 }
 
-html[data-dashboard-theme="dark"] [data-slot="alert-dialog-content"] {
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-content"],
+html[data-admin-theme="dark"] [data-slot="alert-dialog-content"],
+html[data-dashboard-theme="dark"] [data-dashboard-portal]:not([data-testid="logout-dialog"]),
+html[data-admin-theme="dark"] [data-admin-portal]:not(dialog) {
   background: #101010;
   border-color: #303030;
-}
-
-html[data-dashboard-theme="dark"] [data-slot="alert-dialog-title"] {
+  color-scheme: dark;
   color: #f5f5f5;
 }
 
-html[data-dashboard-theme="dark"] [data-slot="alert-dialog-description"] {
+html[data-dashboard-theme="dark"] [data-dashboard-portal][data-testid="logout-dialog"] {
+  color-scheme: dark;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-portal][data-testid="logout-dialog"] > div:last-child,
+html[data-admin-theme="dark"] [data-admin-portal][data-testid="logout-dialog"] > div:last-child {
+  background-color: #101010 !important;
+  border-color: #303030 !important;
+  color: #f5f5f5 !important;
+}
+
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-title"],
+html[data-admin-theme="dark"] [data-slot="alert-dialog-title"] {
+  color: #f5f5f5;
+}
+
+html[data-dashboard-theme="dark"] [data-slot="alert-dialog-description"],
+html[data-admin-theme="dark"] [data-slot="alert-dialog-description"] {
   color: #a3a3a3;
+}
+
+/* Portal dashboard/admin di luar shell: teks gelap jadi terang, muted jadi abu. */
+html[data-dashboard-theme="dark"] :is([data-dashboard-portal], [data-testid="logout-dialog"]) :is(
+  [class~="text-[#15211d]"],
+  [class~="text-[#34443d]"],
+  [class~="text-[#455850]"],
+  [class~="text-[#4d5e57]"]
+),
+html[data-admin-theme="dark"] :is([data-admin-portal], [data-slot="alert-dialog-content"]) :is(
+  [class~="text-[#15211d]"],
+  [class~="text-[#34443d]"],
+  [class~="text-[#455850]"]
+) {
+  color: #f5f5f5 !important;
+}
+
+html[data-dashboard-theme="dark"] :is([data-dashboard-portal], [data-testid="logout-dialog"]) :is(
+  [class~="text-[#627069]"],
+  [class~="text-[#82928a]"]
+),
+html[data-admin-theme="dark"] :is([data-admin-portal], [data-slot="alert-dialog-content"]) :is(
+  [class~="text-[#627069]"],
+  [class~="text-[#718078]"],
+  [class~="text-[#82928a]"]
+) {
+  color: #a3a3a3 !important;
+}
+
+html[data-dashboard-theme="dark"] :is([data-dashboard-portal], [data-testid="logout-dialog"]) :is(
+  [class~="border-[#dfe8e3]"],
+  [class~="border-[#dce7e1]"],
+  [class~="border-rose-200"]
+),
+html[data-admin-theme="dark"] :is([data-admin-portal], [data-slot="alert-dialog-content"]) :is(
+  [class~="border-[#dfe8e3]"],
+  [class~="border-[#e8efeb]"]
+) {
+  border-color: #303030 !important;
+}
+
+/* <dialog> native (detail akun admin) ikut tema gelap + backdrop. */
+html[data-admin-theme="dark"] dialog[data-admin-portal],
+html[data-dashboard-theme="dark"] dialog[data-dashboard-portal] {
+  background-color: #101010 !important;
+  border-color: #303030 !important;
+  color: #f5f5f5 !important;
+  color-scheme: dark;
+}
+
+html[data-admin-theme="dark"] dialog[data-admin-portal]::backdrop,
+html[data-dashboard-theme="dark"] dialog[data-dashboard-portal]::backdrop {
+  background-color: rgb(0 0 0 / 72%) !important;
 }
 
 :root {

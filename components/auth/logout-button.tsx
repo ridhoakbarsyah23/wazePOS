@@ -107,6 +107,8 @@ export function LogoutButton({
         <div
           role="alertdialog"
           data-testid="logout-dialog"
+          data-dashboard-portal
+          data-admin-portal
           aria-modal="true"
           aria-labelledby="logout-dialog-title"
           aria-describedby="logout-dialog-description"

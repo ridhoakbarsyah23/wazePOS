@@ -119,7 +119,7 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
       </Button>
 
       {open && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Verifikasi pembayaran ${payment.providerOrderId}`}>
+        <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Verifikasi pembayaran ${payment.providerOrderId}`}>
           <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)]">
             <div className="border-b border-[#e8efeb] p-4 sm:p-5">
               <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078]">Verifikasi transfer bank</p>
@@ -137,9 +137,9 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
                 </p>
               )}
 
-              {loadingProof && <p className="text-xs text-[#627069]">Memuat bukti transfer…</p>}
+              {loadingProof && <p className="m-0 text-xs text-[#627069]">Memuat bukti transfer…</p>}
               {!loadingProof && !proof && (
-                <p className="rounded-xl bg-[#fff8ef] px-3 py-2 text-xs text-[#8c5b24]">
+                <p className="m-0 rounded-xl bg-[#fff8ef] px-3 py-2 text-xs text-[#8c5b24]">
                   {payment.proofUploaded ? "Bukti belum dapat dimuat. Coba lagi." : "Owner belum mengunggah bukti transfer. Verifikasi approve membutuhkan bukti."}
                 </p>
               )}

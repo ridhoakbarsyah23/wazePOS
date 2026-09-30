@@ -33,6 +33,8 @@ function AlertDialogContent({ className, ...props }: React.ComponentProps<typeof
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
+        data-dashboard-portal
+        data-admin-portal
         className={cn("fixed top-1/2 left-1/2 z-[201] w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 scale-95 overflow-hidden rounded-3xl border border-white/70 bg-white opacity-0 shadow-[0_30px_90px_rgba(4,42,29,.32)] outline-none transition-[opacity,transform] duration-200 data-[state=open]:scale-100 data-[state=open]:opacity-100", className)}
         {...props}
       />
