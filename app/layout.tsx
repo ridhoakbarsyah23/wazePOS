@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Calistoga, Inter, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import { siteConfig } from "@/shared/config/site";
@@ -9,6 +9,29 @@ const manrope = Manrope({
   display: "swap",
   variable: "--font-manrope",
   fallback: ["Segoe UI", "Arial", "sans-serif"],
+});
+
+// Self-host via next/font agar tidak render-blocking + lolos CSP font-src 'self'.
+const calistoga = Calistoga({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-calistoga",
+  fallback: ["Georgia", "serif"],
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  fallback: ["Segoe UI", "Arial", "sans-serif"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-jetbrains-mono",
+  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
 });
 
 export const metadata: Metadata = {
@@ -58,7 +81,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id" className={manrope.variable} data-scroll-behavior="smooth">
+    <html lang="id" className={`${manrope.variable} ${calistoga.variable} ${inter.variable} ${jetbrainsMono.variable}`} data-scroll-behavior="smooth">
       <body className="antialiased">
         {children}
         <PwaRegister />

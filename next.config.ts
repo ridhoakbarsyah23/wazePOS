@@ -40,6 +40,15 @@ const nextConfig: NextConfig = {
   ...(process.env.NEXT_OUTPUT_STANDALONE === "1" ? { output: "standalone" as const } : {}),
   poweredByHeader: false,
   reactStrictMode: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "gsap"],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
   async headers() {
     return [
       {
