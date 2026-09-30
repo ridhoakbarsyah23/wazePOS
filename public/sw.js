@@ -5,7 +5,7 @@
  * - Navigasi halaman: network-first, fallback ke cache terakhir, lalu halaman offline.
  * - Aset statis immutable (/_next/static, ikon): cache-first.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `wazepos-static-${VERSION}`;
 const PAGE_CACHE = `wazepos-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -48,16 +48,25 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
 
   if (request.mode === "navigate") {
+    const isSensitivePage =
+      url.pathname.startsWith("/dashboard") ||
+      url.pathname.startsWith("/pos") ||
+      url.pathname.startsWith("/admin");
+
     event.respondWith(
       (async () => {
         try {
           const fresh = await fetch(request);
-          const cache = await caches.open(PAGE_CACHE);
-          cache.put(request, fresh.clone());
+          if (!isSensitivePage) {
+            const cache = await caches.open(PAGE_CACHE);
+            cache.put(request, fresh.clone());
+          }
           return fresh;
         } catch {
-          const cached = await caches.match(request);
-          if (cached) return cached;
+          if (!isSensitivePage) {
+            const cached = await caches.match(request);
+            if (cached) return cached;
+          }
           const offline = await caches.match(OFFLINE_URL);
           return offline ?? Response.error();
         }

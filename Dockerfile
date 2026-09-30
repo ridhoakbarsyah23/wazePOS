@@ -12,7 +12,7 @@ FROM node:22.23.2-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci --no-audit --no-fund
 
 FROM node:22.23.2-alpine AS builder
 WORKDIR /app
@@ -36,7 +36,7 @@ RUN npm run build
 FROM node:22.23.2-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
 
 FROM node:22.23.2-alpine AS runner
 WORKDIR /app
