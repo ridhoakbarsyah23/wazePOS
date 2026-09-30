@@ -387,7 +387,7 @@ export function PlatformAdminBusinessDetail({
                           <DetailItem icon={CalendarDays} label="Akhir periode" value={formatDate(currentBusiness.currentPeriodEnd)} />
                         </dl>
                         <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
-                          Status ini bersifat read-only. Perubahan subscription dilakukan melalui alur pelanggan, bukan dari halaman Platform Admin.
+                          Status ini bersifat read-only. Perubahan subscription dilakukan melalui alur pelanggan, bukan dari halaman Dashboard Admin.
                         </p>
                       </div>
                     ) : <EmptyDetail>Belum ada subscription untuk usaha ini.</EmptyDetail>}

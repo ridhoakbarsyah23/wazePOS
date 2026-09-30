@@ -5,7 +5,7 @@ Aplikasi Point of Sale (POS) berbasis web untuk UMKM, lengkap dengan:
 - **Website promosi** — landing page marketing dan lead generation.
 - **Aplikasi POS** — dashboard pemilik, kasir, produk, stok, pelanggan, laporan, dan struk.
 - **Billing subscription** — paket Tumbuh dan Bisnis dengan pembayaran transfer bank manual.
-- **Platform Admin** — dashboard internal untuk memantau pelanggan dan subscription.
+- **Dashboard Admin** — dashboard internal untuk memantau pelanggan dan subscription.
 
 Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle ORM, PostgreSQL, Better Auth, dan Resend.
 
@@ -35,7 +35,7 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 - [Deploy ke Vercel](#deploy-ke-vercel)
 - [Autentikasi dan onboarding](#autentikasi-dan-onboarding)
 - [Paket dan pembayaran subscription](#paket-dan-pembayaran-subscription)
-- [Platform Admin](#platform-admin)
+- [Dashboard Admin](#platform-admin)
 - [Penyimpanan lead dan event analytics](#penyimpanan-lead-dan-event-analytics)
 - [Pengujian dan pengecekan kualitas](#pengujian-dan-pengecekan-kualitas)
 - [Struktur proyek](#struktur-proyek)
@@ -72,7 +72,7 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 - Batasan paket (entitlement) didefinisikan terpusat di `shared/billing/plans.ts` dan diverifikasi ulang oleh API untuk fitur khusus Paket Bisnis.
 - Pemilik usaha dapat membandingkan dan mengganti paket selama trial melalui `/subscription`; perubahan subscription aktif tetap dikunci sampai alur pembayaran tersedia.
 
-### Platform Admin (internal)
+### Dashboard Admin (internal)
 
 - Dashboard internal read-only di `/admin` untuk memantau data pelanggan dan subscription.
 - Filter status subscription, jenis usaha, paket, onboarding, dan rentang tanggal pendaftaran.
@@ -173,8 +173,8 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 | `npm run db:migrate` | Menjalankan migrasi ke database lokal |
 | `npm run db:migrate:production` | Menjalankan migrasi ke database remote (dengan guard khusus) |
 | `npm run db:studio` | Membuka Drizzle Studio untuk melihat data |
-| `npm run admin:seed` | Membuat akun Platform Admin lokal (lihat [Platform Admin](#platform-admin)) |
-| `npm run admin:reset` | Reset password akun Platform Admin |
+| `npm run admin:seed` | Membuat akun Dashboard Admin lokal (lihat [Dashboard Admin](#platform-admin)) |
+| `npm run admin:reset` | Reset password akun Dashboard Admin |
 | `npm run security:secrets` | Memeriksa tidak ada secret yang masuk kode |
 
 ---
@@ -246,12 +246,12 @@ Referensi: [batas cron Vercel](https://vercel.com/docs/cron-jobs/usage-and-prici
 | `BANK_TRANSFER_ACCOUNT_NUMBER` | Untuk checkout | Nomor rekening tujuan. Ganti contoh dengan rekening resmi sebelum production. |
 | `BANK_TRANSFER_ACCOUNT_NAME` | Untuk checkout | Nama pemilik rekening tujuan. |
 
-### Platform Admin
+### Dashboard Admin
 
 | Variabel | Wajib? | Penjelasan |
 | --- | --- | --- |
 | `PLATFORM_ADMIN_EMAILS` | Ya untuk `/admin` | Allowlist email akun internal yang sudah terverifikasi dan boleh membuka `/admin`. Pisahkan beberapa email dengan koma. Jangan gunakan awalan `NEXT_PUBLIC_`. Akun dari signup publik tidak otomatis mendapat akses. |
-| `PLATFORM_ADMIN_NAME` | Tidak | Nama akun yang dibuat seeder Platform Admin lokal. |
+| `PLATFORM_ADMIN_NAME` | Tidak | Nama akun yang dibuat seeder Dashboard Admin lokal. |
 | `PLATFORM_ADMIN_SEED_PASSWORD` | Tidak | Password sementara untuk seeder. Simpan hanya di environment lokal/secret store dan hapus setelah akun selesai dibuat. |
 
 ### Lead webhook
@@ -277,7 +277,7 @@ npm run db:studio     # lihat dan edit data lewat Drizzle Studio
 
 Panduan penting:
 
-- Jalankan `npm run db:migrate` setelah menarik perubahan yang menambah tabel (termasuk tabel audit Platform Admin).
+- Jalankan `npm run db:migrate` setelah menarik perubahan yang menambah tabel (termasuk tabel audit Dashboard Admin).
 - Migrasi ke database remote **tidak** dijalankan otomatis dari build (`vercel-build`), karena proses build bisa berjalan paralel dan connection pooler mode transaksi tidak cocok untuk migrasi yang butuh koneksi stabil. Lihat [Deploy ke Vercel](#deploy-ke-vercel).
 - Script migrasi menolak database remote secara default sebagai pengaman, kecuali diizinkan eksplisit (`MIGRATE_ALLOW_REMOTE=1` di Docker, atau flag `--remote` pada `db:migrate:production`).
 
@@ -397,12 +397,12 @@ Response yang sehat memiliki `"ok": true`, `"connected": true`, dan `"authTables
 
 - Checkout paket dibuat oleh server via transfer bank manual menggunakan harga di `shared/billing/plans.ts`; nominal dari browser tidak pernah dipercaya.
 - Owner mentransfer ke rekening `BANK_TRANSFER_*` lalu mengunggah bukti JPG/PNG/WebP maksimal 4 MB.
-- Paket baru aktif hanya setelah Platform Admin menyetujui bukti transfer di `/admin/payments`.
+- Paket baru aktif hanya setelah Dashboard Admin menyetujui bukti transfer di `/admin/payments`.
 - `provider_order_id` unik dan pembaruan pembayaran bersifat idempotent untuk mencegah aktivasi ganda.
 
 ---
 
-## Platform Admin
+## Dashboard Admin
 
 Halaman `/admin` adalah dashboard internal untuk memantau pelanggan dan subscription (fitur lengkap di [Ikhtisar fitur](#platform-admin-internal)).
 

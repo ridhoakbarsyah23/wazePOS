@@ -5,7 +5,7 @@ import { getPlatformAdminAuditData } from "@/server/admin/platform-admin-audit-l
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Audit | Platform Admin wazePOS",
+  title: "Audit | Dashboard Admin wazePOS",
   description: "Jejak aktivitas internal admin wazePOS.",
   robots: { index: false, follow: false },
 };

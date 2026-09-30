@@ -23,7 +23,7 @@ import { GET } from "@/app/api/admin/businesses/export/route";
 const adminSession = {
   user: {
     id: "admin-1",
-    name: "Platform Admin",
+    name: "Dashboard Admin",
     email: "admin@wazepos.com",
   },
 };

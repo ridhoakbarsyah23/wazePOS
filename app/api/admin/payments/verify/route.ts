@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 /**
  * Verifikasi transfer bank: `approve` mengaktifkan paket 1 tahun,
- * `reject` menandai pembayaran gagal. Hanya Platform Admin.
+ * `reject` menandai pembayaran gagal. Hanya Dashboard Admin.
  */
 export async function POST(request: Request) {
   const { session, allowed } = await getPlatformAdminRequestSession();

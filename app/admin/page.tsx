@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getPlatformAdminOverviewData } from "@/server/admin/platform-admin-dashboard";
 
 export const metadata: Metadata = {
-  title: "Platform Admin | wazePOS",
+  title: "Dashboard Admin | wazePOS",
   description: "Pemantauan internal pelanggan dan langganan wazePOS.",
   robots: { index: false, follow: false },
 };

@@ -37,7 +37,7 @@ export async function GET(
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch (error) {
-    console.error("Failed to load Platform Admin business detail", error);
+    console.error("Failed to load Dashboard Admin business detail", error);
     return NextResponse.json({ message: "Detail usaha belum dapat dimuat." }, { status: 500 });
   }
 }

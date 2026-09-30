@@ -5,7 +5,7 @@ import { getPlatformAdminPaymentsData } from "@/server/admin/platform-admin-paym
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Pembayaran | Platform Admin wazePOS",
+  title: "Pembayaran | Dashboard Admin wazePOS",
   description: "Daftar internal pembayaran langganan wazePOS.",
   robots: { index: false, follow: false },
 };

@@ -6,7 +6,7 @@ import { getPlatformAdminUsers } from "@/server/admin/platform-admin-users";
 import { pageLinkClass } from "@/shared/pagination";
 
 export const metadata: Metadata = {
-  title: "Daftar Akun | Platform Admin wazePOS",
+  title: "Daftar Akun | Dashboard Admin wazePOS",
   robots: { index: false, follow: false },
 };
 
@@ -70,7 +70,7 @@ export default async function PlatformAdminUsersPage({ searchParams }: {
                   <PlatformAdminAccountDetailDialog
                     name={item.name}
                     email={item.email}
-                    accessLabel={item.isPlatformAdmin ? "Platform Admin" : "Pengguna"}
+                    accessLabel={item.isPlatformAdmin ? "Dashboard Admin" : "Pengguna"}
                     businessLabel={item.businessName ?? "Belum terhubung ke usaha"}
                     roleLabel={item.role ? roleLabels[item.role] : "Belum memiliki peran"}
                     privacyLabel={item.privacyAcceptedAt ? `${formatDate(item.privacyAcceptedAt)} WIB` : "Belum tercatat"}

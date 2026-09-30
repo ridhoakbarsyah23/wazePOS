@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 /**
  * Menandai pembayaran `paid` sebagai dicairkan ke rekening pribadi.
- * Hanya Platform Admin. Transfer antar-rekening tetap dilakukan manual
+ * Hanya Dashboard Admin. Transfer antar-rekening tetap dilakukan manual
  * via mobile banking; endpoint ini mencatat penandanya.
  */
 export async function POST(request: Request) {

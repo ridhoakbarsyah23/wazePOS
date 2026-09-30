@@ -8,7 +8,7 @@ vi.mock("@/server/admin/platform-admin-payment-notifications", () => ({
 
 vi.mock("@/server/admin/platform-admin-api", () => ({
   getPlatformAdminRequestSession: vi.fn(async () => ({
-    session: { user: { id: "admin-1", name: "Platform Admin", email: "admin@wazepos.com" } },
+    session: { user: { id: "admin-1", name: "Dashboard Admin", email: "admin@wazepos.com" } },
     allowed: true,
   })),
 }));

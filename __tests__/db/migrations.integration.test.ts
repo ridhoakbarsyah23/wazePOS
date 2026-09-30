@@ -69,7 +69,7 @@ describe.runIf(dbReady)("kontrak migrasi (integration)", () => {
     expect(rows[0].total).toBe(2);
   });
 
-  it("menyediakan audit log Platform Admin dengan indeks akses", async () => {
+  it("menyediakan audit log Dashboard Admin dengan indeks akses", async () => {
     const columns = await sql`
       SELECT column_name, is_nullable
       FROM information_schema.columns

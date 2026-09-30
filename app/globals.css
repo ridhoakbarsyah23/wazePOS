@@ -20,7 +20,7 @@
   display: none;
 }
 
-/* The Platform Admin shell must never create page-level horizontal scrolling on
+/* The Dashboard Admin shell must never create page-level horizontal scrolling on
  * small phones. Only explicit regions (desktop tables and the detail dialog
  * tab bar) may scroll on the x axis. */
 #admin-content :where(section, div, ul, nav, header) {
@@ -31,7 +31,7 @@
   max-width: 100%;
 }
 
-/* wazePOS Platform Admin — ops-console theme (ui-ux-pro-max: data-dense
+/* wazePOS Dashboard Admin — ops-console theme (ui-ux-pro-max: data-dense
  * dashboard, subtle motion, dense density). Scoped to #admin-content so the
  * marketing site is untouched. */
 #admin-content .admin-ops-hero {
@@ -201,7 +201,7 @@ html:has(.auth-pro-max) body {
   max-width: 100%;
 }
 
-/* Platform Admin theme is independent from tenant subscription features. */
+/* Dashboard Admin theme is independent from tenant subscription features. */
 [data-admin-shell][data-admin-theme="dark"] {
   color-scheme: dark;
   background: #050505;

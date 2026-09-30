@@ -161,7 +161,7 @@ export async function getPlatformAdminBusinessDetail(
     }));
   } catch (error) {
     // Detail tetap dapat dibuka jika migration audit belum dijalankan di database lokal.
-    console.error("Failed to load Platform Admin audit log", error);
+    console.error("Failed to load Dashboard Admin audit log", error);
   }
 
   const activity = activityRows[0] ?? { saleCount: 0, grossRevenue: 0, lastSaleAt: null };

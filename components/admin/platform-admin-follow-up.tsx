@@ -103,7 +103,7 @@ export function PlatformAdminFollowUp({ businessId, onPendingChange }: { busines
     <div className="min-w-0 space-y-4">
       <div>
         <h3 className="m-0 text-base font-extrabold">Tindak lanjut pelanggan</h3>
-        <p className="mt-1 text-xs leading-5 text-[#627069]">Catatan internal untuk Platform Admin. Setiap penyimpanan menambah riwayat baru.</p>
+        <p className="mt-1 text-xs leading-5 text-[#627069]">Catatan internal untuk Dashboard Admin. Setiap penyimpanan menambah riwayat baru.</p>
       </div>
       {message && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
       {error && <div role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-800"><p>{error}</p><Button type="button" variant="outline" className="mt-2" disabled={loading || saving} onClick={() => void load(1, true)}>Muat ulang riwayat</Button><p className="mt-2 text-xs">Catatan yang diketik tetap disimpan di formulir; status dan tanggal mengikuti pembaruan terbaru setelah dimuat ulang.</p></div>}

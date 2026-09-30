@@ -5,7 +5,7 @@ import { subscriptionPayment } from "@/db/schema";
 import { getPlatformAdminRequestSession } from "@/server/admin/platform-admin-api";
 
 /**
- * Ambil bukti transfer sebagai data URL untuk ditampilkan ke Platform Admin.
+ * Ambil bukti transfer sebagai data URL untuk ditampilkan ke Dashboard Admin.
  * Tidak di-cache: hanya admin terverifikasi yang boleh membuka.
  */
 export async function GET(request: Request) {

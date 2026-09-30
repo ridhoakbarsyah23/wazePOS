@@ -22,7 +22,7 @@ function overviewData() {
           note: "Hubungi kembali soal impor produk.",
           status: "open",
           followUpDate: "2026-09-27",
-          authorName: "Platform Admin",
+          authorName: "Dashboard Admin",
           authorEmail: "admin@wazepos.com",
           createdAt: "2026-09-26T10:00:00.000Z",
         },

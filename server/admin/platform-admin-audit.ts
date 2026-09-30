@@ -36,6 +36,6 @@ export async function recordPlatformAdminAudit(input: {
     });
   } catch (error) {
     // Audit logging should not make a read-only admin page unavailable.
-    console.error("Failed to record Platform Admin audit event", error);
+    console.error("Failed to record Dashboard Admin audit event", error);
   }
 }

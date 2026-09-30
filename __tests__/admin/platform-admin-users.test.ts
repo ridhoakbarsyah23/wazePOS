@@ -25,7 +25,7 @@ function mockDatabase(total: number) {
   return { countWhere, offset, limit, where };
 }
 
-describe("Direktori akun Platform Admin", () => {
+describe("Direktori akun Dashboard Admin", () => {
   beforeEach(() => { vi.resetAllMocks(); mocks.guard.mockResolvedValue({ user: { id: "admin" } }); });
 
   it("menolak akses sebelum membaca data akun", async () => {

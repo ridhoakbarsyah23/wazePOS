@@ -129,7 +129,7 @@ export async function getPlatformAdminAuditData(input: PlatformAdminAuditInput =
     }));
   } catch (error) {
     auditAvailable = false;
-    console.error("Failed to load Platform Admin audit log", error);
+    console.error("Failed to load Dashboard Admin audit log", error);
   }
 
   return {

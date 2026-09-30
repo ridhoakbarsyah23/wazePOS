@@ -18,7 +18,7 @@ export function PlatformAdminNav() {
   const pathname = usePathname() ?? "/admin";
 
   return (
-    <nav aria-label="Navigasi Platform Admin" className="w-full min-w-0">
+    <nav aria-label="Navigasi Dashboard Admin" className="w-full min-w-0">
       <ul className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
         {links.map((link) => {
           const isActive = link.exact

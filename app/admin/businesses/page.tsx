@@ -5,7 +5,7 @@ import { getPlatformAdminDirectoryData } from "@/server/admin/platform-admin-das
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Daftar Usaha | Platform Admin wazePOS",
+  title: "Daftar Usaha | Dashboard Admin wazePOS",
   description: "Direktori internal usaha, owner, dan status subscription wazePOS.",
   robots: { index: false, follow: false },
 };

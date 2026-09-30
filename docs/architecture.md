@@ -19,14 +19,14 @@ app/
   (marketing)/   Halaman publik (landing, privacy)
   (auth)/        Login, register, reset password, /auth/continue
   (app)/         Aplikasi inti setelah login (dashboard, pos, products, ...)
-  admin/         Platform Admin (layout + guard sendiri)
+  admin/         Dashboard Admin (layout + guard sendiri)
   api/           Route Handlers
 components/
   account/ admin/ auth/ catalog/ customers/ dashboard/ inventory/
   marketing/ onboarding/ pos/ settings/ shared/ staff/ subscription/ ui/
 server/
   access/        Route guards untuk workspace
-  admin/         Platform Admin DAL, audit, dan dashboard query
+  admin/         Dashboard Admin DAL, audit, dan dashboard query
   auth/          Better Auth dan session
   billing/       Transfer bank (rekening tujuan + verifikasi admin)
   email/         Email delivery

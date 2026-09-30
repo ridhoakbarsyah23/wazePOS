@@ -534,7 +534,7 @@ export async function getPlatformAdminOverviewData() {
     getPlatformAdminStats(now),
     getTodayFollowUps(now).catch((error) => {
       // Ringkasan tetap dapat dibuka jika migrasi tindak lanjut belum dijalankan.
-      console.error("Failed to load Platform Admin today follow-ups", error);
+      console.error("Failed to load Dashboard Admin today follow-ups", error);
       return { today: getTodayWIBDateString(now), total: 0, items: [] };
     }),
   ]);

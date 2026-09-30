@@ -28,7 +28,7 @@ const allowlistedEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
   .map((value) => value.trim().toLowerCase())
   .filter(Boolean);
 const email = allowlistedEmails[0] ?? "";
-const name = process.env.PLATFORM_ADMIN_NAME?.trim() || "Platform Admin";
+const name = process.env.PLATFORM_ADMIN_NAME?.trim() || "Dashboard Admin";
 const configuredPassword = process.env.PLATFORM_ADMIN_SEED_PASSWORD ?? "";
 const generatedPassword = !configuredPassword && generatePassword;
 const password = configuredPassword || (generatedPassword ? `${randomBytes(18).toString("base64url")}Aa1!` : "");
@@ -75,7 +75,7 @@ try {
     });
 
     passwordApplied = true;
-    console.log(`Platform Admin lokal berhasil dibuat untuk ${email}.`);
+    console.log(`Dashboard Admin lokal berhasil dibuat untuk ${email}.`);
   } else {
     const credentialAccounts = await sql`
       select id, account_id, password
@@ -100,7 +100,7 @@ try {
           where id = ${canonicalCredential.id}
         `;
         passwordApplied = true;
-        console.log(`Password credential Platform Admin ${email} berhasil ditambahkan.`);
+        console.log(`Password credential Dashboard Admin ${email} berhasil ditambahkan.`);
       } else if (resetPassword) {
         await sql`
           update account
@@ -108,7 +108,7 @@ try {
           where id = ${canonicalCredential.id}
         `;
         passwordApplied = true;
-        console.log(`Password Platform Admin ${email} berhasil diperbarui.`);
+        console.log(`Password Dashboard Admin ${email} berhasil diperbarui.`);
       } else {
         console.log(
           [
@@ -126,14 +126,14 @@ try {
         where id = ${legacyCredential.id}
       `;
       passwordApplied = true;
-      console.log(`Credential legacy Platform Admin ${email} berhasil diperbaiki.`);
+      console.log(`Credential legacy Dashboard Admin ${email} berhasil diperbaiki.`);
     } else {
       await sql`
         insert into account (id, account_id, provider_id, user_id, password)
         values (${randomUUID()}, ${existingUser.id}, 'credential', ${existingUser.id}, ${passwordHash})
       `;
       passwordApplied = true;
-      console.log(`Login password ditambahkan ke akun Platform Admin ${email}.`);
+      console.log(`Login password ditambahkan ke akun Dashboard Admin ${email}.`);
     }
   }
 
@@ -143,7 +143,7 @@ try {
   console.log("Login melalui /login; akun seeder akan otomatis diarahkan ke /admin.");
 } catch (error) {
   const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "UNKNOWN";
-  console.error(`Seeder Platform Admin gagal (${code}). Pastikan migrasi database sudah diterapkan.`);
+  console.error(`Seeder Dashboard Admin gagal (${code}). Pastikan migrasi database sudah diterapkan.`);
   process.exitCode = 1;
 } finally {
   await sql.end({ timeout: 2 });

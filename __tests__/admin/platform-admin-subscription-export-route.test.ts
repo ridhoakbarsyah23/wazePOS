@@ -21,7 +21,7 @@ vi.mock("@/server/admin/platform-admin-audit", () => ({
 import { GET } from "@/app/api/admin/subscriptions/export/route";
 
 const adminSession = {
-  user: { id: "admin-1", name: "Platform Admin", email: "admin@wazepos.com" },
+  user: { id: "admin-1", name: "Dashboard Admin", email: "admin@wazepos.com" },
 };
 
 describe("GET /api/admin/subscriptions/export", () => {

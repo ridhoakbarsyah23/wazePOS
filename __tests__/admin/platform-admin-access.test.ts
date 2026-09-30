@@ -7,7 +7,7 @@ import {
   parsePlatformAdminEmails,
 } from "@/shared/admin/platform-admin-access";
 
-describe("akses Platform Admin", () => {
+describe("akses Dashboard Admin", () => {
   it("menormalkan allowlist email tanpa menerima pencocokan parsial", () => {
     const emails = parsePlatformAdminEmails(" Owner@Example.com, ops@example.com ,, ");
 
@@ -21,7 +21,7 @@ describe("akses Platform Admin", () => {
     expect(isPlatformAdminEmail("owner@example.com", "")).toBe(false);
   });
 
-  it("mengarahkan Platform Admin terverifikasi ke admin dan akun biasa ke dashboard", () => {
+  it("mengarahkan Dashboard Admin terverifikasi ke admin dan akun biasa ke dashboard", () => {
     expect(
       getPostLoginDestination(
         { email: "owner@example.com", emailVerified: true },
@@ -58,7 +58,7 @@ describe("akses Platform Admin", () => {
   });
 });
 
-describe("status subscription Platform Admin", () => {
+describe("status subscription Dashboard Admin", () => {
   const now = new Date("2026-09-24T00:00:00.000Z");
 
   it("membedakan trial aktif dan trial yang sudah berakhir berdasarkan tanggal", () => {

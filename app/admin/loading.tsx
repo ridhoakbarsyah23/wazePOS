@@ -5,7 +5,7 @@ function SkeletonBlock({ className }: { className: string }) {
 export default function PlatformAdminLoading() {
   return (
     <div aria-busy="true" aria-live="polite">
-      <span className="sr-only">Memuat halaman Platform Admin...</span>
+      <span className="sr-only">Memuat halaman Dashboard Admin...</span>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(210px,250px)] sm:items-end">
         <div className="space-y-3">
           <SkeletonBlock className="h-6 w-32 rounded-full" />

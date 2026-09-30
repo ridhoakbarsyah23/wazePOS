@@ -51,7 +51,7 @@ describe("GET /api/auth/destination", () => {
     expect(response.status).toBe(401);
   });
 
-  it("mengarahkan akun allowlist terverifikasi ke Platform Admin", async () => {
+  it("mengarahkan akun allowlist terverifikasi ke Dashboard Admin", async () => {
     mocks.getSession.mockResolvedValue({ user: { email: "ADMIN@example.com", emailVerified: true } });
 
     const response = await GET();

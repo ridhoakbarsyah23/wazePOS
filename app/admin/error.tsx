@@ -20,7 +20,7 @@ export default function PlatformAdminError({
         <div className="mx-auto mb-4 grid size-12 place-items-center rounded-full bg-[#fff0e5] text-[#a35f12]">
           <AlertTriangle className="size-6" aria-hidden="true" />
         </div>
-        <h1 className="text-xl font-bold">Data Platform Admin belum dapat dimuat</h1>
+        <h1 className="text-xl font-bold">Data Dashboard Admin belum dapat dimuat</h1>
         <p className="mt-2 text-sm leading-6 text-[#627069]">
           Terjadi kendala saat mengambil data. Silakan coba lagi atau muat ulang halaman.
         </p>

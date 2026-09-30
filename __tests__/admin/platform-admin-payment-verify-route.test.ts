@@ -16,7 +16,7 @@ vi.mock("@/server/admin/platform-admin-payment-verification", () => ({
 import { POST } from "@/app/api/admin/payments/verify/route";
 
 const adminSession = {
-  user: { id: "admin-1", name: "Platform Admin", email: "admin@wazepos.com" },
+  user: { id: "admin-1", name: "Dashboard Admin", email: "admin@wazepos.com" },
 };
 
 function postJson(payload: unknown) {
@@ -54,7 +54,7 @@ describe("POST /api/admin/payments/verify", () => {
     expect(payload.message).toContain("Email pemberitahuan telah dikirim");
     expect(mocks.verifyPayment).toHaveBeenCalledWith(
       { paymentId: "pay-1", decision: "approve" },
-      { id: "admin-1", email: "admin@wazepos.com", name: "Platform Admin" },
+      { id: "admin-1", email: "admin@wazepos.com", name: "Dashboard Admin" },
     );
   });
 

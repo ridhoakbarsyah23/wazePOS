@@ -63,7 +63,7 @@ async function notifyOwnerOfVerification(
 }
 
 /**
- * Verifikasi pembayaran transfer bank oleh Platform Admin.
+ * Verifikasi pembayaran transfer bank oleh Dashboard Admin.
  * Approve mengaktifkan subscription 1 tahun; reject menandai gagal.
  * Pembaruan bersifat idempotent: hanya pembayaran `pending` yang diproses.
  */
