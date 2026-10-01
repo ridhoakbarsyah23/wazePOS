@@ -3,9 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  AlertCircle,
   Check,
-  CheckCircle2,
   Edit2,
   FolderPlus,
   Loader2,
@@ -18,16 +16,13 @@ import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FeedbackAlert } from "@/components/ui/feedback-alert";
+import { useFeedback } from "@/hooks/use-feedback";
 
 export type CategoryItem = {
   id: string;
   name: string;
   productCount: number;
-};
-
-type Notice = {
-  type: "success" | "error";
-  message: string;
 };
 
 type CategoryManagerProps = {
@@ -64,7 +59,7 @@ export function CategoryManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const { feedback, feedbackKey, showFeedback, dismissFeedback } = useFeedback();
 
   const filteredCategories = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("id-ID");
@@ -83,12 +78,7 @@ export function CategoryManager({
     onChange?.(sorted);
   }
 
-  function notify(type: Notice["type"], message: string) {
-    setNotice({ type, message });
-    window.setTimeout(() => {
-      setNotice((current) => (current?.message === message ? null : current));
-    }, 5000);
-  }
+
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -96,7 +86,7 @@ export function CategoryManager({
     if (!name) return;
 
     setPendingAction("create");
-    setNotice(null);
+    dismissFeedback();
     try {
       const response = await fetch("/api/categories", {
         method: "POST",
@@ -108,10 +98,10 @@ export function CategoryManager({
 
       updateCategories([...categories, { ...payload.category, productCount: 0 }]);
       setNewCategoryName("");
-      notify("success", payload.message ?? `Kategori "${name}" berhasil dibuat.`);
+      showFeedback("success", payload.message ?? `Kategori "${name}" berhasil dibuat.`);
       router.refresh();
     } catch (error) {
-      notify("error", error instanceof Error ? error.message : "Gagal membuat kategori.");
+      showFeedback("error", error instanceof Error ? error.message : "Gagal membuat kategori.");
     } finally {
       setPendingAction(null);
     }
@@ -132,7 +122,7 @@ export function CategoryManager({
     if (!name) return;
 
     setPendingAction(`edit:${item.id}`);
-    setNotice(null);
+    dismissFeedback();
     try {
       const response = await fetch(`/api/categories/${item.id}`, {
         method: "PATCH",
@@ -150,10 +140,10 @@ export function CategoryManager({
         ),
       );
       cancelEditing();
-      notify("success", payload.message ?? "Kategori berhasil diperbarui.");
+      showFeedback("success", payload.message ?? "Kategori berhasil diperbarui.");
       router.refresh();
     } catch (error) {
-      notify("error", error instanceof Error ? error.message : "Gagal memperbarui kategori.");
+      showFeedback("error", error instanceof Error ? error.message : "Gagal memperbarui kategori.");
     } finally {
       setPendingAction(null);
     }
@@ -161,16 +151,16 @@ export function CategoryManager({
 
   async function handleDelete(item: CategoryItem) {
     setPendingAction(`delete:${item.id}`);
-    setNotice(null);
+    dismissFeedback();
     try {
       const response = await fetch(`/api/categories/${item.id}`, { method: "DELETE" });
       const payload = await readApiPayload(response);
       updateCategories(categories.filter((current) => current.id !== item.id));
       if (editingId === item.id) cancelEditing();
-      notify("success", payload.message ?? `Kategori "${item.name}" berhasil dihapus.`);
+      showFeedback("success", payload.message ?? `Kategori "${item.name}" berhasil dihapus.`);
       router.refresh();
     } catch (error) {
-      notify("error", error instanceof Error ? error.message : "Gagal menghapus kategori.");
+      showFeedback("error", error instanceof Error ? error.message : "Gagal menghapus kategori.");
     } finally {
       setPendingAction(null);
     }
@@ -210,34 +200,9 @@ export function CategoryManager({
         </div>
       )}
 
-      {notice && (
-        <div
-          className={`mt-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-xs font-bold ${
-            notice.type === "success"
-              ? "border-[#cae8d9] bg-[#eaf7f0] text-[#198760]"
-              : "border-rose-200 bg-rose-50 text-rose-700"
-          }`}
-          role="status"
-          aria-live="polite"
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            {notice.type === "success" ? (
-              <CheckCircle2 className="size-4 shrink-0" />
-            ) : (
-              <AlertCircle className="size-4 shrink-0" />
-            )}
-            <span className="min-w-0">{notice.message}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setNotice(null)}
-            className="shrink-0 rounded-lg p-1 text-current/70 hover:bg-black/5"
-            aria-label="Tutup notifikasi"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      )}
+      <div className="mt-4">
+        <FeedbackAlert feedback={feedback} feedbackKey={feedbackKey} onDismiss={dismissFeedback} />
+      </div>
 
       <div className={compact ? "mt-0" : "mt-6"}>
         <div className="grid gap-5 lg:grid-cols-[minmax(250px,0.7fr)_minmax(0,1.3fr)]">

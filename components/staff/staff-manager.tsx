@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  AlertTriangle,
   CalendarDays,
-  CheckCircle2,
   CircleGauge,
   Crown,
   Eye,
@@ -30,6 +28,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FeedbackAlert } from "@/components/ui/feedback-alert";
+import { useFeedback } from "@/hooks/use-feedback";
 import {
   Table,
   TableBody,
@@ -71,14 +71,7 @@ export function StaffManager({
   const [isAdding, setIsAdding] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const hasPendingAction = pendingAction !== null;
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  useEffect(() => {
-    if (!feedback) return;
-
-    const timeoutId = window.setTimeout(() => setFeedback(null), 15_000);
-    return () => window.clearTimeout(timeoutId);
-  }, [feedback]);
+  const { feedback, feedbackKey, showFeedback, dismissFeedback } = useFeedback();
 
   // Form states
   const [name, setName] = useState("");
@@ -97,7 +90,7 @@ export function StaffManager({
 
   async function handleAddStaff(e: React.FormEvent) {
     e.preventDefault();
-    setFeedback(null);
+    dismissFeedback();
     setPendingAction("add");
 
     try {
@@ -109,24 +102,24 @@ export function StaffManager({
 
       const data = await res.json();
       if (!res.ok) {
-        setFeedback({ type: "error", message: data.message ?? "Gagal menambahkan karyawan." });
+        showFeedback("error", data.message ?? "Gagal menambahkan karyawan.");
         return;
       }
 
-      setFeedback({ type: "success", message: data.message });
+      showFeedback("success", data.message);
       setStaffList((prev) => [data.staff, ...prev]);
       resetAddForm();
       setIsAdding(false);
       router.refresh();
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPendingAction(null);
     }
   }
 
   async function handleChangeRole(memberId: string, newRole: "admin" | "cashier") {
-    setFeedback(null);
+    dismissFeedback();
     setPendingAction(`role:${memberId}`);
 
     try {
@@ -138,24 +131,24 @@ export function StaffManager({
 
       const data = await res.json();
       if (!res.ok) {
-        setFeedback({ type: "error", message: data.message ?? "Gagal memperbarui peran." });
+        showFeedback("error", data.message ?? "Gagal memperbarui peran.");
         return;
       }
 
       setStaffList((prev) =>
         prev.map((s) => (s.id === memberId ? { ...s, role: newRole } : s))
       );
-      setFeedback({ type: "success", message: data.message });
+      showFeedback("success", data.message);
       router.refresh();
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPendingAction(null);
     }
   }
 
   async function handleDeleteStaff(memberId: string) {
-    setFeedback(null);
+    dismissFeedback();
     setPendingAction(`delete:${memberId}`);
 
     try {
@@ -163,15 +156,15 @@ export function StaffManager({
       const data = await res.json();
 
       if (!res.ok) {
-        setFeedback({ type: "error", message: data.message ?? "Gagal mencabut akses." });
+        showFeedback("error", data.message ?? "Gagal mencabut akses.");
         return;
       }
 
       setStaffList((prev) => prev.filter((s) => s.id !== memberId));
-      setFeedback({ type: "success", message: data.message });
+      showFeedback("success", data.message);
       router.refresh();
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPendingAction(null);
     }
@@ -198,37 +191,7 @@ export function StaffManager({
   return (
     <div className="space-y-6">
       {/* Alert Banner */}
-      {feedback && (
-        <div
-          role={feedback.type === "error" ? "alert" : "status"}
-          className={`flex items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${
-            feedback.type === "success"
-              ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]"
-              : "border-[#f2d4b9] bg-[#fff0e5] text-[#a35f12]"
-          }`}
-        >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="size-5 shrink-0 text-[#198760]" />
-          ) : (
-            <AlertTriangle className="size-5 shrink-0 text-[#a35f12]" />
-          )}
-          <div className="min-w-0 flex-1">
-            <p>{feedback.message}</p>
-            <p className="mt-1 text-[11px] font-medium opacity-75">
-              Notifikasi akan tertutup otomatis dalam 15 detik.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFeedback(null)}
-            className="grid size-8 shrink-0 place-items-center rounded-lg transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30"
-            aria-label="Tutup notifikasi"
-            title="Tutup notifikasi"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-      )}
+      <FeedbackAlert feedback={feedback} feedbackKey={feedbackKey} onDismiss={dismissFeedback} />
 
       {/* Plan quota banner if quota reached */}
       {isQuotaReached && (
@@ -304,7 +267,7 @@ export function StaffManager({
             disabled={hasPendingAction}
             onClick={() => {
               if (isAdding) resetAddForm();
-              setFeedback(null);
+              dismissFeedback();
               setIsAdding(!isAdding);
             }}
             variant={isAdding ? "outline" : "default"}

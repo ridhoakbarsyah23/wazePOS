@@ -24,6 +24,7 @@ export default async function CustomersPage() {
       createdAt: customer.createdAt,
       transactionCount: sql<number>`count(${sale.id})::int`,
       totalSpent: sql<number>`coalesce(sum(case when ${sale.status} = 'completed' then ${sale.total} else 0 end), 0)::int`,
+      visitCount: sql<number>`count(distinct date(${sale.createdAt}))::int`,
       lastVisitAt: sql<Date | null>`max(${sale.createdAt})`,
     })
     .from(customer)
@@ -41,6 +42,7 @@ export default async function CustomersPage() {
     createdAt: new Date(row.createdAt).toISOString(),
     transactionCount: Number(row.transactionCount),
     totalSpent: Number(row.totalSpent),
+    visitCount: Number(row.visitCount),
     lastVisitAt: row.lastVisitAt ? new Date(row.lastVisitAt).toISOString() : null,
   }));
 

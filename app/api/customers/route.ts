@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       createdAt: customer.createdAt,
       transactionCount: sql<number>`count(*) filter (where ${sale.status} = 'completed')::int`,
       totalSpent: sql<number>`coalesce(sum(case when ${sale.status} = 'completed' then ${sale.total} else 0 end), 0)::int`,
+      visitCount: sql<number>`count(distinct date(${sale.createdAt}))::int`,
       lastVisitAt: sql<Date | null>`max(${sale.createdAt})`,
     })
     .from(customer)
@@ -126,6 +127,7 @@ export async function POST(request: Request) {
           ...created,
           transactionCount: 0,
           totalSpent: 0,
+          visitCount: 0,
           lastVisitAt: null,
         },
       },

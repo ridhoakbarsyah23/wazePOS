@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   Boxes,
-  CheckCircle2,
   Filter,
   Package,
   Pencil,
@@ -19,6 +18,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { FeedbackAlert } from "@/components/ui/feedback-alert";
+import { useFeedback } from "@/hooks/use-feedback";
 import { RupiahInput } from "@/components/ui/rupiah-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,34 +86,7 @@ export function ProductManager({
   });
 
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [feedbackKey, setFeedbackKey] = useState(0);
-  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const FEEDBACK_DURATION_MS = 15_000;
-
-  // Alert tampil 15 detik dengan animasi smooth, lalu menghilang otomatis.
-  function showFeedback(type: "success" | "error", message: string) {
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    setFeedback({ type, message });
-    setFeedbackKey((key) => key + 1);
-    feedbackTimerRef.current = setTimeout(() => {
-      setFeedback(null);
-      feedbackTimerRef.current = null;
-    }, FEEDBACK_DURATION_MS);
-  }
-
-  function dismissFeedback() {
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    feedbackTimerRef.current = null;
-    setFeedback(null);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    };
-  }, []);
+  const { feedback, feedbackKey, showFeedback, dismissFeedback } = useFeedback();
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -168,7 +142,7 @@ export function ProductManager({
 
   async function handleCreateProduct(e: React.FormEvent) {
     e.preventDefault();
-    setFeedback(null);
+    dismissFeedback();
     setPending(true);
 
     try {
@@ -221,7 +195,7 @@ export function ProductManager({
     e.preventDefault();
     if (!editingItem) return;
 
-    setFeedback(null);
+    dismissFeedback();
     setPending(true);
 
     try {
@@ -260,7 +234,7 @@ export function ProductManager({
 
   async function handleToggleStatus(item: Product) {
     const nextState = !item.isActive;
-    setFeedback(null);
+    dismissFeedback();
     setPending(true);
 
     try {
@@ -290,38 +264,7 @@ export function ProductManager({
   return (
     <div className="space-y-6">
       {/* Alert Feedback */}
-      {feedback && (
-        <div
-          key={feedbackKey}
-          role="status"
-          aria-live="polite"
-          className={`relative flex items-start gap-3 overflow-hidden rounded-2xl border p-4 text-sm font-semibold shadow-sm animate-toast-in ${
-            feedback.type === "success"
-              ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]"
-              : "border-[#f2d4b9] bg-[#fff0e5] text-[#a35f12]"
-          }`}
-        >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="size-5 shrink-0 text-[#198760]" />
-          ) : (
-            <AlertTriangle className="size-5 shrink-0 text-[#a35f12]" />
-          )}
-          <span className="flex-1">{feedback.message}</span>
-          <button
-            type="button"
-            onClick={dismissFeedback}
-            aria-label="Tutup notifikasi"
-            className="shrink-0 rounded-lg p-0.5 opacity-60 transition hover:opacity-100"
-          >
-            <X className="size-4" />
-          </button>
-          {/* Progress bar 15 detik */}
-          <span
-            className="absolute bottom-0 left-0 h-[3px] bg-current opacity-30 animate-progress-15"
-            aria-hidden="true"
-          />
-        </div>
-      )}
+      <FeedbackAlert feedback={feedback} feedbackKey={feedbackKey} onDismiss={dismissFeedback} />
 
       {/* Action Header & Search Controls */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

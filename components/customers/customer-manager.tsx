@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CalendarClock,
   Check,
@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FeedbackAlert } from "@/components/ui/feedback-alert";
+import { useFeedback } from "@/hooks/use-feedback";
 
 export type CustomerListItem = {
   id: string;
@@ -31,10 +33,9 @@ export type CustomerListItem = {
   createdAt: string;
   transactionCount: number;
   totalSpent: number;
+  visitCount: number;
   lastVisitAt: string | null;
 };
-
-type Feedback = { type: "success" | "error"; message: string } | null;
 
 /** Format angka ke Rupiah dengan aman: value non-number tetap ter-render, tidak crash. */
 function formatRupiah(value: number) {
@@ -62,6 +63,7 @@ function normalizeCustomer(raw: unknown): CustomerListItem {
     createdAt: base.createdAt ? new Date(base.createdAt).toISOString() : new Date().toISOString(),
     transactionCount: Number(base.transactionCount ?? 0),
     totalSpent: Number(base.totalSpent ?? 0),
+    visitCount: Number((base as Record<string, unknown>).visitCount ?? 0),
     lastVisitAt: base.lastVisitAt ? new Date(base.lastVisitAt).toISOString() : null,
   };
 }
@@ -75,7 +77,7 @@ export function CustomerManager({
 }) {
   const [customers, setCustomers] = useState<CustomerListItem[]>(initialCustomers);
   const [query, setQuery] = useState("");
-  const [feedback, setFeedback] = useState<Feedback>(null);
+  const { feedback, feedbackKey, showFeedback, dismissFeedback } = useFeedback();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   // Form tambah
@@ -94,11 +96,6 @@ export function CustomerManager({
 
   const isQuotaReached = maxCustomers < 9999 && customers.length >= maxCustomers;
 
-  useEffect(() => {
-    if (!feedback) return;
-    const timeoutId = window.setTimeout(() => setFeedback(null), 8_000);
-    return () => window.clearTimeout(timeoutId);
-  }, [feedback]);
 
   const filteredCustomers = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -131,7 +128,7 @@ export function CustomerManager({
 
   async function handleAddCustomer(e: React.FormEvent) {
     e.preventDefault();
-    setFeedback(null);
+    dismissFeedback();
     setPendingAction("add");
 
     try {
@@ -143,7 +140,7 @@ export function CustomerManager({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setFeedback({ type: "error", message: data?.message ?? "Pelanggan belum berhasil disimpan." });
+        showFeedback("error", data?.message ?? "Pelanggan belum berhasil disimpan.");
         return;
       }
 
@@ -152,16 +149,16 @@ export function CustomerManager({
       setCustomers((current) => [...current, created]);
       resetAddForm();
       setShowAddForm(false);
-      setFeedback({ type: "success", message: data.message ?? "Pelanggan berhasil ditambahkan." });
+      showFeedback("success", data.message ?? "Pelanggan berhasil ditambahkan.");
     } catch {
-      setFeedback({ type: "error", message: "Terjadi kesalahan jaringan. Coba lagi." });
+      showFeedback("error", "Terjadi kesalahan jaringan. Coba lagi.");
     } finally {
       setPendingAction(null);
     }
   }
 
   async function handleSaveEdit(id: string) {
-    setFeedback(null);
+    dismissFeedback();
     setPendingAction(`edit-${id}`);
 
     try {
@@ -173,7 +170,7 @@ export function CustomerManager({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setFeedback({ type: "error", message: data?.message ?? "Gagal memperbarui data pelanggan." });
+        showFeedback("error", data?.message ?? "Gagal memperbarui data pelanggan.");
         return;
       }
 
@@ -181,16 +178,16 @@ export function CustomerManager({
         current.map((item) => (item.id === id ? { ...item, ...normalizeCustomer({ ...item, ...data.customer }) } : item)),
       );
       setEditingId(null);
-      setFeedback({ type: "success", message: "Pelanggan berhasil diperbarui." });
+      showFeedback("success", "Pelanggan berhasil diperbarui.");
     } catch {
-      setFeedback({ type: "error", message: "Terjadi kesalahan jaringan. Coba lagi." });
+      showFeedback("error", "Terjadi kesalahan jaringan. Coba lagi.");
     } finally {
       setPendingAction(null);
     }
   }
 
   async function handleDelete(item: CustomerListItem) {
-    setFeedback(null);
+    dismissFeedback();
     setPendingAction(`delete-${item.id}`);
 
     try {
@@ -198,14 +195,14 @@ export function CustomerManager({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setFeedback({ type: "error", message: data?.message ?? "Gagal menghapus pelanggan." });
+        showFeedback("error", data?.message ?? "Gagal menghapus pelanggan.");
         return;
       }
 
       setCustomers((current) => current.filter((entry) => entry.id !== item.id));
-      setFeedback({ type: "success", message: `Pelanggan "${item.name}" berhasil dihapus.` });
+      showFeedback("success", `Pelanggan "${item.name}" berhasil dihapus.`);
     } catch {
-      setFeedback({ type: "error", message: "Terjadi kesalahan jaringan. Coba lagi." });
+      showFeedback("error", "Terjadi kesalahan jaringan. Coba lagi.");
     } finally {
       setPendingAction(null);
     }
@@ -274,22 +271,7 @@ export function CustomerManager({
         })}
       </div>
 
-      {feedback && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`flex items-start justify-between gap-3 rounded-2xl border px-4 py-3 text-xs font-semibold ${
-            feedback.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-rose-200 bg-rose-50 text-rose-700"
-          }`}
-        >
-          <span>{feedback.message}</span>
-          <button type="button" onClick={() => setFeedback(null)} aria-label="Tutup notifikasi" className="opacity-60 hover:opacity-100">
-            <X className="size-3.5" />
-          </button>
-        </div>
-      )}
+      <FeedbackAlert feedback={feedback} feedbackKey={feedbackKey} onDismiss={dismissFeedback} />
 
       {/* Toolbar: cari + tambah */}
       <div className="flex flex-col gap-3 rounded-2xl border border-[#dfe8e3] bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-4">
@@ -603,7 +585,7 @@ export function CustomerManager({
                   <p className="text-[9px] font-bold uppercase tracking-wide text-[#8b9991]">Total</p>
                 </div>
                 <div>
-                  <p className="text-sm font-black text-[#15211d]">{formatTanggal(item.lastVisitAt).split(" ")[0]}</p>
+                  <p className="text-sm font-black text-[#15211d]">{item.visitCount}×</p>
                   <p className="text-[9px] font-bold uppercase tracking-wide text-[#8b9991]">Kunjungan</p>
                 </div>
               </div>

@@ -31,6 +31,7 @@ const baseCustomer = {
   createdAt: "2026-09-01T00:00:00.000Z",
   transactionCount: 3,
   totalSpent: 150000,
+  visitCount: 2,
   lastVisitAt: "2026-09-20T00:00:00.000Z",
 };
 

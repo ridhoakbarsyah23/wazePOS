@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FeedbackAlert } from "@/components/ui/feedback-alert";
+import { useFeedback } from "@/hooks/use-feedback";
 
 type Option = { id: string; name: string };
 type StockSetting = {
@@ -50,7 +52,7 @@ export function StockAdjustmentForm({
   const [quantity, setQuantity] = useState("");
   const [threshold, setThreshold] = useState(String(initialStockSetting?.lowStockThreshold ?? 5));
   const [note, setNote] = useState("");
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const { feedback, feedbackKey, showFeedback, dismissFeedback } = useFeedback();
   const [pending, setPending] = useState(false);
   const currentStockSetting = stockSettings.find(
     (item) => item.outletId === outletId && item.productId === productId,
@@ -73,7 +75,7 @@ export function StockAdjustmentForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setFeedback(null);
+    dismissFeedback();
 
     try {
       const response = await fetch("/api/stock/adjust", {
@@ -90,16 +92,16 @@ export function StockAdjustmentForm({
 
       const result = await response.json();
       if (!response.ok) {
-        setFeedback({ type: "error", message: result.message ?? "Penyesuaian stok gagal." });
+        showFeedback("error", result.message ?? "Penyesuaian stok gagal.");
         return;
       }
 
-      setFeedback({ type: "success", message: result.message ?? "Stok berhasil diperbarui!" });
+      showFeedback("success", result.message ?? "Stok berhasil diperbarui!");
       setQuantity("");
       setNote("");
       window.setTimeout(() => window.location.reload(), 800);
     } catch {
-      setFeedback({ type: "error", message: "Tidak dapat terhubung ke server." });
+      showFeedback("error", "Tidak dapat terhubung ke server.");
     } finally {
       setPending(false);
     }
@@ -119,23 +121,7 @@ export function StockAdjustmentForm({
         </div>
       )}
 
-      {feedback && (
-        <div
-          role="status"
-          className={`flex items-start gap-2.5 rounded-xl border p-3.5 text-sm font-semibold transition-all ${
-            feedback.type === "success"
-              ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]"
-              : "border-[#f2d4b9] bg-[#fff0e5] text-[#a35f12]"
-          }`}
-        >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="size-4 shrink-0 text-[#198760] mt-0.5" />
-          ) : (
-            <AlertTriangle className="size-4 shrink-0 text-[#a35f12] mt-0.5" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
-      )}
+      <FeedbackAlert feedback={feedback} feedbackKey={feedbackKey} onDismiss={dismissFeedback} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
