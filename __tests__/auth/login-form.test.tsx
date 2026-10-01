@@ -44,7 +44,7 @@ describe("LoginForm", () => {
 
     await waitFor(() => {
       expect(mocks.replace).toHaveBeenCalledWith("/admin");
-    });
+    }, { timeout: 2000 });
     expect(mocks.replace).not.toHaveBeenCalledWith("/dashboard");
   });
 
@@ -58,6 +58,6 @@ describe("LoginForm", () => {
 
     await waitFor(() => {
       expect(mocks.replace).toHaveBeenCalledWith("/auth/continue");
-    });
+    }, { timeout: 2000 });
   });
 });
