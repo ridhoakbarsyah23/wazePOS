@@ -8,6 +8,7 @@ import { GoogleSsoButton } from "@/components/auth/google-sso-button";
 import { authInputClass, PasswordField } from "@/components/auth/password-field";
 import { authClient } from "@/shared/auth/auth-client";
 import { loginSchema } from "@/shared/validation/auth";
+import { AuthStatusModal, type AuthStatus } from "@/components/auth/auth-status-modal";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
@@ -16,11 +17,11 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
   const searchParams = useSearchParams();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<AuthStatus>("idle");
   const [isNavigating, startNavigation] = useTransition();
   // Tetap "pending" selama proses verifikasi akun DAN sampai navigasi ke
-  // dashboard selesai, supaya spinner tidak menghilang di tengah transisi.
-  const isPending = isSubmitting || isNavigating;
+  // dashboard selesai, supaya form tetap disabled di tengah transisi.
+  const isPending = loginStatus !== "idle" || isNavigating;
 
   function clearError(field: keyof FieldErrors) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -50,7 +51,7 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
       return;
     }
 
-    setIsSubmitting(true);
+    setLoginStatus("checking");
     try {
       const response = await authClient.signIn.email({
         email: result.data.email,
@@ -70,6 +71,7 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
           return;
         }
         setErrorMessage("Email atau kata sandi tidak sesuai.");
+        setLoginStatus("idle");
         return;
       }
 
@@ -92,20 +94,25 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
         // Server continuation akan menentukan tujuan dari sesi yang baru dibuat.
       }
 
+      // Animasi sukses: Ubah modal jadi centang hijau, tahan sebentar
+      setLoginStatus("success");
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+
       // Navigasi dibungkus useTransition: isNavigating tetap true sampai
-      // halaman tujuan selesai dirender, sehingga animasi loading tidak terputus.
+      // halaman tujuan selesai dirender.
       startNavigation(() => {
         router.replace(destination);
       });
     } catch {
       setErrorMessage("Tidak dapat terhubung ke server. Silakan coba lagi.");
-    } finally {
-      setIsSubmitting(false);
+      setLoginStatus("idle");
     }
   }
 
   return (
-    <form className="mt-5 grid min-w-0 gap-3.5 sm:mt-6" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+    <>
+      <AuthStatusModal status={loginStatus} />
+      <form className="mt-5 grid min-w-0 gap-3.5 sm:mt-6" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
       {googleSsoEnabled && <GoogleSsoButton flow="login" disabled={isPending} />}
 
       {(fieldErrors.email || fieldErrors.password || errorMessage) && (
@@ -199,5 +206,6 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
         {isPending ? "Memeriksa akun..." : "Masuk"}
       </button>
     </form>
+    </>
   );
 }
