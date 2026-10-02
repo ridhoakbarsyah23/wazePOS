@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, useTransition, useEffect, useRef, type FormEvent } from "react";
+import gsap from "gsap";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { GoogleSsoButton } from "@/components/auth/google-sso-button";
@@ -22,6 +23,22 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
   // Tetap "pending" selama proses verifikasi akun DAN sampai navigasi ke
   // dashboard selesai, supaya form tetap disabled di tengah transisi.
   const isPending = loginStatus !== "idle" || isNavigating;
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (formRef.current) {
+      // Mengambil semua elemen anak langsung dari form (kecuali modal jika ada di luar)
+      // Array.from membantu mengubah HTMLCollection menjadi array agar gsap bisa membacanya
+      const elements = Array.from(formRef.current.children);
+      
+      // Animasi fade-in beruntun (stagger) dari bawah ke atas
+      gsap.fromTo(
+        elements,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power3.out", clearProps: "all" }
+      );
+    }
+  }, []);
 
   function clearError(field: keyof FieldErrors) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -112,7 +129,7 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
   return (
     <>
       <AuthStatusModal status={loginStatus} />
-      <form className="mt-5 grid min-w-0 gap-3.5 sm:mt-6" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+      <form ref={formRef} className="mt-5 grid min-w-0 gap-3.5 sm:mt-6" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
       {googleSsoEnabled && <GoogleSsoButton flow="login" disabled={isPending} />}
 
       {(fieldErrors.email || fieldErrors.password || errorMessage) && (
@@ -141,25 +158,32 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
           </ul>
         </div>
       )}
-      <div className="grid gap-2 text-xs font-bold text-[#34443d]">
-        <label htmlFor="login-email">Email</label>
-        <input
-          id="login-email"
-          className={`${authInputClass} ${fieldErrors.email ? "!border-red-400 !ring-4 !ring-red-100" : ""}`}
-          name="email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          autoCapitalize="none"
-          spellCheck={false}
-          required
-          placeholder="nama@email.com"
-          disabled={isPending}
-          aria-invalid={Boolean(fieldErrors.email)}
-          aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
-          onInput={() => clearError("email")}
-        />
-        {fieldErrors.email && <span id="login-email-error" className="font-semibold text-red-600">{fieldErrors.email}</span>}
+      <div className="grid min-w-0 gap-1.5">
+        <div className="relative min-w-0">
+          <input
+            id="login-email"
+            className={`${authInputClass} ${fieldErrors.email ? "!border-red-400 !ring-4 !ring-red-100" : ""}`}
+            name="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            placeholder="nama@email.com"
+            disabled={isPending}
+            aria-invalid={Boolean(fieldErrors.email)}
+            aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
+            onInput={() => clearError("email")}
+          />
+          <label 
+            htmlFor="login-email" 
+            className={`absolute left-3.5 top-2 text-[10px] font-extrabold uppercase tracking-wide text-[#65736c] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:text-[#9aa69f] peer-focus:top-2 peer-focus:text-[10px] peer-focus:font-extrabold peer-focus:uppercase peer-focus:tracking-wide cursor-text ${fieldErrors.email ? "text-red-600 peer-focus:text-red-700" : "peer-focus:text-[#198760]"}`}
+          >
+            Email
+          </label>
+        </div>
+        {fieldErrors.email && <span id="login-email-error" className="pl-1 text-xs font-semibold text-red-600">{fieldErrors.email}</span>}
       </div>
 
       <PasswordField
@@ -201,7 +225,7 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
 
       {errorMessage && !fieldErrors.email && !fieldErrors.password && <p className="m-0 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-700" role="alert" aria-live="polite">{errorMessage}</p>}
 
-      <button className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#1ba36f] to-[#147554] px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.25)] transition duration-200 hover:-translate-y-px hover:from-[#20ad78] hover:to-[#147554] hover:shadow-[0_12px_24px_rgba(25,135,96,.3)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none" type="submit" disabled={isPending}>
+      <button className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#1ba36f] to-[#147554] px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.25)] transition duration-200 hover:-translate-y-px hover:from-[#20ad78] hover:to-[#147554] hover:shadow-[0_12px_24px_rgba(25,135,96,.3)] active:scale-[0.98] active:shadow-[0_4px_10px_rgba(25,135,96,.2)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-wait disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none" type="submit" disabled={isPending}>
         {isPending && <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
         {isPending ? "Memeriksa akun..." : "Masuk"}
       </button>

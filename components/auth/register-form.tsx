@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import gsap from "gsap";
 import { PrivacyPolicyDialog } from "@/components/auth/privacy-policy-dialog";
 import { authInputClass, PasswordField } from "@/components/auth/password-field";
 import { GoogleSsoButton } from "@/components/auth/google-sso-button";
@@ -26,6 +27,18 @@ export function RegisterForm({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (formRef.current) {
+      const elements = Array.from(formRef.current.children);
+      gsap.fromTo(
+        elements,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power3.out", clearProps: "all" }
+      );
+    }
+  }, []);
 
   function clearError(field: FieldName) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -103,7 +116,7 @@ export function RegisterForm({
   }
 
   return (
-    <form className="mt-5 grid min-w-0 gap-3" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
+    <form ref={formRef} className="mt-5 grid min-w-0 gap-3" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
       {(fieldErrors.name || fieldErrors.email || fieldErrors.password || fieldErrors.confirmPassword || fieldErrors.privacyAccepted || errorMessage) && (
         <div
           id="register-error-summary"
@@ -222,7 +235,7 @@ export function RegisterForm({
       </div>
 
       <div className={`grid items-start gap-3 ${googleSsoEnabled ? "sm:grid-cols-2" : ""}`}>
-        <button className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#198760] px-4 text-sm font-bold text-white transition-colors hover:bg-[#147554] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none" type="submit" disabled={isPending || !privacyAccepted}>
+        <button className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#1ba36f] to-[#147554] px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(25,135,96,.25)] transition duration-200 hover:-translate-y-px hover:from-[#20ad78] hover:to-[#147554] hover:shadow-[0_12px_24px_rgba(25,135,96,.3)] active:scale-[0.98] active:shadow-[0_4px_10px_rgba(25,135,96,.2)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/20 disabled:cursor-not-allowed disabled:opacity-65 motion-reduce:transform-none motion-reduce:transition-none" type="submit" disabled={isPending || !privacyAccepted}>
           {isPending && <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
           {isPending ? "Membuat akun..." : "Buat akun"}
         </button>
