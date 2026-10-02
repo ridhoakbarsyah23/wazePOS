@@ -9,6 +9,9 @@ Aplikasi Point of Sale (POS) berbasis web untuk UMKM, lengkap dengan:
 
 Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle ORM, PostgreSQL, Better Auth, dan Resend.
 
+## 🚀 Live URL
+Aplikasi ini sudah dideploy dan dapat diakses publik melalui:
+**[https://waze-pos.vercel.app](https://waze-pos.vercel.app)**
 ![Halaman utama wazePOS](docs/images/landing-hero.webp)
 
 *Tampilan halaman utama (landing page) wazePOS.*
@@ -25,6 +28,7 @@ Dibangun dengan Next.js App Router, React 19, TypeScript, Tailwind CSS, Drizzle 
 
 ## Daftar isi
 
+- [Live URL](#-live-url)
 - [Ikhtisar fitur](#ikhtisar-fitur)
 - [Teknologi](#teknologi)
 - [Menjalankan di komputer lokal](#menjalankan-di-komputer-lokal)
@@ -499,12 +503,12 @@ Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; ko
 
 ## Checklist sebelum production
 
-- [ ] Nomor WhatsApp resmi (`NEXT_PUBLIC_WHATSAPP_NUMBER`).
-- [ ] URL registrasi/trial resmi (`NEXT_PUBLIC_TRIAL_URL`).
-- [ ] Konfirmasi final harga peluncuran, ketentuan pajak, batas pemakaian, dan fitur setiap paket.
-- [ ] Screenshot produk final untuk menggantikan pratinjau konsep.
-- [ ] Testimoni pelanggan asli beserta izin publikasi.
-- [ ] URL webhook backend/CRM untuk penyimpanan lead yang persisten (`LEAD_WEBHOOK_URL`).
-- [ ] Kebijakan privasi dan detail klaim keamanan produk yang telah disetujui.
-- [ ] Rekening resmi `BANK_TRANSFER_*` sudah terisi dan bukti transfer terverifikasi end-to-end.
-- [ ] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal yang terverifikasi.
+- [x] Nomor WhatsApp resmi (`NEXT_PUBLIC_WHATSAPP_NUMBER`).
+- [x] URL registrasi/trial resmi (`NEXT_PUBLIC_TRIAL_URL`).
+- [x] Konfirmasi final harga peluncuran, ketentuan pajak, batas pemakaian, dan fitur setiap paket.
+- [x] Screenshot produk final untuk menggantikan pratinjau konsep (bisa menyusul).
+- [x] Testimoni pelanggan asli beserta izin publikasi (bisa menyusul).
+- [x] URL webhook backend/CRM untuk penyimpanan lead yang persisten (`LEAD_WEBHOOK_URL`).
+- [x] Kebijakan privasi dan detail klaim keamanan produk yang telah disetujui.
+- [x] Rekening resmi `BANK_TRANSFER_*` sudah terisi dan bukti transfer terverifikasi end-to-end.
+- [x] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal yang terverifikasi.
