@@ -10,6 +10,8 @@ function overviewData() {
     overview: { totalUsers: 12, totalBusinesses: 10, trialActive: 4, trialExpired: 1, activeSubscriptions: 3, expiredSubscriptions: 2 },
     payments: { pendingPayments: 2, paidPayments: 5, paidRevenue: 500000 },
     analytics: { totalSubscriptions: 10, currentActiveSubscriptions: 3, activeSubscriptionRate: 30, activeMrr: 100000, trialEndingSoon: 2, activeSubscriptions: 3, trialActive: 4, trialExpired: 1, pastDue: 0, cancelled: 0 },
+    topBusinesses: [],
+    mrr: { current: 1000000, previous: 500000 },
     todayFollowUps: {
       today: "2026-09-27",
       total: 1,

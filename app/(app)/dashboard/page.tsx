@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { AppFooter } from "@/components/shared/app-footer";
 import { AppHeader } from "@/components/shared/app-header";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 import { db } from "@/db";
-import { outlet } from "@/db/schema";
+import { outlet, product, sale } from "@/db/schema";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
 import { hasPlanFeature, normalizePlan } from "@/shared/billing/plans";
 import type { PeriodKey } from "@/components/dashboard/dashboard-header";
@@ -39,6 +39,13 @@ export default async function DashboardPage({
       .where(eq(outlet.businessId, membership.businessId))
       .orderBy(outlet.name);
 
+  const [totalProducts, totalSales] = await Promise.all([
+    db.select({ count: count() }).from(product).where(eq(product.businessId, membership.businessId)),
+    db.select({ count: count() }).from(sale).where(eq(sale.businessId, membership.businessId))
+  ]);
+  const hasProducts = totalProducts[0].count > 0;
+  const hasSales = totalSales[0].count > 0;
+
   const selectedOutletId = canManageOutlets
     ? feedback.outlet && outlets.some((item) => item.id === feedback.outlet)
       ? feedback.outlet
@@ -63,6 +70,8 @@ export default async function DashboardPage({
     >
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardContent
+          hasProducts={hasProducts}
+          hasSales={hasSales}
           membership={membership}
           session={session}
           subDetails={subDetails}

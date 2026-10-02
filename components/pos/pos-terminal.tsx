@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { calculateCartTotal, calculatePayment, getQuickCashOptions } from "@/shared/pos/pos-calculations";
 import { filterPosProducts, getProductStockIssue, resolveProductEntry } from "@/shared/pos/pos-product-search";
+import gsap from "gsap";
 import {
   clearSaleRequestId,
   createSaleRequestFingerprint,
@@ -275,7 +276,7 @@ export function PosTerminal({
     addedFeedbackTimerRef.current = setTimeout(() => setAddedFeedback(null), 900);
   }, []);
 
-  const addProduct = useCallback((product: PosProduct) => {
+  const addProduct = useCallback((product: PosProduct, event?: React.MouseEvent) => {
     const quantityInCart = cart
       .filter((item) => item.id === product.id)
       .reduce((sum, item) => sum + item.quantity, 0);
@@ -296,6 +297,35 @@ export function PosTerminal({
       }
       return [...current, { ...product, lineId: createCartLineId(), quantity: 1, note: "" }];
     });
+    
+    if (event) {
+      const button = event.currentTarget;
+      const cartIcon = document.getElementById("pos-cart-icon");
+      if (button && cartIcon) {
+        const buttonRect = button.getBoundingClientRect();
+        const cartRect = cartIcon.getBoundingClientRect();
+        
+        const flyingDot = document.createElement("div");
+        flyingDot.className = "fixed z-[100] grid size-8 place-items-center rounded-full bg-[#198760] text-xs font-bold text-white shadow-lg pointer-events-none";
+        flyingDot.innerText = "+1";
+        flyingDot.style.left = `${buttonRect.left + buttonRect.width / 2 - 16}px`;
+        flyingDot.style.top = `${buttonRect.top + buttonRect.height / 2 - 16}px`;
+        document.body.appendChild(flyingDot);
+        
+        gsap.to(flyingDot, {
+          x: cartRect.left + cartRect.width / 2 - (buttonRect.left + buttonRect.width / 2),
+          y: cartRect.top + cartRect.height / 2 - (buttonRect.top + buttonRect.height / 2),
+          scale: 0.3,
+          opacity: 0,
+          duration: 0.55,
+          ease: "power2.inOut",
+          onComplete: () => {
+            flyingDot.remove();
+          }
+        });
+      }
+    }
+
     showAddedFeedback(product);
     setMessage(null);
     return true;
@@ -665,7 +695,7 @@ export function PosTerminal({
                   type="button"
                   disabled={unavailable}
                   key={product.id}
-                  onClick={() => addProduct(product)}
+                  onClick={(e) => addProduct(product, e)}
                   className={`group min-h-32 rounded-2xl border border-[#e5ede8] bg-white p-3.5 text-left transition hover:border-[#7fb59e] hover:bg-[#f6faf8] hover:shadow-[0_6px_16px_rgba(16,65,48,.08)] disabled:cursor-not-allowed disabled:bg-[#f6f7f6] disabled:opacity-55 ${styles.productCard} ${isJustAdded ? styles.productCardAdded : ""}`}
                 >
                   {isJustAdded && (
@@ -733,7 +763,7 @@ export function PosTerminal({
         <div className="flex items-center justify-between border-b border-[#edf2ee] bg-gradient-to-r from-[#f7fbf9] to-white px-4 py-3.5">
           <div className="flex items-center gap-2.5">
             <span className="relative grid size-9 place-items-center rounded-xl bg-[#198760] text-white shadow-[0_2px_10px_rgba(25,135,96,.3)]">
-              <ShoppingCart className="size-4" />
+              <ShoppingCart className="size-4" id="pos-cart-icon" />
               {cartItemCount > 0 && (
                 <span className="absolute -right-1 -top-1 grid min-w-4.5 place-items-center rounded-full border-2 border-white bg-amber-400 px-1 text-[9px] font-black text-[#5b3a00]">
                   {cartItemCount}

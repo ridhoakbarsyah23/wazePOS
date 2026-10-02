@@ -1,4 +1,5 @@
 import { DashboardHeader, type PeriodKey } from "@/components/dashboard/dashboard-header";
+import { DashboardOnboardingChecklist } from "@/components/dashboard/dashboard-onboarding-checklist";
 import { DashboardCashflow } from "@/components/dashboard/dashboard-cashflow";
 import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
 import { DashboardInsights } from "@/components/dashboard/dashboard-insights";
@@ -7,6 +8,8 @@ import { DashboardRecentActivity } from "@/components/dashboard/dashboard-recent
 import { getDashboardData } from "@/server/services/dashboard.service";
 
 export async function DashboardContent({
+  hasProducts,
+  hasSales,
   membership,
   session,
   subDetails,
@@ -44,6 +47,7 @@ export async function DashboardContent({
 
   return (
     <div className="dash-warung mx-auto w-[min(1240px,calc(100%-32px))] py-8 space-y-4 sm:space-y-6 animate-page-enter">
+      <DashboardOnboardingChecklist hasProducts={hasProducts} hasSales={hasSales} outletSlug={selectedOutlet?.slug ?? selectedOutletId} />
       <DashboardHeader
         userName={session.user.name ?? "Pemilik Toko"}
         businessName={membership.businessName}
