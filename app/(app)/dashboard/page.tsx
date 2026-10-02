@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { eq, sql } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { AppFooter } from "@/components/shared/app-footer";
 import { AppHeader } from "@/components/shared/app-header";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
@@ -40,8 +40,8 @@ export default async function DashboardPage({
       .orderBy(outlet.name);
 
   const [totalProducts, totalSales] = await Promise.all([
-    db.select({ count: sql`COUNT(*)::int` }).from(product).where(eq(product.businessId, membership.businessId)),
-    db.select({ count: sql`COUNT(*)::int` }).from(sale).where(eq(sale.businessId, membership.businessId))
+    db.select({ count: count() }).from(product).where(eq(product.businessId, membership.businessId)),
+    db.select({ count: count() }).from(sale).where(eq(sale.businessId, membership.businessId))
   ]);
   const hasProducts = totalProducts[0].count > 0;
   const hasSales = totalSales[0].count > 0;
