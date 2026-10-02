@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  Activity,
   AlertTriangle,
   ArrowRight,
   Building2,
@@ -71,13 +72,23 @@ export default async function PlatformAdminOverviewPage() {
             </p>
           </div>
 
-          <div className="admin-ops-glass w-full min-w-0 max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
-            <p className="m-0 flex min-w-0 items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-emerald-100/90">
-              <CircleDollarSign className="size-3.5 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 break-words">Pembayaran langganan diterima</span>
-            </p>
-            <p className="admin-mono m-0 mt-2 min-w-0 break-words text-2xl font-bold leading-none text-white sm:text-[28px]">{formatRupiah(data.payments.paidRevenue)}</p>
-            <p className="m-0 mt-2 min-w-0 break-words text-xs leading-5 text-emerald-50/85">{data.payments.paidPayments} pembayaran berhasil, seluruh waktu</p>
+          <div className="grid w-full min-w-0 grid-cols-2 gap-3 sm:gap-4">
+            <div className="admin-ops-glass w-full min-w-0 max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
+              <p className="m-0 flex min-w-0 items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-100/90 sm:text-[11px]">
+                <CircleDollarSign className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="min-w-0 break-words">Total Pendapatan</span>
+              </p>
+              <p className="admin-mono m-0 mt-2 min-w-0 break-words text-xl font-bold leading-none text-white sm:text-2xl">{formatRupiah(data.payments.paidRevenue)}</p>
+              <p className="m-0 mt-2 min-w-0 break-words text-[10px] leading-4 text-emerald-50/85 sm:text-xs sm:leading-5">{data.payments.paidPayments} transaksi sukses</p>
+            </div>
+            <div className="admin-ops-glass w-full min-w-0 max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
+              <p className="m-0 flex min-w-0 items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-100/90 sm:text-[11px]">
+                <Repeat2 className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="min-w-0 break-words">MRR Aktif</span>
+              </p>
+              <p className="admin-mono m-0 mt-2 min-w-0 break-words text-xl font-bold leading-none text-white sm:text-2xl">{formatRupiah(data.analytics.activeMrr)}</p>
+              <p className="m-0 mt-2 min-w-0 break-words text-[10px] leading-4 text-emerald-50/85 sm:text-xs sm:leading-5">Dari {data.analytics.currentActiveSubscriptions} langganan</p>
+            </div>
           </div>
         </div>
       </section>
@@ -109,8 +120,46 @@ export default async function PlatformAdminOverviewPage() {
         Total akun mencakup seluruh pengguna terdaftar, termasuk akun admin, staf, serta akun yang belum memverifikasi email atau membuat usaha. Jumlah diperbarui saat halaman dimuat ulang.
       </p>
 
-      <div className="mt-6 sm:mt-7">
+      <div className="mt-6 grid gap-6 sm:mt-7 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-7">
         <PlatformAdminGrowthChart data={data.growthChart} />
+        
+        <section aria-labelledby="top-active-title" className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#dfe8e3] bg-white">
+          <div className="border-b border-[#dfe8e3] p-4 sm:p-5">
+            <h2 id="top-active-title" className="admin-display m-0 flex items-center gap-2 text-lg">
+              <Activity className="size-5 shrink-0 text-[#198760]" aria-hidden="true" />
+              Top 5 Usaha Teraktif
+            </h2>
+            <p className="mt-1 text-xs leading-5 text-[#627069]">Berdasarkan transaksi kasir dalam 30 hari terakhir.</p>
+          </div>
+          <div className="flex-1 p-0">
+            {data.topBusinesses.length > 0 ? (
+              <ul className="m-0 flex list-none flex-col p-0">
+                {data.topBusinesses.map((tb, index) => (
+                  <li key={tb.id} className="group relative flex items-center gap-3 border-b border-[#f5f8f6] p-4 last:border-0 hover:bg-[#fcfdfd]">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#f0f5f2] text-xs font-bold text-[#106348]">{index + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-[#15211d]">{tb.name}</p>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-[#627069]">
+                        {tb.saleCount.toLocaleString("id-ID")} transaksi
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="admin-mono text-sm font-bold text-[#15211d]">{formatRupiah(tb.grossRevenue)}</p>
+                      <p className="text-[10px] font-semibold text-[#627069]">GMV</p>
+                    </div>
+                    <Link href={`/admin/businesses/${tb.id}`} className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#198760]/30" aria-label={`Lihat detail usaha ${tb.name}`} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center p-6 text-center">
+                <Activity className="mb-2 size-8 text-[#c0d1c9]" aria-hidden="true" />
+                <p className="text-sm font-semibold text-[#34443d]">Belum ada data transaksi</p>
+                <p className="mt-1 text-xs text-[#627069]">Transaksi dari aplikasi kasir akan muncul di sini.</p>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
 
       <section aria-labelledby="attention-title" className="mt-6 rounded-2xl border border-[#dfe8e3] bg-white p-4 sm:mt-7 sm:p-5">

@@ -527,22 +527,50 @@ export async function getPlatformAdminStats(now: Date = new Date()) {
   };
 }
 
+export async function getTopActiveBusinesses(limit: number = 5) {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const topBusinesses = await db
+    .select({
+      id: business.id,
+      name: business.name,
+      saleCount: count(sale.id).as("sale_count"),
+      grossRevenue: sum(sale.total).as("gross_revenue"),
+    })
+    .from(sale)
+    .innerJoin(business, eq(sale.businessId, business.id))
+    .where(and(eq(sale.status, "completed"), gte(sale.createdAt, thirtyDaysAgo)))
+    .groupBy(business.id, business.name)
+    .orderBy(desc(count(sale.id)))
+    .limit(limit);
+
+  return topBusinesses.map((tb) => ({
+    id: tb.id,
+    name: tb.name,
+    saleCount: Number(tb.saleCount ?? 0),
+    grossRevenue: Number(tb.grossRevenue ?? 0),
+  }));
+}
+
 export async function getPlatformAdminOverviewData() {
   const adminSession = await requirePlatformAdmin();
   const now = new Date();
-  const [stats, todayFollowUps] = await Promise.all([
+  const [stats, todayFollowUps, topBusinesses] = await Promise.all([
     getPlatformAdminStats(now),
     getTodayFollowUps(now).catch((error) => {
       // Ringkasan tetap dapat dibuka jika migrasi tindak lanjut belum dijalankan.
       console.error("Failed to load Dashboard Admin today follow-ups", error);
       return { today: getTodayWIBDateString(now), total: 0, items: [] };
     }),
+    getTopActiveBusinesses(5),
   ]);
 
   return {
     admin: adminSession.user,
     ...stats,
     todayFollowUps,
+    topBusinesses,
   };
 }
 

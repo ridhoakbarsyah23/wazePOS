@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PlatformAdminNav } from "@/components/admin/platform-admin-nav";
+import { PlatformAdminSearch } from "@/components/admin/platform-admin-search";
 import { PlatformAdminPaymentNotificationBell } from "@/components/admin/platform-admin-payment-notification-bell";
 import { PlatformAdminThemeToggle } from "@/components/admin/platform-admin-theme";
 import { getPendingPaymentNotificationCounts } from "@/server/admin/platform-admin-payment-notifications";
@@ -44,19 +45,23 @@ export function PlatformAdminShell({
             <div className="hidden min-w-0 min-[360px]:block">
               <p className="m-0 truncate text-xs font-extrabold text-[#106348]">Dashboard Admin</p>
               {adminEmail && (
-                <p className="m-0 hidden max-w-48 truncate text-[11px] text-[#627069] min-[480px]:block">
+                <p className="m-0 hidden max-w-48 truncate text-[11px] text-[#627069] lg:block">
                   {adminEmail}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <PlatformAdminSearch />
+            <span className="hidden h-7 w-px shrink-0 bg-[#dfe8e3] sm:block" />
+            <div className="flex items-center gap-1 sm:gap-2">
             <PaymentNotificationBellSlot />
             <PlatformAdminThemeToggle />
             <LogoutButton
               compact
               className="h-10 gap-2 rounded-xl px-2 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 sm:h-9 sm:px-3"
             />
+            </div>
           </div>
         </div>
         <div className="mx-auto w-full min-w-0 max-w-[1440px] px-3 pb-3 sm:px-5 lg:px-6">
