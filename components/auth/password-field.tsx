@@ -15,7 +15,7 @@ type PasswordFieldProps = {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export const authInputClass = "h-12 w-full min-w-0 rounded-xl border border-[#d8e3dd] bg-white px-3.5 text-base font-medium text-[#15211d] outline-none transition duration-200 placeholder:font-normal placeholder:text-[#9aa69f] hover:border-[#b5cec1] focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f5f8f6] disabled:opacity-60 sm:text-sm motion-reduce:transition-none";
+export const authInputClass = "peer h-14 w-full min-w-0 rounded-xl border border-[#d8e3dd] bg-white px-3.5 pb-2 pt-5 text-base font-semibold text-[#15211d] outline-none transition duration-200 placeholder:text-transparent hover:border-[#b5cec1] focus:border-[#198760] focus:ring-4 focus:ring-[#198760]/10 disabled:cursor-not-allowed disabled:bg-[#f5f8f6] disabled:opacity-60 sm:text-sm motion-reduce:transition-none";
 
 function VisibilityIcon({ visible }: { visible: boolean }) {
   return visible ? (
@@ -39,8 +39,7 @@ export function PasswordField({ id, name, label, placeholder, autoComplete, disa
   const capsId = `${id}-caps-lock`;
 
   return (
-    <div className="grid min-w-0 gap-2 text-xs font-bold text-[#34443d]">
-      <label htmlFor={id}>{label}</label>
+    <div className="grid min-w-0 gap-1.5">
       <div className="relative min-w-0">
         <input
           id={id}
@@ -59,6 +58,12 @@ export function PasswordField({ id, name, label, placeholder, autoComplete, disa
           onKeyUp={(event) => setCapsLockActive(event.getModifierState("CapsLock"))}
           onBlur={() => setCapsLockActive(false)}
         />
+        <label 
+          htmlFor={id} 
+          className={`absolute left-3.5 top-2 text-[10px] font-extrabold uppercase tracking-wide text-[#65736c] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:text-[#9aa69f] peer-focus:top-2 peer-focus:text-[10px] peer-focus:font-extrabold peer-focus:uppercase peer-focus:tracking-wide cursor-text ${error ? "text-red-600 peer-focus:text-red-700" : "peer-focus:text-[#198760]"}`}
+        >
+          {label}
+        </label>
         <button
           type="button"
           className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-lg text-[#65736c] transition duration-200 hover:bg-[#eaf7f0] hover:text-[#147554] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30 disabled:opacity-50 motion-reduce:transition-none"
@@ -70,8 +75,8 @@ export function PasswordField({ id, name, label, placeholder, autoComplete, disa
           <VisibilityIcon visible={visible} />
         </button>
       </div>
-      {error && <span id={errorId} className="font-semibold text-red-600">{error}</span>}
-      {capsLockActive && <span id={capsId} className="font-semibold text-amber-700">Caps Lock sedang aktif.</span>}
+      {error && <span id={errorId} className="pl-1 text-xs font-semibold text-red-600">{error}</span>}
+      {capsLockActive && <span id={capsId} className="pl-1 text-xs font-semibold text-amber-700">Caps Lock sedang aktif.</span>}
     </div>
   );
 }
