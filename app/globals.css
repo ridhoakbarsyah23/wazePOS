@@ -859,10 +859,40 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, se
   border-color: #303030 !important;
 }
 
-/* Ikon kalender date input ikut terang di dark mode. */
-html[data-dashboard-theme="dark"] [data-dashboard-shell] input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(1.6);
-  opacity: 0.8;
+input.date-picker-modern {
+  position: relative;
+  color-scheme: light;
+}
+
+input.date-picker-modern::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  cursor: pointer;
+  color: transparent;
+  background: transparent;
+  opacity: 0;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] input.date-picker-modern {
+  color-scheme: dark;
+  background-color: #151515 !important;
+  border-color: #3a3a3a !important;
+  color: #f5f5f5 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] input.date-picker-modern:focus {
+  background-color: #181818 !important;
+  border-color: #24b985 !important;
+  box-shadow: 0 0 0 4px rgba(36, 185, 133, 0.16) !important;
+}
+
+html[data-dashboard-theme="dark"] [data-dashboard-shell] input.date-picker-modern + svg {
+  color: #36d399 !important;
 }
 
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select)::placeholder {

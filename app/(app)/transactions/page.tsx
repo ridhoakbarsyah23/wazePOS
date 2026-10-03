@@ -174,12 +174,28 @@ export default async function TransactionsPage({
               />
             </label>
             <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
-              <span className="flex items-center gap-1.5"><CalendarDays className="size-3.5 text-[#187c59]" /> Dari</span>
-              <input type="date" name="from" defaultValue={fromKey} className="h-10 border border-[#d6e0db] bg-white px-2 text-sm outline-none focus:border-[#187c59]" />
+              <span className="flex items-center gap-1.5"><CalendarDays aria-hidden="true" className="size-3.5 text-[#187c59]" /> Dari</span>
+              <span className="relative block">
+                <input
+                  type="date"
+                  name="from"
+                  defaultValue={fromKey}
+                  className="date-picker-modern h-11 w-full rounded-xl border border-[#cfdcd5] bg-[#fbfffd] px-3 pr-11 text-sm font-semibold text-[#17211d] outline-none shadow-[inset_0_1px_0_rgba(255,255,255,.65),0_1px_2px_rgba(16,65,48,.04)] transition focus:border-[#1f9b72] focus:bg-white focus:ring-4 focus:ring-[#1f9b72]/10"
+                />
+                <CalendarDays aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#1f9b72]" />
+              </span>
             </label>
             <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
-              Sampai
-              <input type="date" name="to" defaultValue={toKey} className="h-10 border border-[#d6e0db] bg-white px-2 text-sm outline-none focus:border-[#187c59]" />
+              <span className="flex items-center gap-1.5"><CalendarDays aria-hidden="true" className="size-3.5 text-[#187c59]" /> Sampai</span>
+              <span className="relative block">
+                <input
+                  type="date"
+                  name="to"
+                  defaultValue={toKey}
+                  className="date-picker-modern h-11 w-full rounded-xl border border-[#cfdcd5] bg-[#fbfffd] px-3 pr-11 text-sm font-semibold text-[#17211d] outline-none shadow-[inset_0_1px_0_rgba(255,255,255,.65),0_1px_2px_rgba(16,65,48,.04)] transition focus:border-[#1f9b72] focus:bg-white focus:ring-4 focus:ring-[#1f9b72]/10"
+                />
+                <CalendarDays aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#1f9b72]" />
+              </span>
             </label>
             <label className="grid gap-1.5 text-xs font-semibold text-[#52645c]">
               Status
