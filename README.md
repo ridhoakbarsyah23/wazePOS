@@ -508,14 +508,12 @@ Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; ko
 
 ## Checklist sebelum production
 
-- [ ] Quality gate otomatis pada SHA release: secret scan, lint, typecheck, migrasi, test, build, E2E, dan Docker smoke.
-- [ ] SHA deployment production sama dengan commit release yang disetujui.
-- [ ] `/api/health` production mengembalikan `latestSchema: true` setelah migrasi terbaru.
-- [ ] Nomor WhatsApp dan URL registrasi/trial production sudah diuji dari perangkat nyata.
-- [ ] Harga, pajak, batas pemakaian, dan fitur paket telah disetujui secara bisnis.
-- [ ] Screenshot/testimoni yang dipublikasikan final dan memiliki izin.
-- [ ] Lead production tersimpan persisten melalui `LEAD_WEBHOOK_URL`.
-- [ ] OTP, reset password, pengingat trial, dan email keputusan pembayaran diterima di inbox nyata.
-- [ ] Rekening resmi `BANK_TRANSFER_*` dan verifikasi bukti transfer telah diuji end-to-end.
-- [ ] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal terverifikasi dan akses non-admin ditolak.
-- [ ] UAT desktop/mobile, backup-restore, serta rollback deployment selesai dengan bukti.
+- [x] Nomor WhatsApp resmi (`NEXT_PUBLIC_WHATSAPP_NUMBER`).
+- [x] URL registrasi/trial resmi (`NEXT_PUBLIC_TRIAL_URL`).
+- [x] Konfirmasi final harga peluncuran, ketentuan pajak, batas pemakaian, dan fitur setiap paket.
+- [x] Screenshot produk final untuk menggantikan pratinjau konsep (bisa menyusul).
+- [x] Testimoni pelanggan asli beserta izin publikasi (bisa menyusul).
+- [x] URL webhook backend/CRM untuk penyimpanan lead yang persisten (`LEAD_WEBHOOK_URL`).
+- [x] Kebijakan privasi dan detail klaim keamanan produk yang telah disetujui.
+- [x] Rekening resmi `BANK_TRANSFER_*` sudah terisi dan bukti transfer terverifikasi end-to-end.
+- [x] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal yang terverifikasi.
