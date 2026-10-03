@@ -56,6 +56,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Audit production dependencies
+        run: npm run security:dependencies
+
       - name: Lint
         run: npm run lint
 
@@ -78,6 +81,18 @@ jobs:
           DATABASE_URL: postgresql://wazepos:wazepos@127.0.0.1:5432/wazepos
           BETTER_AUTH_SECRET: ci-only-secret-with-at-least-32-characters
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+      - name: Install Chromium for end-to-end tests
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end smoke test
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://wazepos:wazepos@127.0.0.1:5432/wazepos
+          BETTER_AUTH_SECRET: ci-only-secret-with-at-least-32-characters
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+          RESEND_API_KEY: re_ci_only
+          RESEND_FROM_EMAIL: wazePOS CI <ci@example.com>
 
   docker-smoke:
     name: Docker build and smoke test

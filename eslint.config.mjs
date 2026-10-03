@@ -11,6 +11,10 @@ export default defineConfig([
     "next-env.d.ts",
     ".opencode/**",
     "design-system/**",
+    ".playwright-results/**",
+    "playwright-report/**",
+    "test-results/**",
+    "scratch/**",
   ]),
   // Batas arsitektur (lihat docs/architecture.md):
   // - `shared/` isomorphic: tidak boleh menyentuh server/db/app.

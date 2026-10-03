@@ -48,6 +48,9 @@ yarn-error.log*
 job_log.txt
 logs.zip
 .tmp/
+playwright-report/
+test-results/
+.playwright-results/
 
 # ============================================================================
 # 🛠️ INTERNAL / EXPERIMENTAL FOLDERS

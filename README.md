@@ -478,9 +478,13 @@ npm run lint        # ESLint (max-warnings=0)
 npm run typecheck   # TypeScript, tanpa emit
 npm test            # Vitest, seluruh test suite
 npm run build       # Build production
+npm run test:e2e    # Playwright: smoke test desktop dan mobile
+npm run security:dependencies # Blok advisori high/critical dependency runtime
 ```
 
-Test dikelompokkan mengikuti domain di `__tests__/<domain>/` (admin, auth, billing, dashboard, marketing, operations, pos, dll). Jalankan ketiga perintah di atas sebelum membuat pull request.
+Test unit/integration dikelompokkan mengikuti domain di `__tests__/<domain>/` (admin, auth, billing, dashboard, marketing, operations, pos, dll). Smoke test browser berada di `e2e/` dan secara default menjalankan build production lokal di Chromium desktop serta mobile. Gunakan `PLAYWRIGHT_BASE_URL=https://domain.example` untuk memeriksa deployment tanpa menyalakan server lokal. Jalankan seluruh perintah di atas sebelum membuat pull request.
+
+Checklist UAT, bukti aktivasi production, dan kriteria go/no-go tersedia di [`docs/production-readiness.md`](docs/production-readiness.md).
 
 ---
 
@@ -496,6 +500,7 @@ Struktur folder dipisahkan berdasarkan domain agar mudah dipelihara:
 | `shared/` | Kode isomorphic (aman klien dan server): schema validasi Zod, plan/entitlement, kalkulasi POS, util murni |
 | `db/` | Satu-satunya tempat schema dan koneksi database (Drizzle) |
 | `__tests__/` | Test, dikelompokkan per domain |
+| `e2e/` | Smoke test browser Playwright untuk desktop dan mobile |
 
 Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; komponen klien tidak boleh meng-import `server/`. Panduan lengkap tersedia di [`docs/architecture.md`](docs/architecture.md).
 
