@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
@@ -15,6 +15,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    exclude: [...configDefaults.exclude, "e2e/**"],
     // GSAP ScrollTrigger + ~50 tweens koreografi memakan ±5 dtk per test di jsdom.
     testTimeout: 15_000,
   },

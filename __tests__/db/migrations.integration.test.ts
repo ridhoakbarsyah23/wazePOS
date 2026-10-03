@@ -104,6 +104,26 @@ describe.runIf(dbReady)("kontrak migrasi (integration)", () => {
     ]);
   });
 
+  it("memiliki penanda skema production dari migrasi 0024, 0028, dan 0029", async () => {
+    const columns = await sql`
+      SELECT table_name, column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND (
+          (table_name = 'subscription' AND column_name = 'trial_reminder_sent_at')
+          OR (table_name = 'user' AND column_name = 'privacy_accepted_at')
+          OR (table_name = 'subscription_payment' AND column_name = 'disbursed_at')
+        )
+      ORDER BY table_name, column_name
+    `;
+
+    expect(columns).toEqual([
+      { table_name: "subscription", column_name: "trial_reminder_sent_at" },
+      { table_name: "subscription_payment", column_name: "disbursed_at" },
+      { table_name: "user", column_name: "privacy_accepted_at" },
+    ]);
+  });
+
   it("memulihkan akun credential staf agar menautkan user id (migrasi 0014)", async () => {
     await sql`INSERT INTO "user" (id, name, email) VALUES (${STAFF_USER_ID}, ${"Staf Uji"}, ${"itest-staff@example.com"})`;
     await sql`INSERT INTO business_member (id, business_id, user_id, role) VALUES ('itest-member-staff', ${BUSINESS_A}, ${STAFF_USER_ID}, 'cashier')`;

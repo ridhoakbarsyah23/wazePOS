@@ -478,9 +478,13 @@ npm run lint        # ESLint (max-warnings=0)
 npm run typecheck   # TypeScript, tanpa emit
 npm test            # Vitest, seluruh test suite
 npm run build       # Build production
+npm run test:e2e    # Playwright: smoke test desktop dan mobile
+npm run security:dependencies # Blok advisori high/critical dependency runtime
 ```
 
-Test dikelompokkan mengikuti domain di `__tests__/<domain>/` (admin, auth, billing, dashboard, marketing, operations, pos, dll). Jalankan ketiga perintah di atas sebelum membuat pull request.
+Test unit/integration dikelompokkan mengikuti domain di `__tests__/<domain>/` (admin, auth, billing, dashboard, marketing, operations, pos, dll). Smoke test browser berada di `e2e/` dan secara default menjalankan build production lokal di Chromium desktop serta mobile. Gunakan `PLAYWRIGHT_BASE_URL=https://domain.example` untuk memeriksa deployment tanpa menyalakan server lokal. Jalankan seluruh perintah di atas sebelum membuat pull request.
+
+Checklist UAT, bukti aktivasi production, dan kriteria go/no-go tersedia di [`docs/production-readiness.md`](docs/production-readiness.md).
 
 ---
 
@@ -496,6 +500,7 @@ Struktur folder dipisahkan berdasarkan domain agar mudah dipelihara:
 | `shared/` | Kode isomorphic (aman klien dan server): schema validasi Zod, plan/entitlement, kalkulasi POS, util murni |
 | `db/` | Satu-satunya tempat schema dan koneksi database (Drizzle) |
 | `__tests__/` | Test, dikelompokkan per domain |
+| `e2e/` | Smoke test browser Playwright untuk desktop dan mobile |
 
 Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; komponen klien tidak boleh meng-import `server/`. Panduan lengkap tersedia di [`docs/architecture.md`](docs/architecture.md).
 
@@ -503,12 +508,14 @@ Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; ko
 
 ## Checklist sebelum production
 
-- [x] Nomor WhatsApp resmi (`NEXT_PUBLIC_WHATSAPP_NUMBER`).
-- [x] URL registrasi/trial resmi (`NEXT_PUBLIC_TRIAL_URL`).
-- [x] Konfirmasi final harga peluncuran, ketentuan pajak, batas pemakaian, dan fitur setiap paket.
-- [x] Screenshot produk final untuk menggantikan pratinjau konsep (bisa menyusul).
-- [x] Testimoni pelanggan asli beserta izin publikasi (bisa menyusul).
-- [x] URL webhook backend/CRM untuk penyimpanan lead yang persisten (`LEAD_WEBHOOK_URL`).
-- [x] Kebijakan privasi dan detail klaim keamanan produk yang telah disetujui.
-- [x] Rekening resmi `BANK_TRANSFER_*` sudah terisi dan bukti transfer terverifikasi end-to-end.
-- [x] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal yang terverifikasi.
+- [ ] Quality gate otomatis pada SHA release: secret scan, lint, typecheck, migrasi, test, build, E2E, dan Docker smoke.
+- [ ] SHA deployment production sama dengan commit release yang disetujui.
+- [ ] `/api/health` production mengembalikan `latestSchema: true` setelah migrasi terbaru.
+- [ ] Nomor WhatsApp dan URL registrasi/trial production sudah diuji dari perangkat nyata.
+- [ ] Harga, pajak, batas pemakaian, dan fitur paket telah disetujui secara bisnis.
+- [ ] Screenshot/testimoni yang dipublikasikan final dan memiliki izin.
+- [ ] Lead production tersimpan persisten melalui `LEAD_WEBHOOK_URL`.
+- [ ] OTP, reset password, pengingat trial, dan email keputusan pembayaran diterima di inbox nyata.
+- [ ] Rekening resmi `BANK_TRANSFER_*` dan verifikasi bukti transfer telah diuji end-to-end.
+- [ ] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal terverifikasi dan akses non-admin ditolak.
+- [ ] UAT desktop/mobile, backup-restore, serta rollback deployment selesai dengan bukti.
