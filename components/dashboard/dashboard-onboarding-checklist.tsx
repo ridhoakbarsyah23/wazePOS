@@ -63,7 +63,7 @@ export function DashboardOnboardingChecklist({
               <h3 className={`text-xs font-bold ${hasProducts ? 'text-[#15211d]' : 'text-[#15211d]'}`}>2. Tambah Produk</h3>
               <p className="mt-1 text-[11px] leading-relaxed text-[#627069]">Masukkan minimal 1 produk agar bisa dijual di kasir.</p>
               {!hasProducts && (
-                <Link href="/products/new" className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-[#198760] to-[#147554] px-3.5 py-1.5 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(25,135,96,.25)] transition hover:scale-105 hover:from-[#1ba36f] hover:to-[#147554]">
+                <Link href="/products?add=1" className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-[#198760] to-[#147554] px-3.5 py-1.5 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(25,135,96,.25)] transition hover:scale-105 hover:from-[#1ba36f] hover:to-[#147554]">
                   Tambah <ArrowRight className="size-3" />
                 </Link>
               )}
