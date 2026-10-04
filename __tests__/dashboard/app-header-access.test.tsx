@@ -9,6 +9,27 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AppHeader role navigation", () => {
+  it("tidak membuat link kasir ke /pos/all saat filter semua gerai aktif", () => {
+    render(
+      <AppHeader
+        businessName="Toko Uji"
+        role="owner"
+        outlets={[
+          { id: "outlet-1", name: "Gerai Utama", slug: "gerai-utama" },
+          { id: "outlet-2", name: "Gerai Dua", slug: "gerai-dua" },
+        ]}
+        activeOutletId="all"
+      >
+        <main>Konten</main>
+      </AppHeader>,
+    );
+
+    const cashierLinks = screen.getAllByRole("link", { name: /kasir/i });
+
+    expect(cashierLinks.some((link) => link.getAttribute("href") === "/pos/all")).toBe(false);
+    expect(cashierLinks.some((link) => link.getAttribute("href") === "/pos")).toBe(true);
+  });
+
   it("menampilkan Dashboard untuk pemilik dan admin usaha", () => {
     const { rerender } = render(
       <AppHeader businessName="Toko Uji" role="cashier">

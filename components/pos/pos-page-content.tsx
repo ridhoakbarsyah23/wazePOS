@@ -56,6 +56,8 @@ export async function PosPageContent({
     redirect("/pos");
   }
 
+  if (outletSlug === "all") redirect("/pos");
+
   const activeOutlet = outletSlug ? outlets.find((item) => item.slug === outletSlug) : outlets[0];
   if (outletSlug && !activeOutlet) notFound();
   if (!activeOutlet) redirect("/dashboard");
