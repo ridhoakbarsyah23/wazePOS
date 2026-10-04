@@ -65,11 +65,13 @@ export function ProductManager({
   categories,
   outlets,
   allowInventory = true,
+  initialCreateOpen = false,
 }: {
   products: Product[];
   categories: Category[];
   outlets: Outlet[];
   allowInventory?: boolean;
+  initialCreateOpen?: boolean;
 }) {
   const [items, setItems] = useState<Product[]>(products);
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,7 +79,7 @@ export function ProductManager({
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState(initialCreateOpen);
   const [editingItem, setEditingItem] = useState<Product | null>(null);
 
   const [newProduct, setNewProduct] = useState({

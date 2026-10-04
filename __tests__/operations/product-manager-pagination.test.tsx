@@ -19,6 +19,12 @@ const products: Product[] = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 describe("ProductManager pagination", () => {
+  it("membuka form tambah produk dari query tambah", () => {
+    render(<ProductManager products={[]} categories={[]} outlets={[]} initialCreateOpen />);
+
+    expect(screen.getByRole("heading", { name: "Tambah Produk Baru" })).toBeDefined();
+  });
+
   it("menampilkan 10 produk per halaman dan mereset halaman saat pencarian berubah", () => {
     render(<ProductManager products={products} categories={[]} outlets={[]} />);
 

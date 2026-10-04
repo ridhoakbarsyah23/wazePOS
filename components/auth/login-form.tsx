@@ -10,10 +10,17 @@ import { authInputClass, PasswordField } from "@/components/auth/password-field"
 import { authClient } from "@/shared/auth/auth-client";
 import { loginSchema } from "@/shared/validation/auth";
 import { AuthStatusModal, type AuthStatus } from "@/components/auth/auth-status-modal";
+import type { PlanId } from "@/shared/billing/plans";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
-export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
+export function LoginForm({
+  googleSsoEnabled,
+  selectedPlan,
+}: {
+  googleSsoEnabled: boolean;
+  selectedPlan: PlanId;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -130,7 +137,7 @@ export function LoginForm({ googleSsoEnabled }: { googleSsoEnabled: boolean }) {
     <>
       <AuthStatusModal status={loginStatus} />
       <form ref={formRef} className="mt-5 grid min-w-0 gap-3.5 sm:mt-6" onSubmit={handleSubmit} noValidate aria-busy={isPending}>
-      {googleSsoEnabled && <GoogleSsoButton flow="login" disabled={isPending} />}
+      {googleSsoEnabled && <GoogleSsoButton flow="login" selectedPlan={selectedPlan} disabled={isPending} />}
 
       {(fieldErrors.email || fieldErrors.password || errorMessage) && (
         <div

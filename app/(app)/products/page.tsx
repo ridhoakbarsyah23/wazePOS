@@ -8,10 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { requireDashboardAccess } from "@/server/access/dashboard-access";
 import { hasPlanFeature, normalizePlan } from "@/shared/billing/plans";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ add?: string }>;
+}) {
   const access = await requireDashboardAccess({ rule: "manageBusiness" });
   if (!access.ok) return access.lockout;
   const { session, membership, currentSubscription, subDetails, allowDarkMode } = access;
+  const shouldOpenCreateForm = (await searchParams).add === "1";
 
   const [products, categories, outlets] = await Promise.all([
     db.select({
@@ -57,6 +62,7 @@ export default async function ProductsPage() {
             categories={categories}
             outlets={outlets}
             allowInventory={allowInventory}
+            initialCreateOpen={shouldOpenCreateForm}
           />
         </div>
       </section>

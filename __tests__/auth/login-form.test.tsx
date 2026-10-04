@@ -37,7 +37,7 @@ describe("LoginForm", () => {
       json: async () => ({ destination: "/admin" }),
     }));
 
-    render(<LoginForm googleSsoEnabled={false} />);
+    render(<LoginForm googleSsoEnabled={false} selectedPlan="tumbuh" />);
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "admin@example.com" } });
     fireEvent.change(screen.getByLabelText("Kata sandi"), { target: { value: "password123" } });
     fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
@@ -51,7 +51,7 @@ describe("LoginForm", () => {
   it("tetap memakai server continuation bila tujuan gagal", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
 
-    render(<LoginForm googleSsoEnabled={false} />);
+    render(<LoginForm googleSsoEnabled={false} selectedPlan="tumbuh" />);
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "admin@example.com" } });
     fireEvent.change(screen.getByLabelText("Kata sandi"), { target: { value: "password123" } });
     fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
