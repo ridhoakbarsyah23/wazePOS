@@ -8,7 +8,7 @@ export function getGoogleAuthRedirects(flow: SocialAuthFlow, selectedPlan?: Plan
 
   return {
     callbackURL: "/auth/continue",
-    newUserCallbackURL: `/onboarding?plan=${flow === "register" ? plan : "tumbuh"}`,
+    newUserCallbackURL: `/onboarding?plan=${plan}`,
     errorCallbackURL: flow === "register" ? `${registerPath}&oauth=error` : "/login?oauth=error",
   };
 }

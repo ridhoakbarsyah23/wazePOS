@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { LoginForm } from "@/components/auth/login-form";
+import { normalizePlan } from "@/shared/billing/plans";
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
+  const selectedPlan = normalizePlan((await searchParams).plan);
   // Selalu tampilkan form: user yang sudah login tetap bisa membuka /login
   // (mis. ingin ganti akun). Auto-redirect ke /dashboard di sini membuat
   // klik "Masuk" terasa melewati halaman login secara langsung.
@@ -23,7 +25,10 @@ export default async function LoginPage() {
           <div className="mt-6 h-64 animate-pulse rounded-2xl bg-[#eef4f1]" aria-hidden="true" />
         }
       >
-        <LoginForm googleSsoEnabled={Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)} />
+        <LoginForm
+          googleSsoEnabled={Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)}
+          selectedPlan={selectedPlan}
+        />
       </Suspense>
     </AuthPageShell>
   );
