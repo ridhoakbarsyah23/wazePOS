@@ -119,6 +119,33 @@ export type PlatformAdminPaymentSummary = {
   expiredPayments: number;
 };
 
+export type PlatformAdminLeadFilters = {
+  query: string;
+  source: string;
+  createdFrom: string;
+  createdTo: string;
+  sort: "newest" | "oldest" | "name_asc";
+};
+
+export type PlatformAdminLeadItem = {
+  id: string;
+  name: string;
+  whatsapp: string;
+  businessName: string;
+  businessType: string;
+  outlets: string;
+  message: string | null;
+  source: string;
+  webhookDeliveredAt: Date | string | null;
+  createdAt: Date | string;
+};
+
+export type PlatformAdminLeadSummary = {
+  total: number;
+  today: number;
+  webhookDelivered: number;
+};
+
 export type PlatformAdminAuditLogItem = {
   id: string;
   action: string;
