@@ -90,9 +90,15 @@ jobs:
         env:
           DATABASE_URL: postgresql://wazepos:wazepos@127.0.0.1:5432/wazepos
           BETTER_AUTH_SECRET: ci-only-secret-with-at-least-32-characters
-          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+          NEXT_PUBLIC_SITE_URL: https://ci.wazepos.test
           RESEND_API_KEY: re_ci_only
           RESEND_FROM_EMAIL: wazePOS CI <ci@example.com>
+          CRON_SECRET: ci-only-cron-secret-with-at-least-32-characters
+          BANK_TRANSFER_BANK: CI Bank
+          BANK_TRANSFER_ACCOUNT_NUMBER: 9876543210
+          BANK_TRANSFER_ACCOUNT_NAME: PT CI wazePOS
+          PLATFORM_ADMIN_EMAILS: admin@example.com
+          LEAD_WEBHOOK_URL: https://crm.example.com/leads
 
   docker-smoke:
     name: Docker build and smoke test
