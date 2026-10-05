@@ -8,6 +8,11 @@ import {
 } from "@/shared/billing/plans";
 
 describe("hak fitur paket", () => {
+  it("menampilkan nama paket sesuai slug URL registrasi", () => {
+    expect(plans.tumbuh.name).toBe("wazePOS Tumbuh");
+    expect(plans.bisnis.name).toBe("wazePOS Bisnis");
+  });
+
   it("menonaktifkan QRIS untuk seluruh paket sampai integrasi resmi tersedia", () => {
     expect(hasPlanFeature("tumbuh", "qrisPayments")).toBe(false);
     expect(hasPlanFeature("bisnis", "qrisPayments")).toBe(false);

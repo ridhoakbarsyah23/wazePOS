@@ -66,7 +66,7 @@ export async function createCategory(formData: FormData) {
 export async function createOutlet(formData: FormData) {
   const { membership, canManageOutlets } = await getBusinessContext();
   if (!canManageOutlets) {
-    redirectToDashboard("error", "Multi-gerai hanya tersedia pada wazePOS Business.");
+    redirectToDashboard("error", "Multi-gerai hanya tersedia pada wazePOS Bisnis.");
   }
   const nameValue = formData.get("name");
   const addressValue = formData.get("address");

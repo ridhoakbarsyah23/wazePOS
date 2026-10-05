@@ -121,7 +121,7 @@ export default async function SubscriptionPage({
               </h2>
               <p className="mt-1 text-xs text-rose-700 leading-relaxed">
                 Operasional kasir, katalog produk, dan manajemen data saat ini dinonaktifkan sementara.
-                Silakan pilih paket langganan di bawah ini (wazePOS Growth atau wazePOS Business), transfer ke rekening resmi, lalu unggah bukti pembayaran untuk diverifikasi admin.
+                Silakan pilih paket langganan di bawah ini (wazePOS Tumbuh atau wazePOS Bisnis), transfer ke rekening resmi, lalu unggah bukti pembayaran untuk diverifikasi admin.
               </p>
             </div>
           </div>

@@ -25,10 +25,10 @@ export function PlanFeatureNotice({
           </span>
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#f0d99a] bg-white/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#8a6418]">
-              <Crown className="size-3" /> wazePOS Business
+              <Crown className="size-3" /> wazePOS Bisnis
             </span>
             <h1 className="mt-3 text-xl font-extrabold tracking-tight text-[#533b12] sm:text-2xl">
-              {featureName} tersedia di wazePOS Business
+              {featureName} tersedia di wazePOS Bisnis
             </h1>
             <p className="mt-2 text-sm leading-6 text-[#80652a]">{description}</p>
             <p className="mt-2 text-xs leading-5 text-[#9a7a3a]">{businessName}</p>
@@ -40,12 +40,12 @@ export function PlanFeatureNotice({
               href="/subscription"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#9a6a12] px-4 text-xs font-extrabold text-white transition hover:bg-[#7d550d]"
             >
-              Lihat wazePOS Business
+              Lihat wazePOS Bisnis
               <ArrowRight className="size-4" />
             </Link>
           ) : (
             <p className="text-xs leading-5 text-[#80652a]">
-              Hubungi pemilik usaha untuk membuka fitur ini melalui wazePOS Business.
+              Hubungi pemilik usaha untuk membuka fitur ini melalui wazePOS Bisnis.
             </p>
           )}
         </div>

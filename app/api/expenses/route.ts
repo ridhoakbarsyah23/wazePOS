@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const currentSubscription = await getBusinessSubscription(membership.businessId);
   if (!hasPlanFeature(currentSubscription?.plan, "cashflow")) {
     return NextResponse.json(
-      { message: "Arus kas tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Arus kas tersedia pada wazePOS Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }

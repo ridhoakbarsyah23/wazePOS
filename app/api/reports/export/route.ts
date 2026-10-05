@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   }
   if (!hasPlanFeature(currentSubscription?.plan, "exportReports")) {
     return NextResponse.json(
-      { message: "Ekspor laporan tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Ekspor laporan tersedia pada wazePOS Bisnis.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }

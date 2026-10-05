@@ -9,7 +9,7 @@ function readEnv(environment: Record<string, string | undefined>, key: string): 
 }
 
 /**
- * Rekening tujuan tunggal untuk pembayaran paket Growth & Business.
+ * Rekening tujuan tunggal untuk pembayaran paket Tumbuh & Bisnis.
  * Diisi via env agar bisa diganti tanpa deploy ulang kode; fallback berupa
  * placeholder contoh yang wajib diganti di production.
  */
