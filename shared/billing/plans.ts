@@ -43,7 +43,7 @@ export type PlanConfig = {
 
 export const plans: Record<PlanId, PlanConfig> = {
   tumbuh: {
-    name: "wazePOS Growth",
+    name: "wazePOS Tumbuh",
     description: "Kapasitas operasional inti untuk usaha mandiri dan UMKM.",
     annualPrice: 450_000,
     limits: {
@@ -75,7 +75,7 @@ export const plans: Record<PlanId, PlanConfig> = {
     },
   },
   bisnis: {
-    name: "wazePOS Business",
+    name: "wazePOS Bisnis",
     description: "Kapasitas lebih besar dan metode pembayaran tambahan untuk usaha berkembang.",
     annualPrice: 950_000,
     limits: {

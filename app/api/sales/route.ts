@@ -123,7 +123,7 @@ export async function POST(request: Request) {
   const allowsSaleItemNotes = hasPlanFeature(currentSubscription?.plan, "saleItemNotes");
 
   if ((parsed.data.paymentMethod === "debit" || parsed.data.paymentMethod === "credit") && !allowsAllPayments) {
-    return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
+    return NextResponse.json({ message: "Seluruh metode pembayaran (Kartu Debit & Kredit EDC) tersedia pada wazePOS Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
   }
   if (parsed.data.paymentMethod === "qris") {
     return NextResponse.json(
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     );
   }
   if (!allowsSaleItemNotes && parsed.data.items.some((item) => (item.note ?? "").trim().length > 0)) {
-    return NextResponse.json({ message: "Catatan per item tersedia pada wazePOS Business.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
+    return NextResponse.json({ message: "Catatan per item tersedia pada wazePOS Bisnis.", code: "PLAN_FEATURE_REQUIRED" }, { status: 403 });
   }
 
   const quantities = new Map<string, { quantity: number; note: string | null }>();

@@ -75,7 +75,7 @@ function getBoundaryLabel(item: PlatformAdminBusiness) {
 }
 
 function getPlanLabel(plan: PlatformAdminBusiness["plan"] | PlatformAdminPaymentDetail["plan"]) {
-  return plan === "bisnis" ? "wazePOS Business" : plan === "tumbuh" ? "wazePOS Growth" : "Belum ada paket";
+  return plan === "bisnis" ? "wazePOS Bisnis" : plan === "tumbuh" ? "wazePOS Tumbuh" : "Belum ada paket";
 }
 
 function getPaymentMeta(status: PlatformAdminPaymentDetail["status"]) {

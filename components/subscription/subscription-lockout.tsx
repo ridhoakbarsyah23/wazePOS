@@ -41,7 +41,7 @@ export function SubscriptionLockout({
           <p className="m-0 font-bold mb-1">Cara Mengaktifkan Kembali:</p>
           {isOwner ? (
             <p className="m-0 leading-5">
-              Sebagai <strong>Pemilik Usaha</strong>, Anda dapat memilih paket langganan (wazePOS Growth atau wazePOS Business), transfer ke rekening resmi, lalu unggah bukti pembayaran untuk diverifikasi admin.
+              Sebagai <strong>Pemilik Usaha</strong>, Anda dapat memilih paket langganan (wazePOS Tumbuh atau wazePOS Bisnis), transfer ke rekening resmi, lalu unggah bukti pembayaran untuk diverifikasi admin.
             </p>
           ) : (
             <p className="m-0 leading-5">

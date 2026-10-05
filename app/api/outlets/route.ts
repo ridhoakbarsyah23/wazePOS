@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   }
   if (!hasPlanFeature(context.currentSubscription?.plan, "multiOutlet")) {
     return NextResponse.json(
-      { message: "Menambah gerai hanya tersedia pada wazePOS Business. Upgrade paket untuk mengelola multi-gerai.", code: "PLAN_FEATURE_REQUIRED" },
+      { message: "Menambah gerai hanya tersedia pada wazePOS Bisnis. Upgrade paket untuk mengelola multi-gerai.", code: "PLAN_FEATURE_REQUIRED" },
       { status: 403 },
     );
   }

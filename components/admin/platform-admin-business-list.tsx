@@ -70,7 +70,7 @@ function DateValue({ value }: { value: Date | string | null }) {
 }
 
 function getPlanLabel(plan: PlatformAdminBusiness["plan"]) {
-  return plan === "bisnis" ? "wazePOS Business" : plan === "tumbuh" ? "wazePOS Growth" : "-";
+  return plan === "bisnis" ? "wazePOS Bisnis" : plan === "tumbuh" ? "wazePOS Tumbuh" : "-";
 }
 
 function getBoundaryDate(item: PlatformAdminBusiness) {
@@ -239,8 +239,8 @@ export function PlatformAdminBusinessList({
               className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua paket</option>
-              <option value="tumbuh">wazePOS Growth</option>
-              <option value="bisnis">wazePOS Business</option>
+              <option value="tumbuh">wazePOS Tumbuh</option>
+              <option value="bisnis">wazePOS Bisnis</option>
               <option value="missing">Tanpa paket</option>
             </select>
             <select

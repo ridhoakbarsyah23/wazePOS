@@ -74,7 +74,7 @@ export default async function ReportsPage({
           businessName={membership.businessName}
           role={membership.role}
           featureName="Laporan penjualan di layar"
-          description="Ringkasan omzet, produk terlaris, dan laporan penjualan di layar tersedia di wazePOS Business."
+          description="Ringkasan omzet, produk terlaris, dan laporan penjualan di layar tersedia di wazePOS Bisnis."
         />
       </AppHeader>
     );
@@ -314,10 +314,10 @@ export default async function ReportsPage({
               </Button>
             ) : membership.role === "owner" ? (
               <Button asChild variant="secondary" size="sm">
-                <Link href="/subscription">Ekspor Excel tersedia di wazePOS Business</Link>
+                <Link href="/subscription">Ekspor Excel tersedia di wazePOS Bisnis</Link>
               </Button>
             ) : (
-              <span className="text-xs font-semibold text-[#627069]">Ekspor Excel tersedia di wazePOS Business.</span>
+              <span className="text-xs font-semibold text-[#627069]">Ekspor Excel tersedia di wazePOS Bisnis.</span>
             )}
           </div>
         </div>

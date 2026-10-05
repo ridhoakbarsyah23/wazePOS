@@ -90,9 +90,9 @@ export default async function SettingsPage() {
                 <Crown className="size-5" />
               </span>
               <div>
-                <h2 className="text-sm font-extrabold text-[#533b12]">Multi-gerai tersedia di wazePOS Business</h2>
+                <h2 className="text-sm font-extrabold text-[#533b12]">Multi-gerai tersedia di wazePOS Bisnis</h2>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-[#80652a]">
-                  wazePOS Growth mendukung 1 gerai. Upgrade untuk menambah gerai dan mengelola operasional multi-cabang.
+                  wazePOS Tumbuh mendukung 1 gerai. Upgrade untuk menambah gerai dan mengelola operasional multi-cabang.
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ export default async function SettingsPage() {
               href="/subscription"
               className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#9a6a12] px-4 text-xs font-extrabold text-white transition hover:bg-[#7d550d]"
             >
-              Lihat wazePOS Business
+              Lihat wazePOS Bisnis
               <ArrowRight className="size-4" />
             </Link>
           </section>

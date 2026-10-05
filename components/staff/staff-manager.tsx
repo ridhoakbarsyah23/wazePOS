@@ -53,7 +53,7 @@ export function StaffManager({
   currentUserRole,
   currentUserId,
   maxStaff = 2,
-  planName = "wazePOS Growth",
+  planName = "wazePOS Tumbuh",
 }: {
   initialStaff: StaffMember[];
   currentUserRole: "owner" | "admin" | "cashier";
@@ -206,12 +206,12 @@ export function StaffManager({
                   Kuota {maxStaff} Akun Tim Tercapai ({planName})
                 </p>
                 <p className="m-0 text-xs text-[#627069]">
-                  Kuota menghitung pemilik dan karyawan. Tingkatkan ke <strong>wazePOS Business</strong> untuk menambah anggota tim.
+                  Kuota menghitung pemilik dan karyawan. Tingkatkan ke <strong>wazePOS Bisnis</strong> untuk menambah anggota tim.
                 </p>
               </div>
             </div>
             <Button asChild variant="default" size="sm">
-              <Link href="/subscription">Upgrade ke Business</Link>
+              <Link href="/subscription">Upgrade ke Bisnis</Link>
             </Button>
           </CardContent>
         </Card>
