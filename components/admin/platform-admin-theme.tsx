@@ -14,6 +14,9 @@ type PlatformAdminThemeContextValue = {
 
 const PlatformAdminThemeContext = createContext<PlatformAdminThemeContextValue | null>(null);
 
+const themeToggleClassName =
+  "grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-[#dbe5df] bg-white text-[#198760] transition-colors hover:border-[#9ac3b0] hover:bg-[#eef6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30 dark:border-[#303030] dark:bg-[#151515] dark:text-[#62d6a5] dark:hover:border-[#3f3f3f] dark:hover:bg-[#202020] dark:focus-visible:ring-[#62d6a5]/25 sm:size-9";
+
 export function PlatformAdminThemeProvider({
   initialTheme,
   children,
@@ -58,9 +61,12 @@ export function PlatformAdminThemeToggle() {
     <button
       type="button"
       onClick={() => context.setTheme(isDark ? "light" : "dark")}
+      aria-pressed={isDark}
       aria-label={isDark ? "Gunakan mode terang" : "Gunakan mode gelap"}
       title={isDark ? "Gunakan mode terang" : "Gunakan mode gelap"}
-      className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#dbe5df] bg-white text-[#198760] transition hover:border-[#9ac3b0] hover:bg-[#eef6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30 sm:size-9"
+      data-theme-toggle="admin"
+      data-active-theme={context.theme}
+      className={themeToggleClassName}
     >
       {isDark ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}
     </button>
