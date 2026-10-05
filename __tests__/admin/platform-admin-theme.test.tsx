@@ -24,7 +24,10 @@ describe("PlatformAdminTheme", () => {
     expect(document.querySelector("[data-admin-shell]")?.getAttribute("data-admin-theme")).toBe("dark");
     await waitFor(() => expect(document.documentElement.dataset.adminTheme).toBe("dark"));
     expect(document.documentElement.dataset.dashboardTheme).toBeUndefined();
-    expect(screen.getByRole("button", { name: "Gunakan mode terang" })).toBeDefined();
+    const toggle = screen.getByRole("button", { name: "Gunakan mode terang" });
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    expect(toggle.getAttribute("data-theme-toggle")).toBe("admin");
+    expect(toggle.getAttribute("data-active-theme")).toBe("dark");
   });
 
   it("mengganti tema admin dan menyimpan preferensinya", async () => {
@@ -39,6 +42,6 @@ describe("PlatformAdminTheme", () => {
     await waitFor(() => {
       expect(document.querySelector("[data-admin-shell]")?.getAttribute("data-admin-theme")).toBe("dark");
     });
-    expect(screen.getByRole("button", { name: "Gunakan mode terang" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Gunakan mode terang" }).getAttribute("aria-pressed")).toBe("true");
   });
 });

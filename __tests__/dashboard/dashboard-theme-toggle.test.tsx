@@ -25,12 +25,16 @@ describe("DashboardThemeToggle", () => {
     render(<DashboardThemeToggle enabled />);
 
     const toggle = screen.getByRole("button", { name: "Gunakan mode gelap" });
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    expect(toggle.getAttribute("data-theme-toggle")).toBe("dashboard");
     fireEvent.click(toggle);
 
     await waitFor(() => {
       expect(document.documentElement.dataset.dashboardTheme).toBe("dark");
     });
     expect(localStorage.getItem("wazepos:dashboard-theme")).toBe("dark");
-    expect(screen.getByRole("button", { name: "Gunakan mode terang" })).toBeDefined();
+    const darkToggle = screen.getByRole("button", { name: "Gunakan mode terang" });
+    expect(darkToggle.getAttribute("aria-pressed")).toBe("true");
+    expect(darkToggle.getAttribute("data-active-theme")).toBe("dark");
   });
 });
