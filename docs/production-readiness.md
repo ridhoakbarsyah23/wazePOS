@@ -42,7 +42,7 @@ Jangan menjalankan skenario pembuatan akun, transaksi, atau pembayaran terhadap 
 | [ ] | Google OAuth aktif | waktu uji + akun uji + redirect berhasil |
 | [ ] | OTP dan reset password terkirim | message ID Resend + inbox penerima |
 | [ ] | Cron pengingat trial berjalan | invocation Vercel + message ID Resend |
-| [ ] | Lead tersimpan persisten | ID lead pada CRM/backend |
+| [ ] | Lead tersimpan persisten | ID lead pada database; ID CRM/backend bila webhook opsional aktif |
 | [ ] | Transfer bank end-to-end | ID pembayaran + approve/reject admin + email |
 | [ ] | Allowlist admin menolak akun biasa | hasil 401/403 dan akses admin berhasil |
 | [ ] | Backup dan restore database diuji | waktu backup + hasil restore staging |
