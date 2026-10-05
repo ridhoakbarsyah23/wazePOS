@@ -1,6 +1,9 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { db } from "@/db";
+import { lead as leadTable } from "@/db/schema";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/server/rate-limit";
 
 export const runtime = "nodejs";
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
     businessType: asText(body.businessType, 50),
     outlets: asText(body.outlets, 20),
     message: asText(body.message, 500),
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
   if (!lead.name || !validPhone(lead.whatsapp) || !lead.businessName || !lead.businessType || !lead.outlets) {
@@ -57,8 +60,12 @@ export async function POST(request: Request) {
   }
 
   const webhookUrl = process.env.LEAD_WEBHOOK_URL?.trim();
+  let storedInDatabase = false;
 
   try {
+    await db.insert(leadTable).values(lead);
+    storedInDatabase = true;
+
     if (webhookUrl) {
       const response = await fetch(webhookUrl, {
         method: "POST",
@@ -73,22 +80,26 @@ export async function POST(request: Request) {
       });
 
       if (!response.ok) throw new Error(`Webhook returned ${response.status}`);
-    } else if (process.env.NODE_ENV !== "production") {
+
+      await db
+        .update(leadTable)
+        .set({ webhookDeliveredAt: new Date(), updatedAt: new Date() })
+        .where(eq(leadTable.id, lead.id));
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
       const dataDirectory = path.join(process.cwd(), "data");
       await mkdir(dataDirectory, { recursive: true });
       await appendFile(path.join(dataDirectory, "leads.ndjson"), `${JSON.stringify(lead)}\n`, "utf8");
+    } else if (storedInDatabase && webhookUrl) {
+      console.error("Lead saved in database but webhook delivery failed", error);
     } else {
+      console.error("Failed to store lead", error);
       return NextResponse.json(
-        { message: "Formulir belum terhubung. Silakan hubungi kami melalui WhatsApp." },
-        { status: 503 },
+        { message: "Data belum berhasil dikirim. Silakan coba kembali atau hubungi kami melalui WhatsApp." },
+        { status: 502 },
       );
     }
-  } catch (error) {
-    console.error("Failed to store lead", error);
-    return NextResponse.json(
-      { message: "Data belum berhasil dikirim. Silakan coba kembali atau hubungi kami melalui WhatsApp." },
-      { status: 502 },
-    );
   }
 
   return NextResponse.json({ message: "Terima kasih. Tim wazePOS akan menghubungi Anda melalui WhatsApp." });

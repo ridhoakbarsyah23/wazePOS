@@ -257,6 +257,26 @@ export const platformAdminFollowUp = pgTable(
   ],
 );
 
+export const lead = pgTable(
+  "lead",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    whatsapp: text("whatsapp").notNull(),
+    businessName: text("business_name").notNull(),
+    businessType: text("business_type").notNull(),
+    outlets: text("outlets").notNull(),
+    message: text("message"),
+    source: text("source").default("marketing_form").notNull(),
+    webhookDeliveredAt: timestamp("webhook_delivered_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("lead_created_at_idx").on(table.createdAt),
+    index("lead_whatsapp_idx").on(table.whatsapp),
+  ],
+);
+
 export const category = pgTable(
   "category",
   {
@@ -518,6 +538,7 @@ export const schema = {
   subscriptionPayment,
   platformAdminAuditLog,
   platformAdminFollowUp,
+  lead,
   category,
   product,
   inventoryStock,

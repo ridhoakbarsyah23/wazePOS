@@ -14,6 +14,7 @@ const readyDatabase = {
   businessTable: "business",
   subscriptionTable: "subscription",
   subscriptionPaymentTable: "subscription_payment",
+  leadTable: "lead",
   privacyAcceptedAt: true,
   trialReminderSentAt: true,
   disbursedAt: true,
@@ -116,7 +117,6 @@ describe("GET /api/health", () => {
     vi.stubEnv("BANK_TRANSFER_ACCOUNT_NUMBER", "9876543210");
     vi.stubEnv("BANK_TRANSFER_ACCOUNT_NAME", "PT Contoh POS");
     vi.stubEnv("PLATFORM_ADMIN_EMAILS", "admin@example.com");
-    vi.stubEnv("LEAD_WEBHOOK_URL", "https://crm.example.com/leads");
 
     const response = await GET();
 

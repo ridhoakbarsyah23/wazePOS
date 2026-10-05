@@ -262,7 +262,7 @@ Referensi: [batas cron Vercel](https://vercel.com/docs/cron-jobs/usage-and-prici
 
 | Variabel | Wajib? | Penjelasan |
 | --- | --- | --- |
-| `LEAD_WEBHOOK_URL` | Ya untuk production | Endpoint backend/CRM yang menerima JSON lead. |
+| `LEAD_WEBHOOK_URL` | Tidak | Endpoint backend/CRM opsional yang menerima salinan JSON lead setelah lead tersimpan di database. Harus HTTPS bila diisi. |
 | `LEAD_WEBHOOK_SECRET` | Tidak | Bearer token opsional untuk webhook. |
 
 > Catatan: nilai `NEXT_PUBLIC_*` dimasukkan ke bundle JavaScript saat build. Setelah mengubahnya, jalankan ulang `npm run build` atau lakukan deployment baru agar nilainya ikut terpakai.
@@ -379,7 +379,7 @@ Tanpa membuka secret, cek:
 https://waze-pos.vercel.app/api/health
 ```
 
-Response yang sehat memiliki `"ok": true`, database terhubung, tabel auth/bisnis tersedia, dan schema terbaru. Pada production, endpoint ini juga mensyaratkan konfigurasi operasional utama sudah lengkap: `NEXT_PUBLIC_SITE_URL` HTTPS, email Resend, `CRON_SECRET`, rekening transfer resmi, `PLATFORM_ADMIN_EMAILS`, dan `LEAD_WEBHOOK_URL` HTTPS. Detail konfigurasi hanya ditampilkan di non-production agar endpoint publik tidak membocorkan status secret. Lalu tes halaman `/register` dan `/login`.
+Response yang sehat memiliki `"ok": true`, database terhubung, tabel auth/bisnis/lead tersedia, dan schema terbaru. Pada production, endpoint ini juga mensyaratkan konfigurasi operasional utama sudah lengkap: `NEXT_PUBLIC_SITE_URL` HTTPS, email Resend, `CRON_SECRET`, rekening transfer resmi, dan `PLATFORM_ADMIN_EMAILS`. Detail konfigurasi hanya ditampilkan di non-production agar endpoint publik tidak membocorkan status secret. Lalu tes halaman `/register` dan `/login`.
 
 ---
 
@@ -445,8 +445,8 @@ Setelah berhasil, hapus `PLATFORM_ADMIN_SEED_PASSWORD` dari environment jika seb
 
 ### Penyimpanan lead
 
-- **Development:** jika `LEAD_WEBHOOK_URL` kosong, lead disimpan ke `data/leads.ndjson` agar alur bisa diuji lokal. File ini diabaikan Git.
-- **Production:** API mengembalikan status `503` bila webhook belum dikonfigurasi — mencegah website memberi konfirmasi palsu ketika data sebenarnya tidak tersimpan.
+- **Development:** lead disimpan ke database lokal. Jika database lokal belum menyala, endpoint memakai fallback `data/leads.ndjson` agar alur bisa diuji. File ini diabaikan Git.
+- **Production:** lead wajib tersimpan di database PostgreSQL. Jika `LEAD_WEBHOOK_URL` diisi, API juga mengirim salinan lead ke CRM/backend eksternal secara best-effort; kegagalan webhook tidak menggagalkan form selama lead sudah tersimpan di database.
 
 Payload webhook lead:
 
@@ -513,7 +513,7 @@ Aturan utama: kode di `shared/` tidak boleh meng-import `server/` atau `db/`; ko
 - [x] Konfirmasi final harga peluncuran, ketentuan pajak, batas pemakaian, dan fitur setiap paket.
 - [x] Screenshot produk final untuk menggantikan pratinjau konsep (bisa menyusul).
 - [x] Testimoni pelanggan asli beserta izin publikasi (bisa menyusul).
-- [x] URL webhook backend/CRM untuk penyimpanan lead yang persisten (`LEAD_WEBHOOK_URL`).
+- [x] Penyimpanan lead persisten di PostgreSQL; webhook CRM (`LEAD_WEBHOOK_URL`) opsional.
 - [x] Kebijakan privasi dan detail klaim keamanan produk yang telah disetujui.
 - [x] Rekening resmi `BANK_TRANSFER_*` sudah terisi dan bukti transfer terverifikasi end-to-end.
 - [x] `PLATFORM_ADMIN_EMAILS` hanya berisi email internal yang terverifikasi.

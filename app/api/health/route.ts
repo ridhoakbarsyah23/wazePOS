@@ -60,7 +60,6 @@ export async function GET() {
     trialReminderCron: hasValue(process.env.CRON_SECRET),
     bankTransfer: hasProductionBankAccount(),
     platformAdminAllowlist: hasAdminAllowlist(process.env.PLATFORM_ADMIN_EMAILS),
-    leadWebhook: isHttpsUrl(process.env.LEAD_WEBHOOK_URL),
   };
   const environment = {
     databaseUrl: hasValue(process.env.DATABASE_URL),
@@ -91,6 +90,7 @@ export async function GET() {
       businessTable: string | null;
       subscriptionTable: string | null;
       subscriptionPaymentTable: string | null;
+      leadTable: string | null;
       privacyAcceptedAt: boolean;
       trialReminderSentAt: boolean;
       disbursedAt: boolean;
@@ -102,6 +102,7 @@ export async function GET() {
           to_regclass('public.business') as "businessTable",
           to_regclass('public.subscription') as "subscriptionTable",
           to_regclass('public.subscription_payment') as "subscriptionPaymentTable",
+          to_regclass('public.lead') as "leadTable",
           exists (
             select 1 from information_schema.columns
             where table_schema = 'public' and table_name = 'user' and column_name = 'privacy_accepted_at'
@@ -119,7 +120,7 @@ export async function GET() {
     const tables = result[0];
     const authTables = Boolean(tables?.userTable && tables?.accountTable);
     const businessTables = Boolean(
-      tables?.businessTable && tables?.subscriptionTable && tables?.subscriptionPaymentTable,
+      tables?.businessTable && tables?.subscriptionTable && tables?.subscriptionPaymentTable && tables?.leadTable,
     );
     const latestSchema = Boolean(
       tables?.privacyAcceptedAt && tables?.trialReminderSentAt && tables?.disbursedAt,
