@@ -11,25 +11,68 @@ const unavailableDatabase = {
   latestSchema: false,
 };
 
+function hasValue(value: string | undefined) {
+  return Boolean(value?.trim());
+}
+
+function isHttpsUrl(value: string | undefined) {
+  if (!value?.trim()) return false;
+  try {
+    return new URL(value.trim()).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function hasAdminAllowlist(value: string | undefined) {
+  return Boolean(
+    value
+      ?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .some((item) => item.includes("@")),
+  );
+}
+
+function hasProductionBankAccount() {
+  const accountNumber = process.env.BANK_TRANSFER_ACCOUNT_NUMBER?.trim();
+  const accountName = process.env.BANK_TRANSFER_ACCOUNT_NAME?.trim();
+
+  return (
+    hasValue(process.env.BANK_TRANSFER_BANK) &&
+    Boolean(accountNumber && accountNumber !== "1234567890") &&
+    Boolean(accountName && accountName !== "PT wazePOS")
+  );
+}
+
 export async function GET() {
   // Detail environment hanya untuk internal/debugging; produksi cukup status ok
   // supaya endpoint publik ini tidak membocorkan konfigurasi ke pihak luar.
-  const includeDetails = process.env.NODE_ENV !== "production";
+  const isProduction = process.env.NODE_ENV === "production";
+  const includeDetails = !isProduction;
 
   const passwordResetEmail = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
   );
+  const productionReadiness = {
+    siteUrlHttps: isHttpsUrl(process.env.NEXT_PUBLIC_SITE_URL),
+    passwordResetEmail,
+    trialReminderCron: hasValue(process.env.CRON_SECRET),
+    bankTransfer: hasProductionBankAccount(),
+    platformAdminAllowlist: hasAdminAllowlist(process.env.PLATFORM_ADMIN_EMAILS),
+    leadWebhook: isHttpsUrl(process.env.LEAD_WEBHOOK_URL),
+  };
   const environment = {
-    databaseUrl: Boolean(process.env.DATABASE_URL),
-    authSecret: Boolean(process.env.BETTER_AUTH_SECRET),
+    databaseUrl: hasValue(process.env.DATABASE_URL),
+    authSecret: hasValue(process.env.BETTER_AUTH_SECRET),
     authUrl: process.env.BETTER_AUTH_URL ?? null,
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
-    passwordResetEmail,
+    productionReadiness,
   };
   const requiredEnvironmentReady =
     environment.databaseUrl &&
     environment.authSecret &&
-    (process.env.NODE_ENV !== "production" || passwordResetEmail);
+    (!isProduction || Object.values(productionReadiness).every(Boolean));
   const deployment = {
     commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA ?? null,
   };

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ execute: vi.fn() }));
 
@@ -24,6 +24,10 @@ describe("GET /api/health", () => {
     mocks.execute.mockReset();
     vi.stubEnv("DATABASE_URL", "postgresql://localhost/wazepos");
     vi.stubEnv("BETTER_AUTH_SECRET", "test-secret-with-at-least-32-characters");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("returns ready only when auth, business, and latest schema markers exist", async () => {
@@ -61,6 +65,69 @@ describe("GET /api/health", () => {
     await expect(response.json()).resolves.toMatchObject({
       ok: false,
       database: { connected: false, authTables: false },
+    });
+  });
+
+  it("does not require production-only integrations outside production", async () => {
+    mocks.execute.mockResolvedValue([readyDatabase]);
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000");
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("CRON_SECRET", "");
+
+    const response = await GET();
+
+    expect(response.status).toBe(200);
+    expect(mocks.execute).toHaveBeenCalledTimes(1);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      environment: {
+        siteUrl: "http://localhost:3000",
+        productionReadiness: {
+          siteUrlHttps: false,
+          passwordResetEmail: false,
+          trialReminderCron: false,
+        },
+      },
+    });
+  });
+
+  it("blocks production readiness when operational integrations are missing", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(mocks.execute).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      database: { connected: false },
+    });
+  });
+
+  it("allows production readiness when required integrations and schema are ready", async () => {
+    mocks.execute.mockResolvedValue([readyDatabase]);
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://pos.example.com");
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("RESEND_FROM_EMAIL", "wazePOS <no-reply@example.com>");
+    vi.stubEnv("CRON_SECRET", "cron-secret-with-at-least-32-characters");
+    vi.stubEnv("BANK_TRANSFER_BANK", "Mandiri");
+    vi.stubEnv("BANK_TRANSFER_ACCOUNT_NUMBER", "9876543210");
+    vi.stubEnv("BANK_TRANSFER_ACCOUNT_NAME", "PT Contoh POS");
+    vi.stubEnv("PLATFORM_ADMIN_EMAILS", "admin@example.com");
+    vi.stubEnv("LEAD_WEBHOOK_URL", "https://crm.example.com/leads");
+
+    const response = await GET();
+
+    expect(response.status).toBe(200);
+    expect(mocks.execute).toHaveBeenCalledTimes(1);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      database: {
+        connected: true,
+        latestSchema: true,
+      },
     });
   });
 });

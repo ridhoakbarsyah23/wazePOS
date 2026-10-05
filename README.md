@@ -379,7 +379,7 @@ Tanpa membuka secret, cek:
 https://waze-pos.vercel.app/api/health
 ```
 
-Response yang sehat memiliki `"ok": true`, `"connected": true`, dan `"authTables": true`. Lalu tes halaman `/register` dan `/login`.
+Response yang sehat memiliki `"ok": true`, database terhubung, tabel auth/bisnis tersedia, dan schema terbaru. Pada production, endpoint ini juga mensyaratkan konfigurasi operasional utama sudah lengkap: `NEXT_PUBLIC_SITE_URL` HTTPS, email Resend, `CRON_SECRET`, rekening transfer resmi, `PLATFORM_ADMIN_EMAILS`, dan `LEAD_WEBHOOK_URL` HTTPS. Detail konfigurasi hanya ditampilkan di non-production agar endpoint publik tidak membocorkan status secret. Lalu tes halaman `/register` dan `/login`.
 
 ---
 
