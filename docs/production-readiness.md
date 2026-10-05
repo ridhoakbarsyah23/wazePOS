@@ -38,7 +38,7 @@ Jangan menjalankan skenario pembuatan akun, transaksi, atau pembayaran terhadap 
 | Status | Pemeriksaan | Bukti yang dicatat |
 | --- | --- | --- |
 | [ ] | SHA alias production sama dengan commit release | SHA + URL deployment |
-| [ ] | Seluruh migrasi sudah diterapkan | respons `/api/health` dengan `latestSchema: true` |
+| [ ] | Seluruh migrasi dan konfigurasi wajib production sudah diterapkan | respons `/api/health` dengan `ok: true`; cek detail `latestSchema` dan integrasi hanya dari staging/non-production |
 | [ ] | Google OAuth aktif | waktu uji + akun uji + redirect berhasil |
 | [ ] | OTP dan reset password terkirim | message ID Resend + inbox penerima |
 | [ ] | Cron pengingat trial berjalan | invocation Vercel + message ID Resend |
