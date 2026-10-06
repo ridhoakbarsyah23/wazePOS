@@ -131,15 +131,18 @@ export function useMarketingMotion({ root, feature, showcase, comparisonOpen }: 
         scrollTrigger: { trigger: page, start: "top top", end: "bottom bottom", scrub: true },
       });
 
-      gsap.from(select(".hero .bar-chart i"), {
-        scaleY: 0.08, opacity: 0.25, transformOrigin: "center bottom",
-        stagger: 0.06, duration: 0.7, delay: 0.35, ease: "power2.out", clearProps: "transform,opacity",
+      gsap.from(select(".hero-flow li"), {
+        opacity: 0, x: -12, stagger: 0.08, duration: 0.55, delay: 0.4, ease: "power3.out", clearProps: "opacity,transform",
+      });
+      gsap.from(select(".receipt-paper"), {
+        opacity: 0, y: -24, rotate: -4, duration: 0.75, delay: 0.5, ease: "back.out(1.35)", clearProps: "opacity,transform",
       });
 
       // Decorative loops only run while their section is visible and the tab is active.
       const heroLoop = gsap.timeline({ paused: true, repeat: -1, yoyo: true })
         .to(select(".hero-orb"), { x: -16, y: 12, scale: 1.04, duration: 5, ease: "sine.inOut" }, 0)
         .to(select(".floating-card"), { y: -8, stagger: 0.25, duration: 2.5, ease: "sine.inOut" }, 0)
+        .to(select(".receipt-stack"), { y: -6, rotate: -1.2, duration: 2.8, ease: "sine.inOut" }, 0.1)
         .to(select(".live-dot"), { opacity: 0.45, duration: 2.5, ease: "sine.inOut" }, 0);
       const track = select(".business-strip-track")[0] as HTMLElement | undefined;
       const strip = select(".business-strip")[0] as HTMLElement | undefined;
@@ -244,8 +247,8 @@ export function useMarketingMotion({ root, feature, showcase, comparisonOpen }: 
     const media = gsap.matchMedia();
     media.add("(prefers-reduced-motion: no-preference)", () => {
       const select = gsap.utils.selector(page);
-      gsap.from(select(".showcase-frame .app-window"), { opacity: 0, y: 10, duration: 0.4, clearProps: "opacity,transform" });
-      gsap.from(select(".showcase-frame .bar-chart i"), { scaleY: 0.08, transformOrigin: "center bottom", stagger: 0.04, duration: 0.6, clearProps: "transform" });
+      gsap.from(select(".showcase-frame .product-shot"), { opacity: 0, y: 12, scale: 0.985, duration: 0.42, ease: "power2.out", clearProps: "opacity,transform" });
+      gsap.from(select(".showcase-frame figcaption"), { opacity: 0, y: 8, duration: 0.32, delay: 0.08, ease: "power2.out", clearProps: "opacity,transform" });
     }, page);
     ScrollTrigger.refresh();
     return () => media.revert();
