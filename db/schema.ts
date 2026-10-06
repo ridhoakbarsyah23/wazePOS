@@ -268,12 +268,20 @@ export const lead = pgTable(
     outlets: text("outlets").notNull(),
     message: text("message"),
     source: text("source").default("marketing_form").notNull(),
+    status: text("status").$type<"new" | "contacted" | "interested" | "not_qualified">().default("new").notNull(),
+    followUpNote: text("follow_up_note"),
+    followUpDate: date("follow_up_date", { mode: "string" }),
+    statusUpdatedAt: timestamp("status_updated_at", { withTimezone: true }),
     webhookDeliveredAt: timestamp("webhook_delivered_at", { withTimezone: true }),
     ...timestamps,
   },
   (table) => [
     index("lead_created_at_idx").on(table.createdAt),
+    index("lead_status_created_at_idx").on(table.status, table.createdAt),
+    index("lead_follow_up_date_idx").on(table.followUpDate),
     index("lead_whatsapp_idx").on(table.whatsapp),
+    check("lead_status_check", sql`${table.status} in ('new', 'contacted', 'interested', 'not_qualified')`),
+    check("lead_follow_up_note_check", sql`${table.followUpNote} is null or char_length(trim(${table.followUpNote})) between 1 and 2000`),
   ],
 );
 

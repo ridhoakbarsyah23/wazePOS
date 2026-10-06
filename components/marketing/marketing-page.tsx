@@ -3,12 +3,15 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dashboardPreview from "@/docs/images/dashboard.webp";
+import posPreview from "@/docs/images/pos.webp";
 import { useMarketingMotion } from "@/components/marketing/use-marketing-motion";
 import { trackEvent } from "@/shared/marketing/analytics";
 import { marketingFaqs } from "@/shared/marketing/marketing-content";
 import { formatPlanAnnualPrice, getMarketingPlanCards, getPlanFeatureComparison } from "@/shared/billing/plans";
 
-const BUSINESS_TYPES = ["Toko", "Warung", "Kedai Kopi", "Restoran", "Usaha Laundry", "Ritel"];
+const BUSINESS_TYPES = ["Toko kelontong", "Warung makan", "Kedai kopi", "Restoran kecil", "Laundry kiloan", "Ritel harian"];
+const HERO_FLOW = ["Pilih produk", "Bayar", "Cetak struk", "Stok ikut bergerak"];
 
 const MARQUEE_GROUPS = 8;
 
@@ -100,6 +103,14 @@ const businessTypes = [
 ];
 
 const showcaseTabs = ["Dasbor", "Kasir", "Produk", "Stok", "Laporan", "Pelanggan"];
+const showcaseDescriptions: Record<string, string> = {
+  Dasbor: "Pantau omzet, transaksi, stok, dan insight penjualan tanpa pindah-pindah catatan.",
+  Kasir: "Cari produk, masukkan member, pilih pembayaran, lalu selesaikan transaksi dari satu terminal.",
+  Produk: "Kelola katalog, harga, kategori, dan SKU agar kasir tidak menebak-nebak saat jam ramai.",
+  Stok: "Lihat ketersediaan dan pergerakan stok untuk paket Bisnis, termasuk peringatan saat menipis.",
+  Laporan: "Baca performa gerai, produk terlaris, dan jam ramai dengan angka yang mudah dipahami.",
+  Pelanggan: "Simpan data pelanggan untuk membantu riwayat transaksi dan pelayanan berikutnya.",
+};
 
 const pricingPlans = getMarketingPlanCards();
 const featureComparison = getPlanFeatureComparison();
@@ -110,7 +121,7 @@ function TrackedLink({ href, event, className, children, external = false }: { h
 
 function Brand() {
   return (
-    <a href="#beranda" className="brand" aria-label="wazePOS — kembali ke beranda">
+    <a href="#beranda" className="brand" aria-label="wazePOS - kembali ke beranda">
       <span className="brand-mark">
         <Image src="/logo.png" alt="" width={34} height={34} priority />
       </span>
@@ -119,38 +130,62 @@ function Brand() {
   );
 }
 
-function DashboardMockup({ mode = "hero", active = "Dasbor" }: { mode?: "hero" | "showcase"; active?: string }) {
-  const previewNavigation: Array<{ label: string; icon: IconName }> = [
-    { label: "Dasbor", icon: "dashboard" },
-    { label: "Kasir", icon: "receipt" },
-    { label: "Produk", icon: "box" },
-    { label: "Stok", icon: "bag" },
-    { label: "Laporan", icon: "chart" },
-    { label: "Pelanggan", icon: "customer" },
-  ];
+function ProductScreenshot({ mode = "hero", active = "Kasir" }: { mode?: "hero" | "showcase"; active?: string }) {
+  const isCashier = active === "Kasir";
+  const image = isCashier ? posPreview : dashboardPreview;
+  const alt = isCashier
+    ? "Tampilan kasir POS wazePOS dengan pencarian produk, daftar produk, dan panel pesanan"
+    : "Tampilan dashboard wazePOS dengan ringkasan omzet, transaksi, stok, dan insight penjualan";
 
   return (
-    <div className={`app-window app-window--${mode}`} aria-label={`Ilustrasi konsep tampilan ${active} wazePOS`} role="img">
-      <div className="window-bar"><span /><span /><span /><b>Pratinjau konsep</b></div>
-      <div className="app-shell">
-        <aside className="app-sidebar">
-          <span className="mini-logo">w</span>
-          {previewNavigation.map((item) => <span key={item.label} className={active === item.label ? "active" : ""}><Icon name={item.icon} size={15} /></span>)}
-        </aside>
-        <div className="app-content">
-          <div className="mock-head"><div><small>Ringkasan bisnis</small><strong>{active}</strong></div><span className="mock-avatar">WP</span></div>
-          <div className="metric-row">
-            <div><span className="metric-icon green"><Icon name="chart" size={14}/></span><small>Penjualan</small><strong>Rp 4,8 jt</strong><em>Contoh data</em></div>
-            <div><span className="metric-icon orange"><Icon name="receipt" size={14}/></span><small>Transaksi</small><strong>128</strong><em>Bulan berjalan</em></div>
-            <div><span className="metric-icon purple"><Icon name="box" size={14}/></span><small>Produk</small><strong>246</strong><em>Terdata</em></div>
-          </div>
-          <div className="mock-grid">
-            <div className="chart-card"><div className="mock-card-head"><strong>Tren penjualan</strong><span>7 hari</span></div><div className="bar-chart">{[36, 52, 45, 72, 57, 84, 68].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div><div className="chart-labels"><span>Sen</span><span>Rab</span><span>Jum</span><span>Min</span></div></div>
-            <div className="activity-card"><div className="mock-card-head"><strong>Aktivitas</strong><span>Lihat detail</span></div>{["Transaksi baru", "Stok diperbarui", "Pelanggan baru"].map((item, index) => <div className="activity" key={item}><span className={`dot dot-${index}`} /><div><b>{item}</b><small>Baru saja</small></div></div>)}</div>
-          </div>
-        </div>
+    <figure className={`product-shot product-shot--${mode}`}>
+      <div className="product-shot-frame">
+        <Image
+          src={image}
+          alt={alt}
+          width={1418}
+          height={802}
+          priority={mode === "hero"}
+          sizes={mode === "hero" ? "(min-width: 1024px) 48vw, 92vw" : "(min-width: 1024px) 820px, 92vw"}
+          className="product-shot-image"
+        />
       </div>
+      <figcaption>
+        <span className="mono">{isCashier ? "Terminal kasir" : "Ringkasan owner"}</span>
+        <b>{isCashier ? "Transaksi bisa selesai dari satu layar." : "Owner langsung melihat kondisi gerai."}</b>
+      </figcaption>
+    </figure>
+  );
+}
+
+function ReceiptStack() {
+  return (
+    <div className="receipt-stack" aria-hidden="true">
+      <div className="receipt-paper">
+        <span className="mono">Struk hari ini</span>
+        <b>Kedai Senja Rasa</b>
+        <dl>
+          <div><dt>Americano Dingin</dt><dd>Rp 20.000</dd></div>
+          <div><dt>Matcha Latte</dt><dd>Rp 24.000</dd></div>
+          <div><dt>Diskon member</dt><dd>-Rp 4.000</dd></div>
+        </dl>
+        <strong>Rp 40.000</strong>
+      </div>
+      <div className="receipt-shadow" />
     </div>
+  );
+}
+
+function FlowRail() {
+  return (
+    <ol className="hero-flow" aria-label="Alur transaksi wazePOS">
+      {HERO_FLOW.map((item, index) => (
+        <li key={item}>
+          <span>{index + 1}</span>
+          <b>{item}</b>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -196,19 +231,28 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
           <div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/>
           <div className="container hero-grid">
             <div className="hero-copy reveal">
-              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web · Multi-gerai · Struk 58/80mm</span></span>
-              <h1 className="hero-display">Tutup buku <span>tanpa ribet.</span><br />Kasir jalan, stok aman.</h1>
-              <p className="hero-lede">wazePOS merapikan transaksi warung sampai restoran: kasir cepat, arus kas & stok wazePOS Bisnis terpantau, laporan kebaca tanpa rekap manual.</p>
+              <span className="eyebrow"><span className="live-dot" aria-hidden="true" /><span className="mono">Kasir web - stok - laporan - multi gerai</span></span>
+              <h1 className="hero-display">Kasir yang terasa seperti <span>meja kerja pemilik usaha.</span></h1>
+              <p className="hero-lede">wazePOS menyatukan transaksi, stok, arus kas, pelanggan, dan laporan harian agar owner tidak lagi menutup toko sambil membongkar nota satu per satu.</p>
               <div className="hero-actions"><TrackedLink href={trialUrl} event="click_try_free" className="button button-primary button-large">Mulai Uji Coba Gratis <Icon name="arrow" size={19}/></TrackedLink><a href="#demo" className="button button-white button-large" onClick={() => trackEvent("click_demo", { source: "hero" })}><Icon name="dashboard" size={19}/> Lihat Tampilan Aplikasi</a></div>
               <dl className="pos-proof">
-                <div><dt className="mono">Kasir</dt><dd>Tunai + kartu EDC Bisnis</dd></div>
-                <div><dt className="mono">Arus kas</dt><dd>masuk-keluar Bisnis</dd></div>
-                <div><dt className="mono">Stok</dt><dd>peringatan menipis</dd></div>
-                <div><dt className="mono">Laporan</dt><dd>Excel + layar</dd></div>
+                <div><dt className="mono">Kasir</dt><dd>Cari SKU, member, dan bayar cepat</dd></div>
+                <div><dt className="mono">Stok Bisnis</dt><dd>Qty bergerak setelah transaksi</dd></div>
+                <div><dt className="mono">Owner</dt><dd>Ringkasan gerai langsung terbaca</dd></div>
               </dl>
               <div className="supporting-values"><span><Icon name="check" size={16}/> Mudah digunakan</span><span><Icon name="check" size={16}/> Sesuai untuk beragam usaha</span><span><Icon name="check" size={16}/> Program uji coba tersedia</span></div>
             </div>
-            <div className="hero-visual reveal delay-1"><div className="visual-backdrop"/><div className="hero-tilt"><DashboardMockup/><div className="receipt-edge" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div></div><div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Operasional lebih rapi</small></div></div><div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Laporan ringkas</b><small>Mudah dipahami</small></div></div></div>
+            <div className="hero-visual reveal delay-1">
+              <div className="visual-backdrop"/>
+              <div className="hero-tilt">
+                <ProductScreenshot mode="hero" active="Kasir" />
+                <div className="receipt-edge" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
+              </div>
+              <ReceiptStack />
+              <FlowRail />
+              <div className="floating-card floating-card-one"><span><Icon name="check" size={16}/></span><div><b>Transaksi tercatat</b><small>Stok ikut diperbarui</small></div></div>
+              <div className="floating-card floating-card-two"><span><Icon name="chart" size={16}/></span><div><b>Owner melihat angka</b><small>Tanpa rekap manual</small></div></div>
+            </div>
           </div>
           <div className="business-strip">
             <span className="business-strip-label"><span className="mono">Cocok untuk</span></span>
@@ -225,20 +269,20 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
         </section>
 
         <section className="section problem-section">
-          <div className="container split-heading" data-reveal><div><span className="section-kicker"><span className="mono">Buku kas kusut</span></span><h2 className="section-display">Tutup kasir jam 9 malam, <span>rekap masih jam 11?</span></h2></div><p>Nota tercecer, stok tidak cocok, laporan numpuk. Bagian ini yang kami bereskan duluan — bukan sekadar ganti tampilan.</p></div>
+          <div className="container split-heading" data-reveal><div><span className="section-kicker"><span className="mono">Buku kas kusut</span></span><h2 className="section-display">Masalahnya bukan jualan. <span>Masalahnya ingat semua.</span></h2></div><p>Harga berubah, stok menipis, pelanggan minta struk, owner minta angka. wazePOS dibuat untuk meringankan bagian yang biasanya cuma ditahan di kepala.</p></div>
           <div className="container problem-grid">
-            {[{n:"01",t:"Nota tercecer saat rame",d:"Tulisan tangan kelewat, kembalian dihitung ulang, antrean menumpuk."},{n:"02",t:"Stok di rak beda dengan catatan",d:"Barang habis ketahuan saat pelanggan sudah pesan."},{n:"03",t:"Rekap makan waktu tutup toko",d:"Omzet harian harus dihitung ulang dari tumpukan nota."},{n:"04",t:"Data nyebar di 3 tempat",d:"Harga di etalase, stok di buku, pelanggan di kepala."}].map((item) => <article className="problem-card" key={item.n} data-reveal><span>{item.n}</span><h3>{item.t}</h3><p>{item.d}</p></article>)}
+            {[{n:"01",t:"Produk dicari sambil antrean jalan",d:"Kasir butuh pencarian yang cepat, bukan scroll katalog sampai pelanggan menunggu."},{n:"02",t:"Stok habis baru ketahuan",d:"Barang populer sering kosong karena stok tidak ikut bergerak setelah transaksi."},{n:"03",t:"Omzet dihitung ulang dari nota",d:"Tutup toko masih lanjut menghitung total, diskon, dan pembayaran manual."},{n:"04",t:"Owner jauh dari angka harian",d:"Pemilik gerai perlu tahu performa tanpa harus berada di meja kasir."}].map((item) => <article className="problem-card" key={item.n} data-reveal><span>{item.n}</span><h3>{item.t}</h3><p>{item.d}</p></article>)}
           </div>
-          <div className="container bridge-copy" data-reveal><span className="bridge-copy-icon" aria-hidden="true"><Icon name="arrow" size={20}/></span><p>Satu alur kasir: jual → catat → stok berkurang → laporan kebaca. Itu janji <b>wazePOS.</b></p></div>
+          <div className="container bridge-copy" data-reveal><span className="bridge-copy-icon" aria-hidden="true"><Icon name="arrow" size={20}/></span><p>Satu alur kerja: pilih produk, terima pembayaran, cetak struk, stok bergerak, laporan owner ikut terbaca. Itu janji <b>wazePOS.</b></p></div>
         </section>
 
         <section className="section benefits-section">
-          <div className="container section-heading centered" data-reveal><span className="section-kicker">Kenapa pemilik usaha pindah</span><h2 className="section-display">Bukan aplikasi serba-bisa. <span>Yang rapi di kasir.</span></h2><p>Enam hal yang langsung terasa di minggu pertama pemakaian.</p></div>
+          <div className="container section-heading centered" data-reveal><span className="section-kicker">Kenapa pemilik usaha pindah</span><h2 className="section-display">Lebih sedikit menebak. <span>Lebih cepat mengambil keputusan.</span></h2><p>Setiap fitur ditarik dari kejadian kasir yang benar-benar terjadi: ramai, stok habis, member datang, owner butuh laporan.</p></div>
             <div className="container benefits-grid">{benefits.map((item) => <article className="benefit-card" key={item.title} data-reveal><span className="icon-box"><Icon name={item.icon}/></span><h3>{item.title}</h3><p>{item.text}</p><a href="#fitur" className="card-link" onClick={() => trackEvent("click_feature", { source: "benefit", benefit: item.title })}>Lihat fitur <Icon name="arrow" size={16}/></a></article>)}</div>
         </section>
 
         <section className="section feature-section" id="fitur" data-motion="fitur">
-          <div className="container section-heading centered" data-reveal><span className="section-kicker">Meja kasir, versi rapi</span><h2 className="section-display">Lima layar yang dipakai <span>setiap hari.</span></h2><p>Tanpa menu pajangan. Semua yang di bawah ini kepakai saat toko rame.</p></div>
+          <div className="container section-heading centered" data-reveal><span className="section-kicker">Meja kasir, versi rapi</span><h2 className="section-display">Layar yang dipakai ketika <span>toko sedang ramai.</span></h2><p>Fokusnya bukan menu yang banyak, tapi alur yang membuat transaksi dan operasional tetap terkendali.</p></div>
           <div className="container feature-tabs" role="tablist" aria-label="Kategori fitur" data-reveal>{featureGroups.map((feature) => <button key={feature.id} role="tab" aria-selected={activeFeature.id === feature.id} className={activeFeature.id === feature.id ? "active" : ""} onClick={() => { setActiveFeature(feature); trackEvent("click_feature", { feature: feature.id }); }}><Icon name={feature.icon} size={19}/>{feature.label}</button>)}</div>
           <div className="container feature-panel" role="tabpanel" data-reveal>
             <div className="feature-copy panel-swap" key={`copy-${activeFeature.id}`}><span className="icon-box icon-box-large"><Icon name={activeFeature.icon} size={27}/></span><h3>{activeFeature.title}</h3><p>{activeFeature.text}</p><ul>{activeFeature.bullets.map((bullet) => <li key={bullet}><span><Icon name="check" size={15}/></span>{bullet}</li>)}</ul><TrackedLink href={whatsappGeneralUrl} event="click_whatsapp" className="text-link" external>Konsultasikan kebutuhan Anda <Icon name="arrow" size={17}/></TrackedLink></div>
@@ -256,9 +300,9 @@ export function MarketingPage({ trialUrl, whatsappGeneralUrl, whatsappTrialUrl }
         </section>
 
         <section className="section showcase-section" id="demo">
-          <div className="container section-heading centered" data-reveal><span className="section-kicker">Coba pencet-pencet</span><h2 className="section-display">Rasanya kayak kasir beneran. <span>Karena memang itu.</span></h2><p>Ilustrasi di bawah mengikuti tab yang Anda pilih. Bukan screenshot final, tapi alurnya sama.</p></div>
+          <div className="container section-heading centered" data-reveal><span className="section-kicker">Lihat ruang kerjanya</span><h2 className="section-display">Bukan gambar pajangan. <span>Ini alur produk yang dipakai.</span></h2><p>{showcaseDescriptions[activeShowcase]}</p></div>
           <div className="container showcase-tabs" role="tablist" aria-label="Pratinjau halaman produk" data-reveal>{showcaseTabs.map((tab, index) => <button id={`showcase-tab-${index}`} key={tab} type="button" role="tab" aria-selected={activeShowcase === tab} aria-controls="showcase-panel" tabIndex={activeShowcase === tab ? 0 : -1} className={activeShowcase === tab ? "active" : ""} onClick={() => { setActiveShowcase(tab); trackEvent("click_demo", { screen: tab }); }}>{tab}</button>)}</div>
-          <div id="showcase-panel" className="container showcase-frame" role="tabpanel" aria-labelledby={`showcase-tab-${showcaseTabs.indexOf(activeShowcase)}`} data-reveal><DashboardMockup key={activeShowcase} mode="showcase" active={activeShowcase}/></div>
+          <div id="showcase-panel" className="container showcase-frame" role="tabpanel" aria-labelledby={`showcase-tab-${showcaseTabs.indexOf(activeShowcase)}`} data-reveal><ProductScreenshot key={activeShowcase} mode="showcase" active={activeShowcase}/></div>
         </section>
 
         <section className="section pricing-section" id="harga" data-motion="harga">

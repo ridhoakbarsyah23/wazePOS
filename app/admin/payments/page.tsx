@@ -44,10 +44,10 @@ export default async function PlatformAdminPaymentsPage({
         <Badge variant="outline" className="mb-3">
           <CreditCard className="size-3.5" /> Pembayaran
         </Badge>
-        <h1 className="m-0 text-2xl font-black leading-tight tracking-[-0.7px] sm:text-3xl">
+        <h1 className="m-0 text-2xl font-black leading-tight tracking-[-0.7px] text-[#15211d] dark:text-white sm:text-3xl">
           Daftar pembayaran
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069]">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069] dark:text-[#a3a3a3]">
           {data.summary.paidPayments} pembayaran berhasil dengan total {formatRupiah(data.summary.paidRevenue)}. {data.summary.pendingPayments} menunggu verifikasi transfer bank. {data.summary.pendingDisbursementPayments} berhasil ({formatRupiah(data.summary.pendingDisbursementRevenue)}) siap dicairkan ke rekening pribadi, {data.summary.disbursedPayments} sudah dicairkan ({formatRupiah(data.summary.disbursedRevenue)}).
         </p>
       </section>
