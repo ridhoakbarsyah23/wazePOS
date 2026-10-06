@@ -109,20 +109,20 @@ export function PlatformAdminPaymentList({
   return (
     <section
       aria-labelledby="payment-list-title"
-      className="mt-6 overflow-hidden rounded-2xl border border-[#dfe8e3] bg-white shadow-[0_8px_24px_rgba(16,65,48,.05)] sm:mt-7"
+      className="mt-6 overflow-hidden rounded-2xl border border-[#dfe8e3] bg-white shadow-[0_8px_24px_rgba(16,65,48,.05)] dark:border-[#303030] dark:bg-[#0d0d0d] sm:mt-7"
     >
-      <div className="flex flex-col gap-4 border-b border-[#e8efeb] p-4 sm:p-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4 border-b border-[#e8efeb] p-4 dark:border-[#303030] sm:p-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 id="payment-list-title" className="m-0 flex items-center gap-2 text-lg font-black">
-              <CreditCard className="size-4 text-[#198760]" aria-hidden="true" />
+            <h2 id="payment-list-title" className="m-0 flex items-center gap-2 text-lg font-black text-[#15211d] dark:text-white">
+              <CreditCard className="size-4 text-[#198760] dark:text-[#62d6a5]" aria-hidden="true" />
               Daftar pembayaran
             </h2>
-            <span aria-live="polite" className="rounded-full bg-[#eef6f2] px-2.5 py-1 text-[11px] font-extrabold text-[#527066]">
+            <span aria-live="polite" className="rounded-full bg-[#eef6f2] px-2.5 py-1 text-[11px] font-extrabold text-[#527066] dark:bg-[#1a1a1a] dark:text-[#a3a3a3]">
               {pagination.total} data
             </span>
           </div>
-          <p className="mt-1 text-xs leading-5 text-[#627069]">
+          <p className="mt-1 text-xs leading-5 text-[#627069] dark:text-[#a3a3a3]">
             Menampilkan {pagination.from}–{pagination.to} dari {pagination.total} pembayaran, maksimal {pagination.pageSize} per halaman.
           </p>
         </div>
@@ -147,21 +147,21 @@ export function PlatformAdminPaymentList({
             aria-label="Filter pembayaran"
           >
             <label className="relative col-span-2 min-w-0">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#82928a]" aria-hidden="true" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#82928a] dark:text-[#737373]" aria-hidden="true" />
               <span className="sr-only">Cari usaha, email, atau order id</span>
               <input
                 name="q"
                 defaultValue={filters.query}
                 maxLength={100}
                 placeholder="Cari usaha, email, atau order id"
-                className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white pl-9 pr-3 text-sm outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
+                className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white pl-9 pr-3 text-sm text-[#15211d] outline-none placeholder:text-[#82928a] dark:border-[#303030] dark:bg-[#101010] dark:text-white dark:placeholder:text-[#737373] transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
               />
             </label>
             <select
               name="status"
               defaultValue={filters.status}
               aria-label="Filter status pembayaran"
-              className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
+              className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none dark:border-[#303030] dark:bg-[#101010] dark:text-white transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua status</option>
               <option value="pending">Pending</option>
@@ -174,7 +174,7 @@ export function PlatformAdminPaymentList({
               name="plan"
               defaultValue={filters.plan}
               aria-label="Filter paket"
-              className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
+              className="h-11 w-full min-w-0 rounded-xl border border-[#b8cbc1] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none dark:border-[#303030] dark:bg-[#101010] dark:text-white transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 sm:h-10"
             >
               <option value="all">Semua paket</option>
               <option value="tumbuh">wazePOS Tumbuh</option>
@@ -189,7 +189,7 @@ export function PlatformAdminPaymentList({
       </div>
 
       {payments.length === 0 ? (
-        <div className="px-5 py-14 text-center text-sm text-[#627069]" role="status">
+        <div className="px-5 py-14 text-center text-sm text-[#627069] dark:text-[#a3a3a3]" role="status">
           {hasFilters
             ? "Tidak ada pembayaran yang cocok dengan pencarian atau filter."
             : "Belum ada pembayaran yang tercatat."}
@@ -199,7 +199,7 @@ export function PlatformAdminPaymentList({
           <div className="hidden overflow-x-auto xl:block" role="region" aria-label="Tabel pembayaran" tabIndex={0}>
             <table className="w-full min-w-[1080px] border-collapse text-left text-sm">
               <caption className="sr-only">Daftar pembayaran langganan</caption>
-              <thead className="bg-[#f7faf8] text-[11px] uppercase tracking-[0.08em] text-[#627069]">
+              <thead className="bg-[#f7faf8] text-[11px] uppercase tracking-[0.08em] text-[#627069] dark:bg-[#151515] dark:text-[#a3a3a3]">
                 <tr>
                   <th scope="col" className="px-5 py-3 font-extrabold">Usaha</th>
                   <th scope="col" className="px-5 py-3 font-extrabold">Nominal</th>
@@ -215,29 +215,29 @@ export function PlatformAdminPaymentList({
                 {payments.map((item) => {
                   const meta = paymentMeta[item.status];
                   return (
-                    <tr key={item.id} className="border-t border-[#edf2ef] align-top transition hover:bg-[#fbfdfc]">
+                    <tr key={item.id} className="border-t border-[#edf2ef] align-top transition hover:bg-[#fbfdfc] dark:border-[#303030] dark:hover:bg-[#151515]">
                       <th scope="row" className="max-w-[240px] px-5 py-4 text-left font-normal">
-                        <p className="m-0 truncate font-extrabold" title={item.businessName}>{item.businessName}</p>
-                        <p className="mt-1 truncate text-xs text-[#627069]" title={item.ownerEmail ?? undefined}>
+                        <p className="m-0 truncate font-extrabold text-[#15211d] dark:text-white" title={item.businessName}>{item.businessName}</p>
+                        <p className="mt-1 truncate text-xs text-[#627069] dark:text-[#a3a3a3]" title={item.ownerEmail ?? undefined}>
                           {item.ownerEmail ?? "Email belum tersedia"}
                         </p>
                       </th>
-                      <td className="whitespace-nowrap px-5 py-4 font-extrabold tabular-nums">{formatRupiah(item.amount)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 font-extrabold tabular-nums text-[#15211d] dark:text-white">{formatRupiah(item.amount)}</td>
                       <td className="px-5 py-4">
                         <Badge className="whitespace-nowrap" variant={meta.variant}>{meta.label}</Badge>
                       </td>
                       <td className="max-w-[220px] px-5 py-4">
-                        <p className="m-0 truncate font-mono text-xs" title={item.providerOrderId}>{item.providerOrderId}</p>
-                        <p className="mt-1 truncate text-xs text-[#627069]">transfer bank{item.senderBank ? ` · ${item.senderBank}` : ""}</p>
+                        <p className="m-0 truncate font-mono text-xs text-[#15211d] dark:text-white" title={item.providerOrderId}>{item.providerOrderId}</p>
+                        <p className="mt-1 truncate text-xs text-[#627069] dark:text-[#a3a3a3]">transfer bank{item.senderBank ? ` · ${item.senderBank}` : ""}</p>
                         {item.proofUploaded ? (
-                          <p className="mt-1 text-xs font-bold text-[#106348]">Bukti terlampir</p>
+                          <p className="mt-1 text-xs font-bold text-[#106348] dark:text-[#62d6a5]">Bukti terlampir</p>
                         ) : item.status === "pending" ? (
-                          <p className="mt-1 text-xs font-bold text-amber-700">Belum ada bukti</p>
+                          <p className="mt-1 text-xs font-bold text-amber-700 dark:text-amber-300">Belum ada bukti</p>
                         ) : null}
                       </td>
-                      <td className="px-5 py-4 font-bold">{getPlanLabel(item.plan)}</td>
-                      <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57]"><DateTimeValue value={item.createdAt} /></td>
-                      <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57]"><DateTimeValue value={item.paidAt} /></td>
+                      <td className="px-5 py-4 font-bold text-[#15211d] dark:text-white">{getPlanLabel(item.plan)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57] dark:text-[#d4d4d4]"><DateTimeValue value={item.createdAt} /></td>
+                      <td className="whitespace-nowrap px-5 py-4 text-[#4d5e57] dark:text-[#d4d4d4]"><DateTimeValue value={item.paidAt} /></td>
                       <td className="px-5 py-4">
                         <div className="grid gap-2">
                           <PlatformAdminPaymentVerifyButton payment={item} />
@@ -251,23 +251,23 @@ export function PlatformAdminPaymentList({
             </table>
           </div>
 
-          <div className="divide-y divide-[#edf2ef] xl:hidden">
+          <div className="divide-y divide-[#edf2ef] dark:divide-[#303030] xl:hidden">
             {payments.map((item) => {
               const meta = paymentMeta[item.status];
               return (
                 <article key={item.id} className="p-4 sm:p-5">
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="m-0 truncate text-sm font-extrabold" title={item.businessName}>{item.businessName}</h3>
-                      <p className="mt-1 truncate font-mono text-xs text-[#627069]" title={item.providerOrderId}>{item.providerOrderId}</p>
+                      <h3 className="m-0 truncate text-sm font-extrabold text-[#15211d] dark:text-white" title={item.businessName}>{item.businessName}</h3>
+                      <p className="mt-1 truncate font-mono text-xs text-[#627069] dark:text-[#a3a3a3]" title={item.providerOrderId}>{item.providerOrderId}</p>
                     </div>
                     <Badge className="shrink-0" variant={meta.variant}>{meta.label}</Badge>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3">
-                    <p className="m-0 text-sm font-black tabular-nums">{formatRupiah(item.amount)}</p>
-                    <p className="m-0 text-xs text-[#627069]">{getPlanLabel(item.plan)}</p>
+                    <p className="m-0 text-sm font-black tabular-nums text-[#15211d] dark:text-white">{formatRupiah(item.amount)}</p>
+                    <p className="m-0 text-xs text-[#627069] dark:text-[#a3a3a3]">{getPlanLabel(item.plan)}</p>
                   </div>
-                  <p className="mt-1 text-[11px] text-[#82928a]">{formatDateTime(item.paidAt ?? item.createdAt)}</p>
+                  <p className="mt-1 text-[11px] text-[#82928a] dark:text-[#a3a3a3]">{formatDateTime(item.paidAt ?? item.createdAt)}</p>
                   <div className="mt-3 grid gap-2">
                     <PlatformAdminPaymentVerifyButton payment={item} />
                     <PlatformAdminPaymentDisburseButton payment={item} />
@@ -280,7 +280,7 @@ export function PlatformAdminPaymentList({
       )}
 
       {pagination.totalPages > 1 && (
-        <nav className="flex flex-wrap items-center gap-1.5 border-t border-[#e8efeb] px-4 py-3 sm:px-5" aria-label="Navigasi halaman pembayaran">
+        <nav className="flex flex-wrap items-center gap-1.5 border-t border-[#e8efeb] px-4 py-3 dark:border-[#303030] sm:px-5" aria-label="Navigasi halaman pembayaran">
           {pagination.page > 1 ? (
             <Link href={buildPageHref(pagination.page - 1, filters, basePath)} className={cn(pageLinkClass, "gap-1.5")}>
               <ChevronLeft className="size-3.5" aria-hidden="true" />
@@ -294,7 +294,7 @@ export function PlatformAdminPaymentList({
           )}
           {getPageNumbers(pagination.page, pagination.totalPages).map((item, index) =>
             item === "ellipsis" ? (
-              <span key={`ellipsis-${index}`} className="px-1 text-xs text-[#82928a]" aria-hidden="true">…</span>
+              <span key={`ellipsis-${index}`} className="px-1 text-xs text-[#82928a] dark:text-[#737373]" aria-hidden="true">…</span>
             ) : (
               <Link
                 key={item}
@@ -322,13 +322,13 @@ export function PlatformAdminPaymentList({
           )}
         </nav>
       )}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#e8efeb] px-4 py-3 text-xs text-[#627069] sm:px-5">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#e8efeb] px-4 py-3 text-xs text-[#627069] dark:border-[#303030] dark:text-[#a3a3a3] sm:px-5">
         <span>Pending: <strong>{summary.pendingPayments}</strong></span>
         <span>Berhasil: <strong>{summary.paidPayments}</strong></span>
         <span>Pendapatan: <strong>{formatRupiah(summary.paidRevenue)}</strong></span>
         <span>Sudah dicairkan: <strong>{summary.disbursedPayments}</strong> ({formatRupiah(summary.disbursedRevenue)})</span>
         <span>Siap dicairkan: <strong>{summary.pendingDisbursementPayments}</strong> ({formatRupiah(summary.pendingDisbursementRevenue)})</span>
-        <span className="ml-auto hidden text-[#82928a] sm:inline">Urutan terbaru lebih dulu</span>
+        <span className="ml-auto hidden text-[#82928a] dark:text-[#a3a3a3] sm:inline">Urutan terbaru lebih dulu</span>
       </div>
     </section>
   );

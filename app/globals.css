@@ -895,6 +895,20 @@ html[data-dashboard-theme="dark"] [data-dashboard-shell] input.date-picker-moder
   color: #36d399 !important;
 }
 
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) input.date-picker-modern {
+  color-scheme: dark;
+}
+
+:is(
+  [data-admin-shell][data-admin-theme="dark"],
+  html[data-admin-theme="dark"] [data-admin-portal]
+) input.date-picker-modern + svg {
+  color: #62d6a5 !important;
+}
+
 html[data-dashboard-theme="dark"] [data-dashboard-shell] :is(input, textarea, select)::placeholder {
   color: #737373 !important;
 }

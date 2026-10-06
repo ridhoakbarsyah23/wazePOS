@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 type LeadsSearchParams = {
   q?: string | string[];
   source?: string | string[];
+  status?: string | string[];
+  followUp?: string | string[];
   createdFrom?: string | string[];
   createdTo?: string | string[];
   sort?: string | string[];
@@ -28,6 +30,8 @@ export default async function PlatformAdminLeadsPage({
   const data = await getPlatformAdminLeadData({
     q: params.q,
     source: params.source,
+    status: params.status,
+    followUp: params.followUp,
     createdFrom: params.createdFrom,
     createdTo: params.createdTo,
     sort: params.sort,
@@ -40,11 +44,11 @@ export default async function PlatformAdminLeadsPage({
         <Badge variant="outline" className="mb-3">
           <Inbox className="size-3.5" /> Lead marketing
         </Badge>
-        <h1 className="m-0 flex items-center gap-2 text-2xl font-black leading-tight tracking-[-0.7px] sm:text-3xl">
-          <ListFilter className="size-6 text-[#198760]" aria-hidden="true" />
+        <h1 className="m-0 flex items-center gap-2 text-2xl font-black leading-tight tracking-[-0.7px] text-[#15211d] dark:text-white sm:text-3xl">
+          <ListFilter className="size-6 text-[#198760] dark:text-[#62d6a5]" aria-hidden="true" />
           Daftar lead
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069]">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069] dark:text-[#a3a3a3]">
           Pantau calon pelanggan dari form website, cek kebutuhan usaha, dan hubungi langsung melalui WhatsApp.
         </p>
       </section>

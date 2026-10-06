@@ -1,4 +1,5 @@
 import type { PlatformSubscriptionState } from "@/shared/admin/platform-admin-access";
+import type { LeadStatus } from "@/shared/admin/platform-admin-leads";
 
 export type PlatformAdminPlanFilter = "all" | "tumbuh" | "bisnis" | "missing";
 export type PlatformAdminOnboardingFilter = "all" | "completed" | "incomplete";
@@ -122,6 +123,8 @@ export type PlatformAdminPaymentSummary = {
 export type PlatformAdminLeadFilters = {
   query: string;
   source: string;
+  status: LeadStatus | "all";
+  followUp: "all" | "due";
   createdFrom: string;
   createdTo: string;
   sort: "newest" | "oldest" | "name_asc";
@@ -136,6 +139,10 @@ export type PlatformAdminLeadItem = {
   outlets: string;
   message: string | null;
   source: string;
+  status: LeadStatus;
+  followUpNote: string | null;
+  followUpDate: string | null;
+  statusUpdatedAt: Date | string | null;
   webhookDeliveredAt: Date | string | null;
   createdAt: Date | string;
 };
@@ -143,7 +150,13 @@ export type PlatformAdminLeadItem = {
 export type PlatformAdminLeadSummary = {
   total: number;
   today: number;
+  businessDate: string;
+  followUpDue: number;
   webhookDelivered: number;
+  new: number;
+  contacted: number;
+  interested: number;
+  notQualified: number;
 };
 
 export type PlatformAdminAuditLogItem = {

@@ -34,10 +34,10 @@ export default async function PlatformAdminAuditPage({
         <Badge variant="outline" className="mb-3">
           <History className="size-3.5" /> Jejak audit
         </Badge>
-        <h1 className="m-0 text-2xl font-black leading-tight tracking-[-0.7px] sm:text-3xl">
+        <h1 className="m-0 text-2xl font-black leading-tight tracking-[-0.7px] text-[#15211d] dark:text-white sm:text-3xl">
           Audit aktivitas admin
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069]">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069] dark:text-[#a3a3a3]">
           {data.pagination.total} aktivitas terekam dari catatan tindak lanjut, pembukaan detail usaha, dan ekspor data. Halaman ini read-only.
         </p>
       </section>

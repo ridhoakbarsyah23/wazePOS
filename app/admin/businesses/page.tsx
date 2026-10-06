@@ -46,11 +46,11 @@ export default async function PlatformAdminBusinessesPage({
         <Badge variant="outline" className="mb-3">
           <Building2 className="size-3.5" /> Direktori usaha
         </Badge>
-        <h1 className="m-0 flex items-center gap-2 text-2xl font-black leading-tight tracking-[-0.7px] sm:text-3xl">
-          <ListFilter className="size-6 text-[#198760]" aria-hidden="true" />
+        <h1 className="m-0 flex items-center gap-2 text-2xl font-black leading-tight tracking-[-0.7px] text-[#15211d] dark:text-white sm:text-3xl">
+          <ListFilter className="size-6 text-[#198760] dark:text-[#62d6a5]" aria-hidden="true" />
           Daftar usaha
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069]">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#627069] dark:text-[#a3a3a3]">
           Cari usaha berdasarkan nama, owner, atau email. Filter status, paket, onboarding, dan rentang pendaftaran.
         </p>
       </section>
