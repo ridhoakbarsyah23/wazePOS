@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/run-e2e.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "security:dependencies": "npm audit --omit=dev --audit-level=high",
     "admin:seed": "node scripts/seed-platform-admin.mjs --generate-password",
