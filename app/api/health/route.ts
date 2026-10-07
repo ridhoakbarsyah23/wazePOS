@@ -50,12 +50,13 @@ export async function GET() {
   // supaya endpoint publik ini tidak membocorkan konfigurasi ke pihak luar.
   const isProduction = process.env.NODE_ENV === "production";
   const includeDetails = !isProduction;
+  const siteUrl = process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
 
   const passwordResetEmail = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
   );
   const productionReadiness = {
-    siteUrlHttps: isHttpsUrl(process.env.NEXT_PUBLIC_SITE_URL),
+    siteUrlHttps: isHttpsUrl(siteUrl),
     passwordResetEmail,
     trialReminderCron: hasValue(process.env.CRON_SECRET),
     bankTransfer: hasProductionBankAccount(),
@@ -65,7 +66,7 @@ export async function GET() {
     databaseUrl: hasValue(process.env.DATABASE_URL),
     authSecret: hasValue(process.env.BETTER_AUTH_SECRET),
     authUrl: process.env.BETTER_AUTH_URL ?? null,
-    siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+    siteUrl: siteUrl ?? null,
     productionReadiness,
   };
   const requiredEnvironmentReady =

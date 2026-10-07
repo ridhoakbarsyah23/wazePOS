@@ -23,7 +23,9 @@ test.describe("public production readiness", () => {
     await page.goto("/");
 
     await expect(page).toHaveTitle(/wazePOS/i);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Tutup buku");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "Kasir yang terasa seperti meja kerja pemilik usaha.",
+    );
     await expect(page.locator('nav[aria-label="Navigasi utama"]')).toBeAttached();
 
     const hasHorizontalOverflow = await page.evaluate(

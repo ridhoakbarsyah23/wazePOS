@@ -31,7 +31,7 @@ export default defineConfig({
   webServer: externalBaseUrl
     ? undefined
     : {
-        command: "npm run start -- --hostname 127.0.0.1 --port 3100",
+        command: "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100",
         url: `${baseURL}/api/live`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

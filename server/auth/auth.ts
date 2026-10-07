@@ -123,7 +123,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    nextCookies(),
     // Kode OTP 6 digit untuk verifikasi email pendaftar manual, disimpan di
     // tabel `verification` yang sudah ada (tanpa migrasi tambahan).
     emailOTP({
@@ -161,5 +160,6 @@ export const auth = betterAuth({
         });
       },
     }),
+    nextCookies(),
   ],
 });
