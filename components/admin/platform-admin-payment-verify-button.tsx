@@ -101,7 +101,7 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
   if (!canVerify) {
     if (payment.verifiedBy) {
       return (
-        <span className="block text-xs text-[#627069]">
+        <span className="block text-xs text-[#627069] dark:text-[#a3a3a3]">
           Diverifikasi oleh {payment.verifiedBy}
           {payment.verificationNote ? ` — ${payment.verificationNote}` : ""}
         </span>
@@ -120,35 +120,35 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
 
       {open && (
         <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Verifikasi pembayaran ${payment.providerOrderId}`}>
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)]">
-            <div className="border-b border-[#e8efeb] p-4 sm:p-5">
-              <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078]">Verifikasi transfer bank</p>
-              <h2 className="m-0 mt-1 text-base font-black text-[#15211d]">{payment.businessName}</h2>
-              <p className="m-0 mt-1 font-mono text-xs text-[#627069]">{payment.providerOrderId} · {formatRupiah(payment.amount)}</p>
-              <p className="m-0 mt-1 text-xs text-[#627069]">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
+            <div className="border-b border-[#e8efeb] p-4 dark:border-[#303030] sm:p-5">
+              <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078] dark:text-[#a3a3a3]">Verifikasi transfer bank</p>
+              <h2 className="m-0 mt-1 text-base font-black text-[#15211d] dark:text-white">{payment.businessName}</h2>
+              <p className="m-0 mt-1 font-mono text-xs text-[#627069] dark:text-[#a3a3a3]">{payment.providerOrderId} · {formatRupiah(payment.amount)}</p>
+              <p className="m-0 mt-1 text-xs text-[#627069] dark:text-[#a3a3a3]">
                 Pengirim: {payment.senderBank ?? "-"} · {payment.senderAccountName ?? "-"}
               </p>
             </div>
 
             <div className="max-h-[50dvh] overflow-y-auto p-4 sm:p-5">
               {message && (
-                <p role={message.type === "error" ? "alert" : "status"} className={`mb-3 rounded-xl border px-3 py-2 text-xs font-bold ${message.type === "success" ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348]" : "border-[#f3c8c4] bg-[#fff2f1] text-[#a4382f]"}`}>
+                <p role={message.type === "error" ? "alert" : "status"} className={`mb-3 rounded-xl border px-3 py-2 text-xs font-bold ${message.type === "success" ? "border-[#cae8d9] bg-[#eaf7f0] text-[#106348] dark:border-[#245f42] dark:bg-[#16362a] dark:text-[#62d6a5]" : "border-[#f3c8c4] bg-[#fff2f1] text-[#a4382f] dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"}`}>
                   {message.text}
                 </p>
               )}
 
-              {loadingProof && <p className="m-0 text-xs text-[#627069]">Memuat bukti transfer…</p>}
+              {loadingProof && <p className="m-0 text-xs text-[#627069] dark:text-[#a3a3a3]">Memuat bukti transfer…</p>}
               {!loadingProof && !proof && (
-                <p className="m-0 rounded-xl bg-[#fff8ef] px-3 py-2 text-xs text-[#8c5b24]">
+                <p className="m-0 rounded-xl bg-[#fff8ef] px-3 py-2 text-xs text-[#8c5b24] dark:bg-amber-400/10 dark:text-amber-200">
                   {payment.proofUploaded ? "Bukti belum dapat dimuat. Coba lagi." : "Owner belum mengunggah bukti transfer. Verifikasi approve membutuhkan bukti."}
                 </p>
               )}
               {proof && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={proof.proofDataUrl} alt={`Bukti transfer ${payment.providerOrderId}`} className="max-h-80 w-full rounded-xl border border-[#dfe8e3] object-contain" />
+                <img src={proof.proofDataUrl} alt={`Bukti transfer ${payment.providerOrderId}`} className="max-h-80 w-full rounded-xl border border-[#dfe8e3] object-contain dark:border-[#303030]" />
               )}
 
-              <label className="mt-4 block text-xs font-bold text-[#34443d]" htmlFor={`verify-note-${payment.id}`}>
+              <label className="mt-4 block text-xs font-bold text-[#34443d] dark:text-[#d4d4d4]" htmlFor={`verify-note-${payment.id}`}>
                 Catatan verifikasi (wajib bila menolak)
               </label>
               <textarea
@@ -158,11 +158,11 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
                 rows={3}
                 placeholder="Contoh: nominal tidak sesuai / bukti tidak terbaca"
                 onChange={(event) => setNote(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 py-2 text-sm outline-none focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
+                className="mt-2 w-full rounded-xl border border-[#dbe5df] bg-[#fbfdfc] px-3 py-2 text-sm text-[#15211d] outline-none placeholder:text-[#82928a] focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10 dark:border-[#303030] dark:bg-[#101010] dark:text-white dark:placeholder:text-[#737373] dark:focus:border-[#62d6a5] dark:focus:ring-[#62d6a5]/25"
               />
             </div>
 
-            <div className="flex flex-col gap-2 border-t border-[#e8efeb] p-4 sm:flex-row sm:justify-end sm:p-5">
+            <div className="flex flex-col gap-2 border-t border-[#e8efeb] p-4 dark:border-[#303030] sm:flex-row sm:justify-end sm:p-5">
               <Button type="button" variant="outline" size="sm" onClick={closeDialog} disabled={Boolean(pending)}>
                 Tutup
               </Button>
@@ -176,7 +176,7 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
               </Button>
             </div>
 
-            <p className="flex items-center gap-1.5 px-4 pb-4 text-[11px] text-[#82928a] sm:px-5">
+            <p className="flex items-center gap-1.5 px-4 pb-4 text-[11px] text-[#82928a] dark:text-[#a3a3a3] sm:px-5">
               <CheckCircle2 className="size-3.5" aria-hidden="true" />
               Menyetujui mengaktifkan paket 1 tahun untuk usaha ini.
             </p>

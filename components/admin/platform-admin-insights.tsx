@@ -25,10 +25,10 @@ function SummaryBar({ label, value, total, tone }: { label: string; value: numbe
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
-        <span className="font-semibold text-[#627069]">{label}</span>
-        <span className="font-extrabold tabular-nums text-[#15211d]">{value}</span>
+        <span className="font-semibold text-[#627069] dark:text-[#a3a3a3]">{label}</span>
+        <span className="font-extrabold tabular-nums text-[#15211d] dark:text-white">{value}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[#edf3ef]">
+      <div className="h-2 overflow-hidden rounded-full bg-[#edf3ef] dark:bg-[#202020]">
         <div className={`h-full rounded-full ${tone}`} style={{ width: `${percentage}%` }} />
       </div>
     </div>
@@ -43,42 +43,42 @@ export function PlatformAdminInsights({ analytics }: { analytics: PlatformAdminA
 
   return (
     <section aria-labelledby="subscription-insights-title" className="mt-6 grid w-full min-w-0 max-w-full gap-3 overflow-hidden sm:mt-7 sm:gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-      <Card className="min-w-0 max-w-full overflow-hidden shadow-none">
+      <Card className="min-w-0 max-w-full overflow-hidden shadow-none dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
         <CardContent className="min-w-0 max-w-full p-4 sm:p-5">
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 items-center gap-2 text-[#198760]">
+              <div className="flex min-w-0 items-center gap-2 text-[#198760] dark:text-[#62d6a5]">
                 <TrendingUp className="size-4 shrink-0" aria-hidden="true" />
                 <h2 id="subscription-insights-title" className="admin-display m-0 min-w-0 break-words text-base font-normal">
                   Komposisi langganan
                 </h2>
               </div>
-              <p className="mt-1 min-w-0 break-words text-xs leading-5 text-[#627069]">
+              <p className="mt-1 min-w-0 break-words text-xs leading-5 text-[#627069] dark:text-[#a3a3a3]">
                 Status langganan saat halaman dimuat.
               </p>
             </div>
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#eaf7f0] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#106348]">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#eaf7f0] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#106348] dark:bg-[#16362a] dark:text-[#62d6a5]">
               <span className="admin-live-dot" aria-hidden="true" />
               Data saat ini
             </span>
           </div>
 
           <div className="mt-5 grid min-w-0 grid-cols-1 gap-3 sm:gap-4 min-[520px]:grid-cols-[minmax(0,1fr)_minmax(150px,0.8fr)] min-[520px]:items-center">
-            <div className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-[#f7faf8] p-4">
-              <div className="flex min-w-0 items-center gap-2 text-[#627069]">
+            <div className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-[#f7faf8] p-4 dark:bg-[#151515]">
+              <div className="flex min-w-0 items-center gap-2 text-[#627069] dark:text-[#a3a3a3]">
                 <CircleDollarSign className="size-4 shrink-0" aria-hidden="true" />
                 <span className="min-w-0 break-words text-xs font-bold">Estimasi pendapatan bulanan (MRR)</span>
               </div>
-              <p className="admin-mono mt-2 min-w-0 break-words text-xl font-bold tracking-tight text-[#15211d] sm:text-2xl">{formatRupiah(analytics.activeMrr)}</p>
-              <p className="mt-1 min-w-0 break-words text-[11px] leading-4 text-[#82928a]">Jumlah harga tahunan paket yang masih aktif dibagi 12. Estimasi ini berbeda dari pembayaran yang diterima.</p>
+              <p className="admin-mono mt-2 min-w-0 break-words text-xl font-bold tracking-tight text-[#15211d] dark:text-white sm:text-2xl">{formatRupiah(analytics.activeMrr)}</p>
+              <p className="mt-1 min-w-0 break-words text-[11px] leading-4 text-[#82928a] dark:text-[#a3a3a3]">Jumlah harga tahunan paket yang masih aktif dibagi 12. Estimasi ini berbeda dari pembayaran yang diterima.</p>
             </div>
             <div className="grid min-w-0 gap-2">
-              <div className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eee9] p-3">
-                <div className="flex min-w-0 items-center gap-1.5 text-[#627069]">
+              <div className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eee9] p-3 dark:border-[#303030] dark:bg-[#151515]">
+                <div className="flex min-w-0 items-center gap-1.5 text-[#627069] dark:text-[#a3a3a3]">
                   <Gauge className="size-3.5 shrink-0" aria-hidden="true" />
                   <span className="min-w-0 break-words text-[10px] font-extrabold uppercase tracking-[0.08em]">Total langganan</span>
                 </div>
-                <p className="admin-mono mt-1 min-w-0 break-words text-lg font-bold text-[#15211d]">{analytics.totalSubscriptions}</p>
+                <p className="admin-mono mt-1 min-w-0 break-words text-lg font-bold text-[#15211d] dark:text-white">{analytics.totalSubscriptions}</p>
               </div>
             </div>
           </div>
@@ -92,25 +92,25 @@ export function PlatformAdminInsights({ analytics }: { analytics: PlatformAdminA
         </CardContent>
       </Card>
 
-      <Card className="min-w-0 max-w-full overflow-hidden shadow-none">
+      <Card className="min-w-0 max-w-full overflow-hidden shadow-none dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
         <CardContent className="flex h-full min-w-0 max-w-full flex-col p-4 sm:p-5">
-          <div className="flex min-w-0 items-center gap-2 text-[#198760]">
+          <div className="flex min-w-0 items-center gap-2 text-[#198760] dark:text-[#62d6a5]">
             <Percent className="size-4 shrink-0" aria-hidden="true" />
             <h2 className="admin-display m-0 min-w-0 break-words text-base font-normal">Persentase langganan aktif</h2>
           </div>
           <div className="mt-5 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-1">
-            <p className="admin-mono m-0 min-w-0 break-words text-4xl font-bold tracking-tight text-[#15211d]">{analytics.activeSubscriptionRate}%</p>
-            <p className="m-0 min-w-0 flex-1 basis-32 break-words pb-1 text-xs leading-5 text-[#627069]">
+            <p className="admin-mono m-0 min-w-0 break-words text-4xl font-bold tracking-tight text-[#15211d] dark:text-white">{analytics.activeSubscriptionRate}%</p>
+            <p className="m-0 min-w-0 flex-1 basis-32 break-words pb-1 text-xs leading-5 text-[#627069] dark:text-[#a3a3a3]">
               langganan masih aktif
             </p>
           </div>
-          <div className="mt-4 h-3 w-full min-w-0 max-w-full overflow-hidden rounded-full bg-[#edf3ef]" aria-label={`Persentase langganan aktif ${analytics.activeSubscriptionRate}%`} role="img">
+          <div className="mt-4 h-3 w-full min-w-0 max-w-full overflow-hidden rounded-full bg-[#edf3ef] dark:bg-[#202020]" aria-label={`Persentase langganan aktif ${analytics.activeSubscriptionRate}%`} role="img">
             <div className="h-full max-w-full rounded-full bg-gradient-to-r from-[#198760] to-[#52c997]" style={{ width: `${Math.min(100, analytics.activeSubscriptionRate)}%` }} />
           </div>
-          <p className="mt-3 min-w-0 break-words text-xs leading-5 text-[#627069]">
+          <p className="mt-3 min-w-0 break-words text-xs leading-5 text-[#627069] dark:text-[#a3a3a3]">
             {analytics.currentActiveSubscriptions} dari {analytics.totalSubscriptions} langganan masih aktif.
           </p>
-          <p className="mt-3 rounded-xl bg-[#f7faf8] p-3 text-xs leading-5 text-[#627069]">Dihitung dari langganan berstatus aktif yang masa berlakunya belum habis atau tanpa tanggal akhir, dibagi seluruh langganan. Angka ini menunjukkan kondisi saat ini, bukan konversi trial.</p>
+          <p className="mt-3 rounded-xl bg-[#f7faf8] p-3 text-xs leading-5 text-[#627069] dark:bg-[#151515] dark:text-[#a3a3a3]">Dihitung dari langganan berstatus aktif yang masa berlakunya belum habis atau tanpa tanggal akhir, dibagi seluruh langganan. Angka ini menunjukkan kondisi saat ini, bukan konversi trial.</p>
         </CardContent>
       </Card>
     </section>

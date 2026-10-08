@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PlatformAdminPaymentList } from "@/components/admin/platform-admin-payment-list";
 
@@ -12,7 +12,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const payments = [
@@ -100,5 +100,37 @@ describe("PlatformAdminPaymentList", () => {
     expect(screen.getByText(/Sudah dicairkan:/)).toBeDefined();
     // Tombol dirender di tabel desktop dan kartu mobile sekaligus di jsdom.
     expect(screen.getAllByRole("button", { name: "Tandai dicairkan" }).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("menjaga modal pencairan tetap terbaca di dark mode", () => {
+    render(
+      <PlatformAdminPaymentList
+        payments={payments}
+        filters={{ query: "", status: "paid", plan: "all" }}
+        summary={summary}
+        pagination={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Tandai dicairkan" })[0]);
+
+    expect(screen.getByRole("alertdialog", { name: /Tandai pencairan/ }).firstElementChild?.className).toContain("dark:bg-[#0d0d0d]");
+    expect(screen.getByLabelText("Referensi pencairan (opsional)").className).toContain("dark:bg-[#101010]");
+  });
+
+  it("menjaga modal verifikasi tetap terbaca di dark mode", () => {
+    render(
+      <PlatformAdminPaymentList
+        payments={[{ ...payments[0], id: "pay-2", status: "pending", proofUploaded: false, verifiedBy: null, verifiedAt: null }]}
+        filters={{ query: "", status: "pending", plan: "all" }}
+        summary={summary}
+        pagination={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Verifikasi/ })[0]);
+
+    expect(screen.getByRole("alertdialog", { name: /Verifikasi pembayaran/ }).firstElementChild?.className).toContain("dark:bg-[#0d0d0d]");
+    expect(screen.getByLabelText("Catatan verifikasi (wajib bila menolak)").className).toContain("dark:bg-[#101010]");
   });
 });
