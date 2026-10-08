@@ -69,6 +69,15 @@ type SaleResult = {
   };
 };
 
+type VoidSaleResult = {
+  ok: boolean;
+  status: number;
+  body: {
+    message?: string;
+    status?: string;
+  };
+};
+
 function createSeed(): E2eSeed {
   const suffix = randomUUID();
   return {
@@ -160,6 +169,24 @@ async function postCashSale(
       paidAmount: input.paidAmount ?? 27000,
     },
   ) as Promise<SaleResult>;
+}
+
+async function postVoidSale(page: Page, input: { saleId: string; reason: string }) {
+  return page.evaluate(
+    async ({ saleId, reason }) => {
+      const response = await fetch(`/api/sales/${saleId}/void`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      return {
+        ok: response.ok,
+        status: response.status,
+        body: await response.json(),
+      };
+    },
+    input,
+  ) as Promise<VoidSaleResult>;
 }
 
 test.describe("owner POS flow", () => {
@@ -366,6 +393,114 @@ test.describe("owner POS flow", () => {
         where business_id = ${seed.businessId}
       `;
       expect(Number(movementCount?.count)).toBe(0);
+    } finally {
+      await context.close();
+      await cleanupE2eData(sql, seed);
+      await sql.end({ timeout: 2 });
+    }
+  });
+
+  test("void transaksi mengubah status dan mengembalikan stok", async ({ browser }) => {
+    const sql = postgres(databaseUrl, { max: 1, prepare: false });
+    const seed = createSeed();
+
+    await seedOwnerPosData(sql, seed);
+
+    const context = await browser.newContext({
+      extraHTTPHeaders: {
+        Cookie: sessionCookieHeader(seed.sessionToken),
+      },
+    });
+    const page = await context.newPage();
+
+    try {
+      await page.goto("/dashboard");
+      await expect(page.getByRole("heading", { name: "Halo, Owner E2E POS" })).toBeVisible();
+
+      const saleResult = await postCashSale(page, {
+        outletId: seed.outletId,
+        productId: seed.productId,
+        clientRequestId: randomUUID(),
+      });
+      expect(saleResult.ok).toBe(true);
+      expect(saleResult.status).toBe(201);
+
+      const saleId = saleResult.body.saleId;
+      const invoiceNumber = saleResult.body.invoiceNumber;
+      if (!saleId || !invoiceNumber) {
+        throw new Error("Sale response did not include saleId and invoiceNumber.");
+      }
+
+      const [stockAfterSale] = await sql<{ quantity: number }[]>`
+        select quantity
+        from inventory_stock
+        where business_id = ${seed.businessId}
+          and product_id = ${seed.productId}
+          and outlet_id = ${seed.outletId}
+        limit 1
+      `;
+      expect(Number(stockAfterSale?.quantity)).toBe(3);
+
+      const voidReason = "Pelanggan membatalkan pesanan";
+      const voidResult = await postVoidSale(page, {
+        saleId: String(saleId),
+        reason: voidReason,
+      });
+
+      expect(voidResult.ok).toBe(true);
+      expect(voidResult.status).toBe(200);
+      expect(voidResult.body).toMatchObject({
+        message: `Transaksi ${invoiceNumber} berhasil dibatalkan (void). Stok barang telah dikembalikan.`,
+        status: "voided",
+      });
+
+      const [voidedSale] = await sql<{
+        saleStatus: string;
+        voidReason: string | null;
+        voidedById: string | null;
+      }[]>`
+        select status as "saleStatus", void_reason as "voidReason", voided_by_id as "voidedById"
+        from sale
+        where id = ${saleId}
+          and business_id = ${seed.businessId}
+        limit 1
+      `;
+      expect(voidedSale).toMatchObject({
+        saleStatus: "voided",
+        voidReason,
+        voidedById: seed.userId,
+      });
+
+      const [stockAfterVoid] = await sql<{ quantity: number }[]>`
+        select quantity
+        from inventory_stock
+        where business_id = ${seed.businessId}
+          and product_id = ${seed.productId}
+          and outlet_id = ${seed.outletId}
+        limit 1
+      `;
+      expect(Number(stockAfterVoid?.quantity)).toBe(5);
+
+      const movements = await sql<{ type: string; quantity: number; note: string | null }[]>`
+        select type, quantity, note
+        from stock_movement
+        where business_id = ${seed.businessId}
+          and product_id = ${seed.productId}
+          and outlet_id = ${seed.outletId}
+        order by created_at asc
+      `;
+      expect(movements).toEqual([
+        expect.objectContaining({
+          type: "sale",
+          quantity: -2,
+          note: `Penjualan ${invoiceNumber}`,
+        }),
+        expect.objectContaining({
+          type: "adjustment",
+          quantity: 2,
+          note: `Void ${invoiceNumber}: ${voidReason}`,
+        }),
+      ]);
     } finally {
       await context.close();
       await cleanupE2eData(sql, seed);
