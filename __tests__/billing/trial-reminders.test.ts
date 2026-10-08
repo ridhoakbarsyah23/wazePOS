@@ -104,11 +104,17 @@ describe("pengiriman pengingat trial", () => {
   it("mengklaim langganan, mengirim email, dan menandai terkirim", async () => {
     const claim = updateChain([{ id: "subscription-1" }]);
     mocks.update.mockReturnValue(claim);
-    mocks.sendEmail.mockResolvedValue(undefined);
+    mocks.sendEmail.mockResolvedValue({ messageId: "email-1" });
 
     const result = await sendTrialReminders({ now: new Date("2026-09-28T02:00:00.000Z") });
 
-    expect(result).toEqual({ sent: 1, failed: 0, skipped: 0 });
+    expect(result).toEqual({
+      sent: 1,
+      failed: 0,
+      skipped: 0,
+      messages: [{ businessId: "business-1", trialEndsAt: "2026-09-29T03:00:00.000Z", messageId: "email-1" }],
+      failures: [],
+    });
     expect(mocks.sendEmail).toHaveBeenCalledOnce();
     expect(mocks.sendEmail.mock.calls[0]?.[0]).toMatchObject({
       recipient: "owner@example.com",
@@ -128,7 +134,13 @@ describe("pengiriman pengingat trial", () => {
 
     const result = await sendTrialReminders();
 
-    expect(result).toEqual({ sent: 0, failed: 1, skipped: 0 });
+    expect(result).toEqual({
+      sent: 0,
+      failed: 1,
+      skipped: 0,
+      messages: [],
+      failures: [{ businessId: "business-1", trialEndsAt: "2026-09-29T03:00:00.000Z", reason: "EMAIL_SEND_FAILED" }],
+    });
     await expect(mocks.transaction.mock.results[0].value).rejects.toThrow("Resend down");
     expect(mocks.update).toHaveBeenCalledOnce();
   });
@@ -139,7 +151,7 @@ describe("pengiriman pengingat trial", () => {
 
     const result = await sendTrialReminders();
 
-    expect(result).toEqual({ sent: 0, failed: 0, skipped: 1 });
+    expect(result).toEqual({ sent: 0, failed: 0, skipped: 1, messages: [], failures: [] });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 });

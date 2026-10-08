@@ -15,6 +15,7 @@
     "test:e2e": "node scripts/run-e2e.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "security:dependencies": "npm audit --omit=dev --audit-level=high",
+    "billing:trial-reminders": "node scripts/run-trial-reminders.mjs",
     "admin:seed": "node scripts/seed-platform-admin.mjs --generate-password",
     "admin:reset": "node scripts/seed-platform-admin.mjs --reset-password --generate-password",
     "db:generate": "drizzle-kit generate",

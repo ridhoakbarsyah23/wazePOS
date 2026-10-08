@@ -33,6 +33,21 @@ npm.cmd run test:e2e
 
 Jangan menjalankan skenario pembuatan akun, transaksi, atau pembayaran terhadap production tanpa data uji dan persetujuan operasional.
 
+## Pengingat trial
+
+Vercel Cron memanggil `/api/billing/trial-reminders` setiap hari sesuai `vercel.json`.
+Endpoint hanya mengirim email untuk trial aktif yang tersisa maksimal 24 jam,
+belum berakhir, dan `trial_reminder_sent_at` masih kosong. Jalankan lokal
+melalui dev server aktif:
+
+```powershell
+npm.cmd run billing:trial-reminders -- --url http://127.0.0.1:3000
+```
+
+Output `sent`, `failed`, `skipped`, `messages`, dan `failures` menjadi bukti
+diagnostik awal. Untuk production, catat invocation Vercel Cron serta message ID
+Resend dari response/log endpoint.
+
 ## Checklist aktivasi production
 
 | Status | Pemeriksaan | Bukti yang dicatat |

@@ -26,10 +26,27 @@ export async function GET(request: Request) {
 
   try {
     const result = await sendTrialReminders();
+    if (result.failed > 0) {
+      console.error("Trial reminder cron finished with failures", {
+        sent: result.sent,
+        failed: result.failed,
+        skipped: result.skipped,
+        failures: result.failures,
+      });
+    } else {
+      console.info("Trial reminder cron finished", {
+        sent: result.sent,
+        skipped: result.skipped,
+        messageIds: result.messages.map((item) => item.messageId).filter(Boolean),
+      });
+    }
     return NextResponse.json({ ok: result.failed === 0, ...result }, {
       status: result.failed > 0 ? 502 : 200,
     });
-  } catch {
+  } catch (error) {
+    console.error("Trial reminder cron crashed", {
+      reason: error instanceof Error ? error.name : "UNKNOWN_ERROR",
+    });
     return NextResponse.json({ message: "Pengingat trial gagal diproses." }, { status: 500 });
   }
 }
