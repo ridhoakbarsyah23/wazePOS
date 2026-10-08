@@ -23,9 +23,11 @@ describe("Halaman daftar akun", () => {
     expect(screen.getByText("Email belum terverifikasi")).toBeDefined();
     const trigger = screen.getByRole("button", { name: /Detail akun/ });
     expect(trigger).toBeDefined();
+    expect(trigger.className).toContain("dark:text-[#62d6a5]");
     // Konten detail tetap dirender di dalam dialog agar tersedia saat modal dibuka.
     expect(trigger.parentElement?.textContent).toContain("Belum terhubung ke usaha");
     expect(trigger.parentElement?.textContent).toContain("Belum tercatat");
+    expect(screen.getByRole("dialog", { hidden: true }).className).toContain("dark:bg-[#0d0d0d]");
     expect(screen.queryByRole("link", { name: "Berikutnya" })).toBeNull();
   });
 

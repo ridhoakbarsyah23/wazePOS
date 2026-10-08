@@ -47,6 +47,14 @@ describe("Ringkasan platform admin", () => {
     expect(screen.getByRole("link", { name: /total akun/i }).getAttribute("href")).toBe("/admin/users");
   });
 
+  it("menjaga permukaan ringkasan utama siap dark mode", async () => {
+    render(await PlatformAdminOverviewPage());
+
+    expect(screen.getByRole("region", { name: "Perlu perhatian" }).className).toContain("dark:bg-[#0d0d0d]");
+    expect(screen.getByRole("region", { name: "Tindak lanjut hari ini" }).className).toContain("dark:bg-[#0d0d0d]");
+    expect(screen.getByText("Total langganan").closest("div")?.className).toContain("dark:text-[#a3a3a3]");
+  });
+
   it("menjelaskan kategori kosong tanpa peringatan palsu", async () => {
     const data = overviewData();
     data.analytics.trialEndingSoon = 0;
