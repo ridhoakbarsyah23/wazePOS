@@ -9,6 +9,7 @@ import { getDashboardData } from "@/server/services/dashboard.service";
 
 export async function DashboardContent({
   hasProducts,
+  hasCategories,
   hasSales,
   membership,
   session,
@@ -47,7 +48,7 @@ export async function DashboardContent({
 
   return (
     <div className="dash-warung mx-auto w-[min(1240px,calc(100%-32px))] py-8 space-y-4 sm:space-y-6 animate-page-enter">
-      <DashboardOnboardingChecklist hasProducts={hasProducts} hasSales={hasSales} outletSlug={selectedOutlet?.slug ?? selectedOutletId} />
+      <DashboardOnboardingChecklist hasCategories={hasCategories} hasProducts={hasProducts} hasSales={hasSales} outletSlug={selectedOutlet?.slug ?? selectedOutletId} />
       <DashboardHeader
         userName={session.user.name ?? "Pemilik Toko"}
         businessName={membership.businessName}
