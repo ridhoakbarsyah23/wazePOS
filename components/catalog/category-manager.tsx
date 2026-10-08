@@ -1,8 +1,10 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowRight,
   Check,
   Edit2,
   FolderPlus,
@@ -31,6 +33,8 @@ type CategoryManagerProps = {
   compact?: boolean;
 };
 
+const starterCategoryNames = ["Minuman", "Makanan", "Snack", "Paket Promo"];
+
 function sortCategories(categories: CategoryItem[]) {
   return [...categories].sort((a, b) => a.name.localeCompare(b.name, "id-ID"));
 }
@@ -53,6 +57,7 @@ export function CategoryManager({
   const router = useRouter();
   const nameInputId = useId();
   const searchInputId = useId();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [search, setSearch] = useState("");
@@ -71,6 +76,8 @@ export function CategoryManager({
     (total, item) => total + Number(item.productCount ?? 0),
     0,
   );
+  const isEmptyCatalog = categories.length === 0;
+  const hasCategoriesWithoutProducts = categories.length > 0 && categorizedProducts === 0;
 
   function updateCategories(nextCategories: CategoryItem[]) {
     const sorted = sortCategories(nextCategories);
@@ -78,7 +85,13 @@ export function CategoryManager({
     onChange?.(sorted);
   }
 
-
+  function applyStarterCategory(name: string) {
+    setNewCategoryName(name);
+    requestAnimationFrame(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    });
+  }
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -204,6 +217,28 @@ export function CategoryManager({
         <FeedbackAlert feedback={feedback} feedbackKey={feedbackKey} onDismiss={dismissFeedback} />
       </div>
 
+      {hasCategoriesWithoutProducts && (
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-[#b9dccb] bg-[#f4fbf7] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-emerald-200 bg-white text-[#198760]">
+              <Check className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-extrabold text-[#15211d]">Kategori sudah siap</p>
+              <p className="mt-1 text-xs leading-5 text-[#627069]">
+                Lanjutkan dengan menambahkan produk pertama agar katalog bisa dipakai di kasir.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="w-full sm:w-auto">
+            <Link href="/products?add=1">
+              Tambah Produk
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </div>
+      )}
+
       <div className={compact ? "mt-0" : "mt-6"}>
         <div className="grid gap-5 lg:grid-cols-[minmax(250px,0.7fr)_minmax(0,1.3fr)]">
           <form
@@ -225,6 +260,7 @@ export function CategoryManager({
               </Label>
               <Input
                 id={nameInputId}
+                ref={nameInputRef}
                 value={newCategoryName}
                 onChange={(event) => setNewCategoryName(event.target.value)}
                 placeholder="Contoh: Minuman"
@@ -233,6 +269,26 @@ export function CategoryManager({
                 className="h-10 rounded-xl border-[#dbe5df] bg-white text-xs"
               />
             </div>
+            {isEmptyCatalog && (
+              <div className="mt-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#8a9991]">
+                  Rekomendasi awal
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {starterCategoryNames.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => applyStarterCategory(name)}
+                      disabled={pendingAction !== null}
+                      className="min-h-9 rounded-full border border-[#cfe3d9] bg-white px-3 text-xs font-bold text-[#106348] transition hover:border-[#198760] hover:bg-[#f1fbf6] disabled:opacity-50"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Button
               type="submit"
               disabled={pendingAction !== null || !newCategoryName.trim()}
@@ -377,7 +433,7 @@ export function CategoryManager({
                   <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[#627069]">
                     {search
                       ? "Coba kata kunci lain atau hapus pencarian."
-                      : "Tambahkan kategori pertama untuk mengelompokkan produk dengan lebih rapi."}
+                      : "Pilih rekomendasi awal atau tulis kategori sendiri untuk mulai merapikan katalog."}
                   </p>
                 </div>
               )}

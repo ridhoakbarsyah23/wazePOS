@@ -19,10 +19,27 @@ const products: Product[] = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 describe("ProductManager pagination", () => {
-  it("membuka form tambah produk dari query tambah", () => {
+  it("mengarahkan pengguna menambah kategori sebelum membuat produk", () => {
     render(<ProductManager products={[]} categories={[]} outlets={[]} initialCreateOpen />);
 
+    expect(screen.getByText("Tambahkan kategori dulu")).toBeDefined();
+    expect(screen.getByRole("link", { name: /Tambah Kategori/i }).getAttribute("href")).toBe("/categories");
+    expect(screen.queryByRole("heading", { name: "Tambah Produk Baru" })).toBeNull();
+  });
+
+  it("membuka form tambah produk dari query tambah saat kategori tersedia", () => {
+    render(
+      <ProductManager
+        products={[]}
+        categories={[{ id: "category-1", name: "Minuman" }]}
+        outlets={[{ id: "outlet-1", name: "Gerai Utama" }]}
+        initialCreateOpen
+      />,
+    );
+
     expect(screen.getByRole("heading", { name: "Tambah Produk Baru" })).toBeDefined();
+    expect(screen.getByLabelText(/Kategori/i)).toHaveProperty("required", true);
+    expect(screen.getByRole("button", { name: "Simpan Produk" })).toHaveProperty("disabled", true);
   });
 
   it("menampilkan 10 produk per halaman dan mereset halaman saat pencarian berubah", () => {

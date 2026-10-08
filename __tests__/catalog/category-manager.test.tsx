@@ -72,6 +72,22 @@ describe("CategoryManager", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it("memberi rekomendasi awal saat kategori masih kosong", () => {
+    render(<CategoryManager initialCategories={[]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Minuman" }));
+
+    expect(screen.getByLabelText("Nama kategori")).toHaveProperty("value", "Minuman");
+    expect(screen.getByText("Pilih rekomendasi awal atau tulis kategori sendiri untuk mulai merapikan katalog.")).toBeDefined();
+  });
+
+  it("mengarahkan ke tambah produk setelah kategori tersedia tanpa produk", () => {
+    render(<CategoryManager initialCategories={[{ id: "category-1", name: "Minuman", productCount: 0 }]} />);
+
+    expect(screen.getByText("Kategori sudah siap")).toBeDefined();
+    expect(screen.getByRole("link", { name: /Tambah Produk/i }).getAttribute("href")).toBe("/products?add=1");
+  });
+
   it("mengubah nama kategori dan menghapus kategori setelah konfirmasi", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")

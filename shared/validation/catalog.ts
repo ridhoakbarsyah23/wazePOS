@@ -28,6 +28,11 @@ const optionalCategoryId = z.preprocess(
   z.string().uuid("Kategori tidak valid.").nullable(),
 );
 
+const requiredCategoryId = z.preprocess(
+  (value) => (value == null ? "" : value),
+  z.string().trim().uuid("Kategori wajib dipilih."),
+);
+
 export const categorySchema = z.object({
   name: requiredText("Nama kategori", 80),
 });
@@ -41,7 +46,7 @@ export const productSchema = z
   .object({
     name: requiredText("Nama produk", 120),
     sku: optionalSku,
-    categoryId: optionalCategoryId,
+    categoryId: requiredCategoryId,
     outletId: z.string().uuid("Gerai tidak valid."),
     sellingPrice: rupiahValue("Harga jual"),
     costPrice: rupiahValue("Harga modal"),

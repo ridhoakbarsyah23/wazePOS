@@ -5,7 +5,7 @@ import { productSchema, productUpdateSchema } from "@/shared/validation/catalog"
 const validProduct = {
   name: "Kopi Susu",
   sku: " kopi-001 ",
-  categoryId: null,
+  categoryId: "22222222-2222-4222-8222-222222222222",
   outletId: "11111111-1111-4111-8111-111111111111",
   sellingPrice: 20_000,
   costPrice: 10_000,
@@ -27,6 +27,15 @@ describe("validasi produk", () => {
     expect(parsed.success).toBe(false);
     if (!parsed.success) {
       expect(parsed.error.issues[0]?.message).toBe("Harga modal tidak boleh lebih besar dari harga jual.");
+    }
+  });
+
+  it("mewajibkan kategori saat membuat produk baru", () => {
+    const parsed = productSchema.safeParse({ ...validProduct, categoryId: null });
+
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      expect(parsed.error.issues[0]?.message).toBe("Kategori wajib dipilih.");
     }
   });
 
