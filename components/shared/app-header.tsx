@@ -188,7 +188,7 @@ function SidebarNavLinks({
             className={`group relative flex items-center justify-between rounded-xl px-3.5 py-2 text-sm font-bold transition-all duration-150 active:scale-[0.98] ${
               isActive
                 ? "bg-[#198760] text-white shadow-md shadow-[#198760]/20 scale-[1.01]"
-                : "text-[#455850] hover:bg-[#eef6f2] hover:text-[#147554]"
+                : "text-[#455850] hover:bg-[#eef6f2] hover:text-[#147554] dark:text-[#d4ded8] dark:hover:bg-[#242424] dark:hover:text-[#62d6a5]"
             } ${isPendingNav ? "opacity-80 ring-2 ring-[#23a473]/30" : ""}`}
           >
             <div className="flex items-center gap-2.5">
@@ -196,7 +196,7 @@ function SidebarNavLinks({
                 className={`grid size-7 place-items-center rounded-lg transition-colors ${
                   isActive
                     ? "bg-white/15 text-white"
-                    : "bg-[#f2f7f4] text-[#198760] group-hover:bg-[#198760] group-hover:text-white"
+                    : "bg-[#f2f7f4] text-[#198760] group-hover:bg-[#198760] group-hover:text-white dark:bg-[#202020] dark:text-[#62d6a5] dark:group-hover:bg-[#198760] dark:group-hover:text-white"
                 }`}
               >
                 <Icon className="size-4" />
@@ -210,7 +210,7 @@ function SidebarNavLinks({
                 className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
                   isActive
                     ? "bg-white/20 text-white"
-                    : "bg-[#eaf7f0] text-[#198760] group-hover:bg-[#198760]/10"
+                    : "bg-[#eaf7f0] text-[#198760] group-hover:bg-[#198760]/10 dark:bg-[#202020] dark:text-[#62d6a5] dark:group-hover:bg-[#198760]/20"
                 }`}
               >
                 {item.badge}
@@ -321,7 +321,7 @@ export function AppHeader({
   // Reset status navigasi saat pindah halaman ditangani di atas (render-phase).
 
   return (
-    <div data-dashboard-shell className="min-h-dvh flex flex-col lg:flex-row bg-[#f4faf7] text-[#15211d]">
+    <div data-dashboard-shell className="min-h-dvh flex flex-col lg:flex-row bg-[#f4faf7] text-[#15211d] dark:bg-[#050505] dark:text-[#f5f5f5]">
       {/* Top Animated Route Progress Bar */}
       {navigatingTo && (
         <div className="fixed top-0 left-0 right-0 h-[2.5px] overflow-hidden bg-transparent z-[100] pointer-events-none">
@@ -332,9 +332,9 @@ export function AppHeader({
       {/* ========================================================= */}
       {/* 1. DESKTOP PERMANENT SIDEBAR (>= 1024px)                  */}
       {/* ========================================================= */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-40 border-r border-[#dfe8e3] bg-white shadow-[2px_0_12px_rgba(16,65,48,0.03)]">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-40 border-r border-[#dfe8e3] bg-white shadow-[2px_0_12px_rgba(16,65,48,0.03)] dark:border-[#303030] dark:bg-[#0d0d0d] dark:shadow-none">
         {/* Brand Header */}
-        <div className="px-4 py-4 border-b border-[#edf3f0]">
+        <div className="px-4 py-4 border-b border-[#edf3f0] dark:border-[#303030]">
           <Link
             href="/dashboard"
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-95"
@@ -344,10 +344,10 @@ export function AppHeader({
               <Image src="/logo.png" alt="Logo wazePOS" fill sizes="36px" className="object-cover" />
             </span>
             <div className="min-w-0">
-              <span className="block text-lg font-extrabold leading-tight tracking-[-0.6px] text-[#15211d]">
+              <span className="block text-lg font-extrabold leading-tight tracking-[-0.6px] text-[#15211d] dark:text-white">
                 waze<span className="text-[#198760]">POS</span>
               </span>
-              <span className="block truncate text-xs font-semibold text-[#627069]">
+              <span className="block truncate text-xs font-semibold text-[#627069] dark:text-[#a3a3a3]">
                 {businessName}
               </span>
             </div>
@@ -356,13 +356,13 @@ export function AppHeader({
           {/* Outlet Switcher (if multi-outlet available) */}
           {outlets.length > 1 && (
             <div className="mt-3.5">
-              <label className="text-[11px] font-bold text-[#71857c] uppercase tracking-wider block mb-1 flex items-center gap-1">
+              <label className="text-[11px] font-bold text-[#71857c] uppercase tracking-wider block mb-1 flex items-center gap-1 dark:text-[#a3a3a3]">
                 <Store className="size-3 text-[#198760]" /> Gerai Aktif
               </label>
               <select
                 value={activeOutletId ?? "all"}
                 onChange={(e) => changeOutlet(e.target.value)}
-                className="w-full h-9 rounded-xl border border-[#dbe5df] bg-[#f7faf8] px-2.5 text-xs font-bold text-[#15211d] outline-none transition focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10"
+                className="w-full h-9 rounded-xl border border-[#dbe5df] bg-[#f7faf8] px-2.5 text-xs font-bold text-[#15211d] outline-none transition focus:border-[#198760] focus:ring-2 focus:ring-[#198760]/10 dark:border-[#303030] dark:bg-[#151515] dark:text-white"
               >
                 <option value="all">Semua Gerai</option>
                 {outlets.map((item) => (
@@ -377,7 +377,7 @@ export function AppHeader({
 
         {/* Scrollable Nav Area */}
         <div className="flex-1 overflow-y-auto py-1.5">
-          <div className="px-4 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-wider text-[#8fa199]">
+          <div className="px-4 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-wider text-[#8fa199] dark:text-[#737373]">
             Menu Utama
           </div>
           <SidebarNavLinks
@@ -392,18 +392,18 @@ export function AppHeader({
 
           {/* Trial Alert Card in Desktop Sidebar */}
           {typeof trialDaysRemaining === "number" && trialDaysRemaining > 0 && (
-            <div className="mx-3 mb-3 mt-2 rounded-xl border border-amber-200/80 bg-linear-to-b from-amber-50 to-orange-50/60 p-2.5 text-amber-900 shadow-xs">
+            <div className="mx-3 mb-3 mt-2 rounded-xl border border-amber-200/80 bg-linear-to-b from-amber-50 to-orange-50/60 p-2.5 text-amber-900 shadow-xs dark:border-amber-900/40 dark:bg-none dark:bg-[#20170b] dark:text-amber-200">
               <div className="flex items-center gap-1.5 text-xs font-bold">
                 <span className="flex size-2 rounded-full bg-amber-500 animate-pulse" />
                 <span>Masa Uji Coba Trial</span>
               </div>
-              <p className="mt-1 text-xs text-amber-800 leading-snug">
+              <p className="mt-1 text-xs text-amber-800 leading-snug dark:text-amber-200">
                 Tersisa <strong>{trialDaysRemaining} hari lagi</strong>. Aktifkan paket untuk operasional tanpa jeda.
               </p>
               {role === "owner" && (
                 <Link
                   href="/subscription"
-                  className="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-[#8c5b24] hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-[#8c5b24] hover:underline dark:text-amber-300"
                 >
                   <span>Pilih Paket</span>
                   <ArrowRight className="size-3" />
@@ -427,14 +427,14 @@ export function AppHeader({
       {/* ========================================================= */}
       {/* 2. MOBILE TOP NAV BAR (< 1024px)                          */}
       {/* ========================================================= */}
-      <header className="lg:hidden sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#dfe8e3] bg-white/95 px-4 backdrop-blur-md">
+      <header className="lg:hidden sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#dfe8e3] bg-white/95 px-4 backdrop-blur-md dark:border-[#303030] dark:bg-[#0d0d0d]/95">
         <div className="flex items-center gap-3">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => openMobileDrawer()}
-            className="h-10 w-10 p-0 text-[#15211d] hover:bg-[#eaf7f0]"
+            className="h-10 w-10 p-0 text-[#15211d] hover:bg-[#eaf7f0] dark:text-white dark:hover:bg-[#242424]"
             aria-label="Buka menu navigasi"
           >
             <Menu className="size-6 text-[#198760]" />
@@ -445,10 +445,10 @@ export function AppHeader({
               <LayoutDashboard className="size-4" />
             </span>
             <div className="min-w-0">
-              <span className="block text-base font-extrabold leading-none tracking-[-0.6px] text-[#15211d]">
+              <span className="block text-base font-extrabold leading-none tracking-[-0.6px] text-[#15211d] dark:text-white">
                 waze<span className="text-[#198760]">POS</span>
               </span>
-              <span className="block truncate text-[10px] font-semibold text-[#627069]">
+              <span className="block truncate text-[10px] font-semibold text-[#627069] dark:text-[#a3a3a3]">
                 {businessName}
               </span>
             </div>
@@ -468,13 +468,13 @@ export function AppHeader({
 
       {/* Mobile Trial Top Warning Bar */}
       {typeof trialDaysRemaining === "number" && trialDaysRemaining > 0 && (
-        <aside className="lg:hidden border-b border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-900 flex items-center justify-between">
+        <aside className="lg:hidden border-b border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-900 flex items-center justify-between dark:border-amber-900/40 dark:bg-[#20170b] dark:text-amber-200">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>Trial sisa {trialDaysRemaining} hari</span>
           </div>
           {role === "owner" && (
-            <Link href="/subscription" className="font-bold underline text-amber-950">
+            <Link href="/subscription" className="font-bold underline text-amber-950 dark:text-amber-300">
               Upgrade
             </Link>
           )}
@@ -494,18 +494,18 @@ export function AppHeader({
           />
 
           {/* Drawer Content */}
-          <div className="relative flex w-64 max-w-[84vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-250">
+          <div className="relative flex w-64 max-w-[84vw] flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-250 dark:bg-[#0d0d0d]">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between border-b border-[#edf3f0] px-4 py-3">
+            <div className="flex items-center justify-between border-b border-[#edf3f0] px-4 py-3 dark:border-[#303030]">
               <div className="flex items-center gap-2.5">
                 <span className="relative size-8 shrink-0 overflow-hidden rounded-xl shadow-xs">
                   <Image src="/logo.png" alt="Logo wazePOS" fill sizes="32px" className="object-cover" />
                 </span>
                 <div>
-                  <span className="block text-base font-extrabold tracking-tight text-[#15211d]">
+                  <span className="block text-base font-extrabold tracking-tight text-[#15211d] dark:text-white">
                     waze<span className="text-[#198760]">POS</span>
                   </span>
-                  <span className="block truncate text-[11px] text-[#627069]">
+                  <span className="block truncate text-[11px] text-[#627069] dark:text-[#a3a3a3]">
                     {businessName}
                   </span>
                 </div>
@@ -515,7 +515,7 @@ export function AppHeader({
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileOpen(false)}
-                className="h-8 w-8 p-0 text-[#627069]"
+                className="h-8 w-8 p-0 text-[#627069] dark:text-[#a3a3a3] dark:hover:bg-[#242424]"
                 aria-label="Tutup menu"
               >
                 <X className="size-5" />
@@ -524,8 +524,8 @@ export function AppHeader({
 
             {/* Drawer Outlet Switcher */}
             {outlets.length > 1 && (
-              <div className="px-4 py-2 border-b border-[#edf3f0]">
-                <label className="text-[11px] font-bold text-[#71857c] uppercase tracking-wider block mb-1">
+              <div className="px-4 py-2 border-b border-[#edf3f0] dark:border-[#303030]">
+                <label className="text-[11px] font-bold text-[#71857c] uppercase tracking-wider block mb-1 dark:text-[#a3a3a3]">
                   Gerai
                 </label>
                 <select
@@ -534,7 +534,7 @@ export function AppHeader({
                     changeOutlet(e.target.value);
                     setMobileOpen(false);
                   }}
-                  className="w-full h-9 rounded-xl border border-[#dbe5df] bg-[#f7faf8] px-2.5 text-xs font-bold text-[#15211d] outline-none"
+                  className="w-full h-9 rounded-xl border border-[#dbe5df] bg-[#f7faf8] px-2.5 text-xs font-bold text-[#15211d] outline-none dark:border-[#303030] dark:bg-[#151515] dark:text-white"
                 >
                   <option value="all">Semua Gerai</option>
                   {outlets.map((item) => (

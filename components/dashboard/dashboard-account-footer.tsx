@@ -74,17 +74,17 @@ export function DashboardAccountFooter({
   }
 
   return (
-    <div ref={menuRef} className="relative border-t border-[#edf3f0] bg-[#fafcfb] p-3.5">
+    <div ref={menuRef} className="relative border-t border-[#edf3f0] bg-[#fafcfb] p-3.5 dark:border-[#303030] dark:bg-[#0d0d0d]">
       <div className="flex items-center gap-2.5">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760]">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eaf7f0] text-[#198760] dark:bg-[#202020] dark:text-[#62d6a5]">
           <RoleIcon className="size-4" />
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="m-0 truncate text-xs font-extrabold text-[#15211d]" title={userName ?? roleLabel}>
+          <p className="m-0 truncate text-xs font-extrabold text-[#15211d] dark:text-white" title={userName ?? roleLabel}>
             {userName ?? roleLabel}
           </p>
-          <p className="m-0 mt-0.5 truncate text-[11px] text-[#71857c]" title={`${roleLabel} - ${outletName}`}>
+          <p className="m-0 mt-0.5 truncate text-[11px] text-[#71857c] dark:text-[#a3a3a3]" title={`${roleLabel} - ${outletName}`}>
             {roleLabel} - {outletName}
           </p>
         </div>
@@ -97,7 +97,7 @@ export function DashboardAccountFooter({
             aria-haspopup="menu"
             aria-controls={menuOpen ? menuId : undefined}
             aria-expanded={menuOpen}
-            className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#dbe5df] bg-white text-[#52645c] transition hover:border-[#9ac3b0] hover:bg-[#eef6f2] hover:text-[#198760] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30"
+            className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#dbe5df] bg-white text-[#52645c] transition hover:border-[#9ac3b0] hover:bg-[#eef6f2] hover:text-[#198760] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]/30 dark:border-[#303030] dark:bg-[#151515] dark:text-[#a3a3a3] dark:hover:border-[#3f3f3f] dark:hover:bg-[#242424] dark:hover:text-[#62d6a5]"
           >
             <MoreHorizontal className="size-4" />
         </button>
@@ -109,7 +109,7 @@ export function DashboardAccountFooter({
           role="menu"
           aria-label="Menu akun"
           onKeyDown={handleMenuKeyDown}
-          className="absolute inset-x-3.5 bottom-full z-50 mb-2 min-w-0 rounded-2xl border border-[#dbe5df] bg-white p-1.5 shadow-[0_16px_45px_rgba(0,0,0,.24)]"
+          className="absolute inset-x-3.5 bottom-full z-50 mb-2 min-w-0 rounded-2xl border border-[#dbe5df] bg-white p-1.5 shadow-[0_16px_45px_rgba(0,0,0,.24)] dark:border-[#303030] dark:bg-[#151515]"
         >
           <Link
             href="/profile"
@@ -118,7 +118,7 @@ export function DashboardAccountFooter({
               setMenuOpen(false);
               onNavigate?.("/profile");
             }}
-            className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-xs font-bold text-[#34443d] transition hover:bg-[#eef6f2] hover:text-[#198760]"
+            className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-xs font-bold text-[#34443d] transition hover:bg-[#eef6f2] hover:text-[#198760] dark:text-[#d4d4d4] dark:hover:bg-[#242424] dark:hover:text-[#62d6a5]"
           >
             <UserRound className="size-4" />
             <span>Profil akun</span>
@@ -132,7 +132,7 @@ export function DashboardAccountFooter({
                 setMenuOpen(false);
                 onNavigate?.("/settings");
               }}
-              className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-xs font-bold text-[#34443d] transition hover:bg-[#eef6f2] hover:text-[#198760]"
+              className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-xs font-bold text-[#34443d] transition hover:bg-[#eef6f2] hover:text-[#198760] dark:text-[#d4d4d4] dark:hover:bg-[#242424] dark:hover:text-[#62d6a5]"
             >
               <Settings className="size-4" />
               <span>Pengaturan</span>
@@ -140,10 +140,10 @@ export function DashboardAccountFooter({
           )}
 
           {allowDarkMode && (
-            <div className="mt-1 flex min-h-12 items-center justify-between gap-3 rounded-xl px-3 text-[#34443d] transition hover:bg-[#eef6f2]">
+            <div className="mt-1 flex min-h-12 items-center justify-between gap-3 rounded-xl px-3 text-[#34443d] transition hover:bg-[#eef6f2] dark:text-[#d4d4d4] dark:hover:bg-[#242424]">
               <div className="min-w-0">
                 <p className="m-0 text-xs font-bold">Mode tampilan</p>
-                <p className="m-0 text-[10px] text-[#82928a]">Gelap atau terang</p>
+                <p className="m-0 text-[10px] text-[#82928a] dark:text-[#a3a3a3]">Gelap atau terang</p>
               </div>
               <DashboardThemeToggle enabled asMenuItem />
             </div>
@@ -153,7 +153,7 @@ export function DashboardAccountFooter({
 
       <LogoutButton
         onOpen={() => setMenuOpen(false)}
-        className="mt-3 min-h-11 w-full justify-center gap-2 rounded-xl border border-rose-100 bg-white px-3 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
+        className="mt-3 min-h-11 w-full justify-center gap-2 rounded-xl border border-rose-100 bg-white px-3 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/40 dark:bg-[#151515] dark:text-rose-300 dark:hover:bg-[#2a1215] dark:hover:text-rose-200"
       />
     </div>
   );
