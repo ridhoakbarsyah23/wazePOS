@@ -34,8 +34,8 @@ export function PlatformAdminNav() {
                 className={cn(
                   "flex h-10 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-xs font-extrabold transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#198760]/30 sm:h-9 sm:w-auto sm:min-w-[104px] sm:justify-start sm:px-3.5 motion-reduce:transition-none",
                   isActive
-                    ? "border-[#0b503d] bg-gradient-to-b from-[#198760] to-[#147554] text-white shadow-[0_8px_20px_rgba(20,117,84,0.3)] hover:from-[#1ba36f] hover:to-[#147554]"
-                    : "border-[#dfe8e3] bg-white text-[#527066] hover:-translate-y-px hover:border-[#9ac3b0] hover:text-[#106348] hover:shadow-[0_8px_20px_rgba(16,65,48,0.1)] motion-reduce:transform-none",
+                    ? "border-[#0b503d] bg-gradient-to-b from-[#198760] to-[#147554] text-white shadow-[0_8px_20px_rgba(20,117,84,0.3)] hover:from-[#1ba36f] hover:to-[#147554] dark:border-[#198760] dark:shadow-none"
+                    : "border-[#dfe8e3] bg-white text-[#527066] hover:-translate-y-px hover:border-[#9ac3b0] hover:text-[#106348] hover:shadow-[0_8px_20px_rgba(16,65,48,0.1)] dark:border-[#303030] dark:bg-[#151515] dark:text-[#d4d4d4] dark:hover:border-[#3f3f3f] dark:hover:bg-[#202020] dark:hover:text-[#62d6a5] dark:hover:shadow-none motion-reduce:transform-none",
                 )}
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />

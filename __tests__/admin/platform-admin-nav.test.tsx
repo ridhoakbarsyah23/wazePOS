@@ -38,6 +38,14 @@ describe("PlatformAdminNav", () => {
     expect(screen.getByRole("link", { name: "Audit" }).getAttribute("aria-current")).toBeNull();
   });
 
+  it("menjaga warna item tidak aktif tetap terbaca di dark mode", () => {
+    mocks.pathname = "/admin";
+    render(<PlatformAdminNav />);
+
+    expect(screen.getByRole("link", { name: "Daftar akun" }).className).toContain("dark:bg-[#151515]");
+    expect(screen.getByRole("link", { name: "Daftar akun" }).className).toContain("dark:text-[#d4d4d4]");
+  });
+
   it("menandai daftar usaha sebagai halaman aktif pada rute direktori", () => {
     mocks.pathname = "/admin/businesses";
     render(<PlatformAdminNav />);
