@@ -167,6 +167,11 @@ export function DashboardSetupManager({
     const sellingPrice = Number(productForm.sellingPrice);
     const costPrice = Number(productForm.costPrice || 0);
 
+    if (categories.length === 0 || !productForm.categoryId) {
+      notify("error", "Tambahkan dan pilih kategori sebelum menyimpan produk.");
+      return;
+    }
+
     if (costPrice > sellingPrice) {
       notify("error", "Harga modal tidak boleh melebihi harga jual.");
       return;
@@ -496,6 +501,27 @@ export function DashboardSetupManager({
       {/* TAB CONTENT: TAMBAH PRODUK CEPAT */}
       {showQuickProduct && activeTab === "product" && (
         <form onSubmit={handleAddProduct} className="mt-6 space-y-4">
+          {categories.length === 0 && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#b9dccb] bg-[#f4fbf7] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-emerald-200 bg-white text-[#198760]">
+                  <Tag className="size-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-extrabold text-[#15211d]">Buat kategori sebelum produk</p>
+                  <p className="mt-1 text-xs leading-5 text-[#627069]">
+                    Kategori membantu katalog kasir, laporan, dan pencarian produk tetap rapi sejak produk pertama.
+                  </p>
+                </div>
+              </div>
+              {showCategories && (
+                <Button type="button" size="sm" onClick={() => setActiveTab("category")} className="w-full sm:w-auto">
+                  <Tag className="size-4" />
+                  <span>Tambah Kategori</span>
+                </Button>
+              )}
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1">
               <Label className="text-xs font-bold text-[#15211d]">Nama Produk *</Label>
@@ -519,13 +545,16 @@ export function DashboardSetupManager({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-[#15211d]">Kategori Menu</Label>
+              <Label htmlFor="quick-product-category" className="text-xs font-bold text-[#15211d]">Kategori Menu</Label>
               <select
+                id="quick-product-category"
                 value={productForm.categoryId}
                 onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
                 className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-xs font-medium text-[#15211d] focus:border-[#198760] focus:ring-1 focus:ring-[#198760]"
+                required
+                disabled={categories.length === 0}
               >
-                <option value="">Umum (Tanpa Kategori)</option>
+                <option value="" disabled>Pilih kategori</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -621,7 +650,7 @@ export function DashboardSetupManager({
 
             <Button
               type="submit"
-              disabled={loading || !productForm.name || !productForm.sellingPrice}
+              disabled={loading || categories.length === 0 || !productForm.categoryId || !productForm.name || !productForm.sellingPrice}
               className="h-11 px-6 rounded-xl bg-[#198760] text-xs font-bold text-white shadow-md hover:bg-[#14714f] transition"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}

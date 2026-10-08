@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowRight,
   Boxes,
   Filter,
   Package,
@@ -79,7 +81,8 @@ export function ProductManager({
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [isCreating, setIsCreating] = useState(initialCreateOpen);
+  const hasCategories = categories.length > 0;
+  const [isCreating, setIsCreating] = useState(initialCreateOpen && hasCategories);
   const [editingItem, setEditingItem] = useState<Product | null>(null);
 
   const [newProduct, setNewProduct] = useState({
@@ -145,6 +148,12 @@ export function ProductManager({
   async function handleCreateProduct(e: React.FormEvent) {
     e.preventDefault();
     dismissFeedback();
+
+    if (!hasCategories || !newProduct.categoryId) {
+      showFeedback("error", "Tambahkan dan pilih kategori sebelum menyimpan produk.");
+      return;
+    }
+
     setPending(true);
 
     try {
@@ -293,11 +302,13 @@ export function ProductManager({
 
         <Button
           onClick={() => {
+            if (!hasCategories) return;
             setIsCreating(!isCreating);
             setEditingItem(null);
           }}
           variant={isCreating ? "outline" : "default"}
           size="sm"
+          disabled={!hasCategories}
         >
           {isCreating ? (
             <>
@@ -311,8 +322,32 @@ export function ProductManager({
         </Button>
       </div>
 
+      {!hasCategories && (
+        <Card className="border-[#b9dccb] bg-[#f4fbf7] shadow-sm">
+          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-200 bg-white text-[#198760]">
+                <Tag className="size-5" />
+              </span>
+              <div>
+                <h3 className="text-sm font-extrabold text-[#15211d]">Tambahkan kategori dulu</h3>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-[#627069]">
+                  Kategori membuat katalog rapi sejak awal, membantu kasir menemukan produk, dan menjaga laporan penjualan lebih mudah dibaca.
+                </p>
+              </div>
+            </div>
+            <Button asChild size="sm" className="w-full sm:w-auto">
+              <Link href="/categories">
+                Tambah Kategori
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Form Tambah Produk Baru */}
-      {isCreating && (
+      {isCreating && hasCategories && (
         <Card className="border-[#63b792]/40 bg-[#f9fcfa] shadow-sm animate-in fade-in duration-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -361,8 +396,9 @@ export function ProductManager({
                   onChange={(e) => updateNewProduct({ categoryId: e.target.value })}
                   className="h-10 w-full rounded-xl border border-[#dbe5df] bg-white px-3 text-sm font-semibold text-[#15211d] outline-none transition focus:border-[#23a473] focus:ring-4 focus:ring-[#23a473]/10"
                   disabled={pending}
+                  required
                 >
-                  <option value="">Tanpa Kategori</option>
+                  <option value="" disabled>Pilih kategori</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -481,7 +517,7 @@ export function ProductManager({
                 >
                   Batal
                 </Button>
-                <Button type="submit" size="sm" disabled={pending || outlets.length === 0}>
+                <Button type="submit" size="sm" disabled={pending || outlets.length === 0 || !newProduct.categoryId}>
                   {pending ? "Menyimpan..." : "Simpan Produk"}
                 </Button>
               </div>
@@ -820,7 +856,9 @@ export function ProductManager({
                     <p className="text-xs text-[#82928a] mt-1">
                       {searchQuery || categoryFilter !== "all" || statusFilter !== "all"
                         ? "Coba ubah kata kunci pencarian atau filter Anda."
-                        : "Klik 'Tambah Produk' untuk mendaftarkan menu perdana gerai Anda."}
+                        : hasCategories
+                          ? "Klik 'Tambah Produk' untuk mendaftarkan menu perdana gerai Anda."
+                          : "Buat kategori pertama, lalu kembali ke halaman ini untuk menambahkan produk."}
                     </p>
                   </TableCell>
                 </TableRow>
