@@ -19,6 +19,10 @@ type SendTrialEndingEmailOptions = {
   now?: Date;
 };
 
+type ResendEmailResponse = {
+  id?: string;
+};
+
 const JAKARTA_TIME_ZONE = "Asia/Jakarta";
 
 function escapeHtml(value: string) {
@@ -87,7 +91,7 @@ export function getTrialReminderSubject(trialEndsAt: Date, now = new Date()): st
 export async function sendTrialEndingEmail(
   { recipient, recipientName, businessName, trialEndsAt, upgradeUrl, idempotencyKey }: TrialEndingEmailInput,
   options: SendTrialEndingEmailOptions = {},
-) {
+): Promise<{ messageId: string | null }> {
   const config = options.config ?? getTrialReminderEmailConfig();
   if (!config) {
     throw new Error("Konfigurasi email pengingat trial belum lengkap.");
@@ -152,4 +156,8 @@ export async function sendTrialEndingEmail(
   if (!response.ok) {
     throw new Error(`Pengiriman email pengingat trial gagal dengan status ${response.status}.`);
   }
+
+  const payload = await response.json().catch((): ResendEmailResponse => ({}));
+  const messageId = typeof payload.id === "string" && payload.id.trim() ? payload.id : null;
+  return { messageId };
 }

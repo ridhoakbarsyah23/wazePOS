@@ -63,14 +63,31 @@ describe("route cron pengingat trial", () => {
 
   it("menjalankan pengingat dan mengembalikan ringkasan saat token cocok", async () => {
     process.env.CRON_SECRET = "rahasia-cron";
-    mocks.sendTrialReminders.mockResolvedValue({ sent: 2, failed: 0, skipped: 1 });
+    mocks.sendTrialReminders.mockResolvedValue({
+      sent: 2,
+      failed: 0,
+      skipped: 1,
+      messages: [
+        { businessId: "business-1", trialEndsAt: "2026-09-29T03:00:00.000Z", messageId: "email-1" },
+      ],
+      failures: [],
+    });
 
     const response = await GET(cronRequest("Bearer rahasia-cron"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(mocks.sendTrialReminders).toHaveBeenCalledOnce();
-    expect(body).toEqual({ ok: true, sent: 2, failed: 0, skipped: 1 });
+    expect(body).toEqual({
+      ok: true,
+      sent: 2,
+      failed: 0,
+      skipped: 1,
+      messages: [
+        { businessId: "business-1", trialEndsAt: "2026-09-29T03:00:00.000Z", messageId: "email-1" },
+      ],
+      failures: [],
+    });
   });
 });
 
@@ -88,10 +105,23 @@ describe("kegagalan pemrosesan cron", () => {
   it("mengembalikan 502 saat ada email yang gagal", async () => {
     process.env.CRON_SECRET = "test";
     mocks.emailConfig.mockReturnValue({ apiKey: "test", from: "test@example.com" });
-    mocks.sendTrialReminders.mockResolvedValue({ sent: 1, failed: 1, skipped: 0 });
+    mocks.sendTrialReminders.mockResolvedValue({
+      sent: 1,
+      failed: 1,
+      skipped: 0,
+      messages: [],
+      failures: [{ businessId: "business-1", trialEndsAt: "2026-09-29T03:00:00.000Z", reason: "EMAIL_STATUS_401" }],
+    });
     const response = await GET(cronRequest("Bearer test"));
     expect(response.status).toBe(502);
-    expect(await response.json()).toEqual({ ok: false, sent: 1, failed: 1, skipped: 0 });
+    expect(await response.json()).toEqual({
+      ok: false,
+      sent: 1,
+      failed: 1,
+      skipped: 0,
+      messages: [],
+      failures: [{ businessId: "business-1", trialEndsAt: "2026-09-29T03:00:00.000Z", reason: "EMAIL_STATUS_401" }],
+    });
   });
 
   it("menyembunyikan detail error database", async () => {

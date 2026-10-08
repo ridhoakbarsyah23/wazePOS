@@ -64,13 +64,14 @@ describe("pengiriman email pengingat trial", () => {
       upgradeUrl: "https://pos.example.com/subscription",
       idempotencyKey: "trial-ending/subscription-1/2026-09-29T03:00:00.000Z",
     };
-    await sendTrialEndingEmail(input, { config, fetcher, now: NOW });
+    const firstResult = await sendTrialEndingEmail(input, { config, fetcher, now: NOW });
     await sendTrialEndingEmail(input, { config, fetcher, now: new Date("2026-09-29T02:00:00.000Z") });
     const first = fetcher.mock.calls[0][1];
     const retry = fetcher.mock.calls[1][1];
     expect(first?.headers).toMatchObject({ "Idempotency-Key": input.idempotencyKey });
     expect(first?.signal).toBeDefined();
     expect(first?.body).toBe(retry?.body);
+    expect(firstResult).toEqual({ messageId: null });
   });
 
   it("mengirim email via Resend dengan penerima, subjek, dan CTA yang benar", async () => {
@@ -79,7 +80,7 @@ describe("pengiriman email pengingat trial", () => {
     );
     const trialEndsAt = new Date("2026-09-29T03:30:00.000Z");
 
-    await sendTrialEndingEmail(
+    const result = await sendTrialEndingEmail(
       {
         recipient: "owner@example.com",
         recipientName: "Owner <Toko>",
@@ -106,6 +107,7 @@ describe("pengiriman email pengingat trial", () => {
     expect(body).not.toContain("re_secret_test");
     // Nama dengan karakter HTML harus di-escape.
     expect(body).toContain("Owner &lt;Toko&gt;");
+    expect(result).toEqual({ messageId: "email-id" });
   });
 
   it("tidak menyertakan CTA saat tautan upgrade tidak tersedia", async () => {

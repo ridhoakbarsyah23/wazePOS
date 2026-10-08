@@ -16,6 +16,26 @@ export type TrialReminderRecipient = {
   ownerName: string | null;
 };
 
+export type TrialReminderFailure = {
+  businessId: string;
+  trialEndsAt: string;
+  reason: string;
+};
+
+export type TrialReminderSentMessage = {
+  businessId: string;
+  trialEndsAt: string;
+  messageId: string | null;
+};
+
+export type TrialReminderResult = {
+  sent: number;
+  failed: number;
+  skipped: number;
+  messages: TrialReminderSentMessage[];
+  failures: TrialReminderFailure[];
+};
+
 function dueConditions(now: Date) {
   return and(
     eq(subscription.status, "trialing"),
@@ -23,6 +43,15 @@ function dueConditions(now: Date) {
     gt(subscription.trialEndsAt, now),
     lte(subscription.trialEndsAt, new Date(now.getTime() + 86_400_000)),
   );
+}
+
+function classifyReminderError(error: unknown) {
+  if (!(error instanceof Error)) return "UNKNOWN_ERROR";
+  const statusMatch = error.message.match(/status\s+(\d{3})/i);
+  if (statusMatch?.[1]) return `EMAIL_STATUS_${statusMatch[1]}`;
+  if (error.name === "TimeoutError" || error.message.toLowerCase().includes("timeout")) return "EMAIL_TIMEOUT";
+  if (error.message.includes("Konfigurasi email")) return "EMAIL_CONFIG_MISSING";
+  return "EMAIL_SEND_FAILED";
 }
 
 /**
@@ -62,12 +91,14 @@ export async function findTrialRemindersDue(now = new Date()): Promise<TrialRemi
  */
 export async function sendTrialReminders(
   options: { now?: Date } = {},
-): Promise<{ sent: number; failed: number; skipped: number }> {
+): Promise<TrialReminderResult> {
   const sentAt = options.now ?? new Date();
   const recipients = await findTrialRemindersDue(sentAt);
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  const messages: TrialReminderSentMessage[] = [];
+  const failures: TrialReminderFailure[] = [];
 
   for (const recipient of recipients) {
     try {
@@ -87,7 +118,7 @@ export async function sendTrialReminders(
 
         if (claimed.length === 0) return false;
 
-        await sendTrialEndingEmail({
+        const email = await sendTrialEndingEmail({
           recipient: recipient.ownerEmail,
           recipientName: recipient.ownerName,
           businessName: recipient.businessName,
@@ -95,14 +126,27 @@ export async function sendTrialReminders(
           upgradeUrl: getUpgradeUrl(),
           idempotencyKey: `trial-ending/${claimed[0].id}/${recipient.trialEndsAt.toISOString()}`,
         });
-        return true;
+        return { sent: true, messageId: email.messageId };
       });
-      if (delivered) sent += 1;
-      else skipped += 1;
-    } catch {
+      if (delivered) {
+        sent += 1;
+        messages.push({
+          businessId: recipient.businessId,
+          trialEndsAt: recipient.trialEndsAt.toISOString(),
+          messageId: delivered.messageId,
+        });
+      } else {
+        skipped += 1;
+      }
+    } catch (error) {
       failed += 1;
+      failures.push({
+        businessId: recipient.businessId,
+        trialEndsAt: recipient.trialEndsAt.toISOString(),
+        reason: classifyReminderError(error),
+      });
     }
   }
 
-  return { sent, failed, skipped };
+  return { sent, failed, skipped, messages, failures };
 }

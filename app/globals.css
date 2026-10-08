@@ -2122,6 +2122,7 @@ h1, h2, h3, p { margin-top: 0; }
     linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(223, 246, 233, 0.54)),
     repeating-linear-gradient(90deg, rgba(20, 117, 84, 0.08) 0 1px, transparent 1px 24px);
   box-shadow: 0 35px 90px rgba(10, 67, 48, 0.16);
+  transform-origin: center;
 }
 
 .product-shot {
@@ -2136,6 +2137,7 @@ h1, h2, h3, p { margin-top: 0; }
   border-radius: 12px;
   background: #f8fbf9;
   box-shadow: 0 28px 72px rgba(10, 67, 48, 0.18);
+  transform-origin: center;
 }
 
 .product-shot--hero .product-shot-frame {
@@ -2161,6 +2163,7 @@ h1, h2, h3, p { margin-top: 0; }
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 18px 40px rgba(10, 67, 48, 0.14);
   backdrop-filter: blur(12px);
+  transform-origin: center;
 }
 
 .product-shot figcaption b {
@@ -2238,6 +2241,7 @@ h1, h2, h3, p { margin-top: 0; }
   text-align: right;
   color: #147554;
   font-size: 18px;
+  transform-origin: right center;
 }
 
 .receipt-shadow {
@@ -2272,6 +2276,7 @@ h1, h2, h3, p { margin-top: 0; }
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 12px 28px rgba(10, 67, 48, 0.1);
+  transform-origin: center;
 }
 
 .hero-flow span {
@@ -2284,6 +2289,7 @@ h1, h2, h3, p { margin-top: 0; }
   background: #147554;
   font-size: 11px;
   font-weight: 850;
+  transform-origin: center;
 }
 
 .hero-flow b {
@@ -2293,6 +2299,10 @@ h1, h2, h3, p { margin-top: 0; }
 
 .floating-card {
   border-radius: 8px;
+}
+
+.hero-pos .floating-card > span {
+  transform-origin: center;
 }
 
 .hero-pos .floating-card-two {

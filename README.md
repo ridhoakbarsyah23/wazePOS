@@ -229,7 +229,7 @@ Semua konfigurasi ada di `.env.local` (lokal) atau environment variables deploym
 
 Pengingat dikirim ke email owner saat status masih `trialing`, trial belum berakhir, dan tersisa maksimal 24 jam. Email mencantumkan waktu berakhir dalam WIB dan tautan `/subscription`. Penanda `trial_reminder_sent_at` disimpan setelah transaksi pengiriman berhasil; kegagalan menggulung balik penanda agar bisa dicoba ulang. Kunci idempotensi Resend membantu mencegah duplikasi ketika respons pengiriman terputus (berlaku 24 jam).
 
-Endpoint: `GET /api/billing/trial-reminders`. Jadwal `vercel.json` adalah `0 2 * * *` (09:00 WIB). Pada **Vercel Hobby**, cron hanya dapat berjalan sekali sehari dan dapat dieksekusi kapan saja antara 09:00–09:59 WIB. Pengingat mengikuti pemeriksaan ini, **bukan tepat 24 jam sebelum kedaluwarsa**. Pergeseran jadwal, downtime, atau kegagalan pengiriman dapat membuat pengingat terlewat; cron Vercel tidak otomatis mengulang permintaan yang gagal. Untuk pemeriksaan setiap jam, gunakan scheduler eksternal dengan header otorisasi yang sama atau Vercel Pro dengan jadwal `0 * * * *`.
+Endpoint: `GET /api/billing/trial-reminders`. Jadwal `vercel.json` adalah `0 17 * * *`, yaitu pukul 00:00 WIB karena Vercel Cron memakai UTC. Pada **Vercel Hobby**, cron hanya dapat berjalan sekali sehari dan dapat dieksekusi kapan saja antara 00:00-00:59 WIB. Pengingat mengikuti pemeriksaan ini, **bukan tepat 24 jam sebelum kedaluwarsa**. Pergeseran jadwal, downtime, atau kegagalan pengiriman dapat membuat pengingat terlewat; cron Vercel tidak otomatis mengulang permintaan yang gagal. Untuk pemeriksaan setiap jam, gunakan scheduler eksternal dengan header otorisasi yang sama atau Vercel Pro dengan jadwal `0 * * * *`.
 
 Aktivasi produksi:
 

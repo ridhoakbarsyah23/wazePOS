@@ -143,7 +143,43 @@ export function useMarketingMotion({ root, feature, showcase, comparisonOpen }: 
         .to(select(".hero-orb"), { x: -16, y: 12, scale: 1.04, duration: 5, ease: "sine.inOut" }, 0)
         .to(select(".floating-card"), { y: -8, stagger: 0.25, duration: 2.5, ease: "sine.inOut" }, 0)
         .to(select(".receipt-stack"), { y: -6, rotate: -1.2, duration: 2.8, ease: "sine.inOut" }, 0.1)
+        .to(select(".product-shot--hero .product-shot-frame"), { y: -5, rotate: 0.45, duration: 3.2, ease: "sine.inOut" }, 0.2)
+        .to(select(".visual-backdrop"), { scale: 1.015, opacity: 0.86, duration: 3.6, ease: "sine.inOut" }, 0)
         .to(select(".live-dot"), { opacity: 0.45, duration: 2.5, ease: "sine.inOut" }, 0);
+      const flowItems = select(".hero-flow li") as HTMLElement[];
+      const flowBadges = select(".hero-flow span") as HTMLElement[];
+      const receiptTotal = select(".receipt-paper strong")[0] as HTMLElement | undefined;
+      const cardIcons = select(".floating-card > span") as HTMLElement[];
+      const productCaption = select(".product-shot--hero figcaption")[0] as HTMLElement | undefined;
+      const transactionLoop = gsap.timeline({ paused: true, repeat: -1, repeatDelay: 0.5, defaults: { ease: "power2.inOut" } });
+      const [flowOne, flowTwo, flowThree, flowFour] = flowItems;
+      const [badgeOne, badgeTwo, badgeThree, badgeFour] = flowBadges;
+      const [cardOne, cardTwo] = cardIcons;
+      if (flowOne && flowTwo && flowThree && flowFour && badgeOne && badgeTwo && badgeThree && badgeFour && cardOne && cardTwo && receiptTotal && productCaption) {
+        gsap.set([...flowItems, ...flowBadges, ...cardIcons, ...(productCaption ? [productCaption] : []), ...(receiptTotal ? [receiptTotal] : [])], {
+          willChange: "transform, opacity, box-shadow",
+        });
+        transactionLoop
+          .to(flowItems, { opacity: 0.72, scale: 0.985, duration: 0.2 }, 0)
+          .to(productCaption, { y: -4, scale: 1.025, duration: 0.38 }, 0.15)
+          .to(flowOne, { opacity: 1, y: -3, scale: 1.035, boxShadow: "0 18px 38px rgba(10,67,48,.18)", duration: 0.42 }, 0.2)
+          .to(badgeOne, { scale: 1.12, backgroundColor: "#198760", duration: 0.36 }, 0.2)
+          .to(flowOne, { y: 0, scale: 1, boxShadow: "0 12px 28px rgba(10,67,48,.1)", duration: 0.42 }, 0.9)
+          .to(productCaption, { y: 0, scale: 1, duration: 0.34 }, 0.92)
+          .to(flowTwo, { opacity: 1, y: -3, scale: 1.035, boxShadow: "0 18px 38px rgba(10,67,48,.18)", duration: 0.42 }, 1.05)
+          .to(badgeTwo, { scale: 1.12, backgroundColor: "#198760", duration: 0.36 }, 1.05)
+          .to(cardOne, { scale: 1.12, duration: 0.34 }, 1.18)
+          .to([flowTwo, cardOne], { y: 0, scale: 1, boxShadow: "0 12px 28px rgba(10,67,48,.1)", duration: 0.42 }, 1.72)
+          .to(flowThree, { opacity: 1, y: -3, scale: 1.035, boxShadow: "0 18px 38px rgba(10,67,48,.18)", duration: 0.42 }, 1.85)
+          .to(badgeThree, { scale: 1.12, backgroundColor: "#198760", duration: 0.36 }, 1.85)
+          .to(receiptTotal, { scale: 1.08, color: "#0f8b61", duration: 0.38 }, 2)
+          .to([flowThree, receiptTotal], { y: 0, scale: 1, color: "#147554", boxShadow: "0 12px 28px rgba(10,67,48,.1)", duration: 0.42 }, 2.52)
+          .to(flowFour, { opacity: 1, y: -3, scale: 1.035, boxShadow: "0 18px 38px rgba(10,67,48,.18)", duration: 0.42 }, 2.66)
+          .to(badgeFour, { scale: 1.12, backgroundColor: "#198760", duration: 0.36 }, 2.66)
+          .to(cardTwo, { scale: 1.12, duration: 0.34 }, 2.8)
+          .to([flowFour, cardTwo], { y: 0, scale: 1, boxShadow: "0 12px 28px rgba(10,67,48,.1)", duration: 0.42 }, 3.32)
+          .to(flowItems, { opacity: 1, scale: 1, duration: 0.28 }, 3.75);
+      }
       const track = select(".business-strip-track")[0] as HTMLElement | undefined;
       const strip = select(".business-strip")[0] as HTMLElement | undefined;
       let stripHovered = false;
@@ -154,7 +190,9 @@ export function useMarketingMotion({ root, feature, showcase, comparisonOpen }: 
       // Initialized before callbacks read it; onToggle may fire during creation.
       const triggers: { strip?: ScrollTrigger; hero?: ScrollTrigger } = {};
       function syncLoops() {
-        heroLoop.paused(document.hidden || !triggers.hero?.isActive);
+        const shouldPauseHero = document.hidden || !triggers.hero?.isActive;
+        heroLoop.paused(shouldPauseHero);
+        transactionLoop.paused(shouldPauseHero);
         marquee?.paused(document.hidden || !triggers.strip?.isActive || stripHovered || Boolean(strip?.matches(":focus-within")));
       }
       triggers.hero = ScrollTrigger.create({ trigger: select(".hero")[0], start: "top bottom", end: "bottom top", onToggle: syncLoops });
