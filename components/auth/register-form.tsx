@@ -205,7 +205,7 @@ export function RegisterForm({
       </div>
 
       <div className="grid gap-1.5">
-        <label htmlFor="register-privacy" className="flex min-h-11 cursor-pointer items-start gap-2.5 py-1 text-xs font-medium leading-5 text-[#556961]">
+        <div className="flex min-h-11 items-start gap-2.5 py-1 text-xs font-medium leading-5 text-[#556961]">
           <input
             id="register-privacy"
             name="privacyAccepted"
@@ -223,14 +223,16 @@ export function RegisterForm({
             }}
             className="mt-0.5 size-4 shrink-0 accent-[#198760]"
           />
-          <span>
-            Saya telah membaca dan menyetujui{" "}
+          <p>
+            <label htmlFor="register-privacy" className="cursor-pointer">
+              Saya telah membaca dan menyetujui
+            </label>{" "}
             <button type="button" aria-haspopup="dialog" onClick={() => setPrivacyOpen(true)} className="cursor-pointer rounded-sm font-bold text-[#198760] underline underline-offset-2 hover:text-[#116b4c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198760]">
               Kebijakan Privasi
             </button>{" "}
             wazePOS. (Buka dan baca hingga akhir untuk mencentang)
-          </span>
-        </label>
+          </p>
+        </div>
         {fieldErrors.privacyAccepted && <span id="register-privacy-error" className="text-xs font-semibold text-red-600">{fieldErrors.privacyAccepted}</span>}
       </div>
 
