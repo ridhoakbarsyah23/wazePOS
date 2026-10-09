@@ -62,6 +62,7 @@ async function stopServer() {
     return;
   }
 
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
   serverProcess.kill();
 
   await Promise.race([
