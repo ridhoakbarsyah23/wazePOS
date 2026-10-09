@@ -2,9 +2,9 @@
 
 Dokumen ini menjadi sumber bukti go/no-go. Sebuah item hanya boleh dicentang setelah diuji pada environment production atau staging yang setara; keberadaan kode atau environment variable saja bukan bukti alurnya bekerja.
 
-## Quality gate otomatis
+## Quality gate manual
 
-Wajib lulus pada commit release:
+Wajib dijalankan dan lulus secara lokal sebelum commit release:
 
 ```bash
 npm run security:secrets
@@ -16,13 +16,17 @@ npm run build
 npm run test:e2e
 ```
 
-CI juga menjalankan migrasi PostgreSQL dan Docker smoke test. Playwright memeriksa Chromium desktop dan mobile untuk:
+GitHub Actions pada push menjalankan Docker build dan smoke test. Playwright lokal memeriksa Chromium desktop dan mobile untuk:
 
 - liveness dan kesiapan skema database;
 - landing page tanpa overflow horizontal;
 - redirect anonymous dari dashboard dan admin;
 - dukungan password manager dan validasi keyboard pada login;
 - state pemilihan paket, dialog privasi, dan reduced-motion pada registrasi.
+- transaksi POS owner: penjualan tunai, idempotensi `clientRequestId`, stok kurang, void, dan isolasi data antar-bisnis;
+- akses kasir: redirect ke POS, transaksi tunai, blokir menu owner/admin, dan penolakan void;
+- pembayaran owner: membuat pesanan transfer bank, upload bukti, dan penyimpanan data pengirim;
+- pembayaran Platform Admin lokal/CI: approve, reject dengan catatan, tandai dicairkan, audit log, serta penolakan anonymous/user biasa.
 
 Untuk smoke test deployment read-only:
 
@@ -102,7 +106,7 @@ Gunakan akun dan data khusus uji. Hapus atau anonimisasi data setelah pengujian 
 Release untuk pengguna umum hanya **go** bila:
 
 - tidak ada advisori critical/high pada dependency runtime yang dapat dieksploitasi;
-- seluruh quality gate pada SHA release hijau;
+- seluruh quality gate manual pada SHA release hijau;
 - health production menunjukkan database dan skema terbaru siap;
 - alur auth, transaksi, pembayaran, email, lead, backup, dan rollback memiliki bukti;
 - tidak ada defect severity 1/2 yang terbuka dari UAT.

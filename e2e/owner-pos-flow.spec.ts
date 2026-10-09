@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from "node:crypto";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Browser, type Page, test } from "@playwright/test";
 import { loadEnvConfig } from "@next/env";
 import postgres from "postgres";
 
@@ -24,6 +24,22 @@ function sessionCookieHeader(token: string) {
     `better-auth.session_token=${signedToken}`,
     `__Secure-better-auth.session_token=${signedToken}`,
   ].join("; ");
+}
+
+function sessionCookie(token: string) {
+  return {
+    name: "better-auth.session_token",
+    value: signCookieValue(token),
+    url: baseUrl ?? "http://127.0.0.1:3100",
+  };
+}
+
+async function newAuthenticatedContext(browser: Browser, token: string) {
+  const context = await browser.newContext({
+    extraHTTPHeaders: { Cookie: sessionCookieHeader(token) },
+  });
+  await context.addCookies([sessionCookie(token)]);
+  return context;
 }
 
 async function cleanupE2eData(sql: postgres.Sql, seed: E2eSeed) {
@@ -53,6 +69,9 @@ type E2eSeed = {
   outletId: string;
   productId: string;
   sessionToken: string;
+  userName: string;
+  role: "owner" | "admin" | "cashier";
+  businessName: string;
   productName: string;
 };
 
@@ -78,7 +97,7 @@ type VoidSaleResult = {
   };
 };
 
-function createSeed(): E2eSeed {
+function createSeed(options: Partial<Pick<E2eSeed, "role" | "userName" | "businessName">> = {}): E2eSeed {
   const suffix = randomUUID();
   return {
     userId: randomUUID(),
@@ -86,6 +105,9 @@ function createSeed(): E2eSeed {
     outletId: randomUUID(),
     productId: randomUUID(),
     sessionToken: `e2e-session-${suffix}`,
+    userName: options.userName ?? "Owner E2E POS",
+    role: options.role ?? "owner",
+    businessName: options.businessName ?? "Toko E2E POS",
     productName: `Kopi E2E ${suffix.slice(0, 8)}`,
   };
 }
@@ -98,7 +120,7 @@ async function seedOwnerPosData(sql: postgres.Sql, seed: E2eSeed) {
   await sql.begin(async (tx) => {
     await tx`
       insert into "user" (id, name, email, email_verified, privacy_accepted_at, created_at, updated_at)
-      values (${seed.userId}, 'Owner E2E POS', ${`${seed.userId}@e2e.wazepos.test`}, true, ${now}, ${now}, ${now})
+      values (${seed.userId}, ${seed.userName}, ${`${seed.userId}@e2e.wazepos.test`}, true, ${now}, ${now}, ${now})
     `;
     await tx`
       insert into session (id, expires_at, token, user_id, created_at, updated_at)
@@ -106,11 +128,11 @@ async function seedOwnerPosData(sql: postgres.Sql, seed: E2eSeed) {
     `;
     await tx`
       insert into business (id, name, type, onboarding_completed, created_at, updated_at)
-      values (${seed.businessId}, 'Toko E2E POS', 'Kedai kopi', true, ${now}, ${now})
+      values (${seed.businessId}, ${seed.businessName}, 'Kedai kopi', true, ${now}, ${now})
     `;
     await tx`
       insert into business_member (id, business_id, user_id, role, created_at, updated_at)
-      values (${randomUUID()}, ${seed.businessId}, ${seed.userId}, 'owner', ${now}, ${now})
+      values (${randomUUID()}, ${seed.businessId}, ${seed.userId}, ${seed.role}, ${now}, ${now})
     `;
     await tx`
       insert into subscription (id, business_id, plan, status, trial_ends_at, created_at, updated_at)
@@ -200,11 +222,7 @@ test.describe("owner POS flow", () => {
 
     await seedOwnerPosData(sql, seed);
 
-    const context = await browser.newContext({
-      extraHTTPHeaders: {
-        Cookie: sessionCookieHeader(seed.sessionToken),
-      },
-    });
+    const context = await newAuthenticatedContext(browser, seed.sessionToken);
     const page = await context.newPage();
 
     try {
@@ -264,11 +282,7 @@ test.describe("owner POS flow", () => {
 
     await seedOwnerPosData(sql, seed);
 
-    const context = await browser.newContext({
-      extraHTTPHeaders: {
-        Cookie: sessionCookieHeader(seed.sessionToken),
-      },
-    });
+    const context = await newAuthenticatedContext(browser, seed.sessionToken);
     const page = await context.newPage();
 
     try {
@@ -345,11 +359,7 @@ test.describe("owner POS flow", () => {
 
     await seedOwnerPosData(sql, seed);
 
-    const context = await browser.newContext({
-      extraHTTPHeaders: {
-        Cookie: sessionCookieHeader(seed.sessionToken),
-      },
-    });
+    const context = await newAuthenticatedContext(browser, seed.sessionToken);
     const page = await context.newPage();
 
     try {
@@ -406,11 +416,7 @@ test.describe("owner POS flow", () => {
 
     await seedOwnerPosData(sql, seed);
 
-    const context = await browser.newContext({
-      extraHTTPHeaders: {
-        Cookie: sessionCookieHeader(seed.sessionToken),
-      },
-    });
+    const context = await newAuthenticatedContext(browser, seed.sessionToken);
     const page = await context.newPage();
 
     try {
@@ -516,11 +522,7 @@ test.describe("owner POS flow", () => {
     await seedOwnerPosData(sql, ownerSeed);
     await seedOwnerPosData(sql, otherBusinessSeed);
 
-    const context = await browser.newContext({
-      extraHTTPHeaders: {
-        Cookie: sessionCookieHeader(ownerSeed.sessionToken),
-      },
-    });
+    const context = await newAuthenticatedContext(browser, ownerSeed.sessionToken);
     const page = await context.newPage();
 
     try {
@@ -588,6 +590,87 @@ test.describe("owner POS flow", () => {
       await context.close();
       await cleanupE2eData(sql, ownerSeed);
       await cleanupE2eData(sql, otherBusinessSeed);
+      await sql.end({ timeout: 2 });
+    }
+  });
+
+  test("kasir diarahkan ke POS, bisa transaksi tunai, dan tidak bisa void", async ({ browser }) => {
+    const sql = postgres(databaseUrl, { max: 1, prepare: false });
+    const seed = createSeed({
+      role: "cashier",
+      userName: "Kasir E2E POS",
+      businessName: "Toko Kasir E2E",
+    });
+
+    await seedOwnerPosData(sql, seed);
+
+    const context = await newAuthenticatedContext(browser, seed.sessionToken);
+    const page = await context.newPage();
+
+    try {
+      await page.goto("/dashboard");
+      await expect(page).toHaveURL(/\/pos$/);
+      await expect(page.getByRole("heading", { name: "Kasir" })).toBeVisible();
+
+      const saleResult = await postCashSale(page, {
+        outletId: seed.outletId,
+        productId: seed.productId,
+        clientRequestId: randomUUID(),
+        quantity: 1,
+        paidAmount: 12000,
+      });
+
+      expect(saleResult.ok).toBe(true);
+      expect(saleResult.status).toBe(201);
+      expect(saleResult.body).toMatchObject({
+        total: 12000,
+        changeAmount: 0,
+        replayed: false,
+      });
+
+      const saleId = saleResult.body.saleId;
+      if (!saleId) {
+        throw new Error("Sale response did not include saleId.");
+      }
+
+      const [createdSale] = await sql<{ cashierId: string; total: number }[]>`
+        select cashier_id as "cashierId", total
+        from sale
+        where id = ${saleId}
+          and business_id = ${seed.businessId}
+        limit 1
+      `;
+      expect(createdSale).toMatchObject({
+        cashierId: seed.userId,
+        total: 12000,
+      });
+
+      await page.goto("/products");
+      await expect(page).toHaveURL(/\/pos$/);
+
+      const voidResult = await postVoidSale(page, {
+        saleId: String(saleId),
+        reason: "Kasir mencoba void transaksi",
+      });
+
+      expect(voidResult.ok).toBe(false);
+      expect(voidResult.status).toBe(403);
+      expect(voidResult.body).toMatchObject({
+        message: "Hanya Pemilik Usaha (Owner) atau Admin yang berhak membatalkan (void) transaksi.",
+      });
+
+      const [stock] = await sql<{ quantity: number }[]>`
+        select quantity
+        from inventory_stock
+        where business_id = ${seed.businessId}
+          and product_id = ${seed.productId}
+          and outlet_id = ${seed.outletId}
+        limit 1
+      `;
+      expect(Number(stock?.quantity)).toBe(4);
+    } finally {
+      await context.close();
+      await cleanupE2eData(sql, seed);
       await sql.end({ timeout: 2 });
     }
   });
