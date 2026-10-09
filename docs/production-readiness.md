@@ -23,6 +23,10 @@ CI juga menjalankan migrasi PostgreSQL dan Docker smoke test. Playwright memerik
 - redirect anonymous dari dashboard dan admin;
 - dukungan password manager dan validasi keyboard pada login;
 - state pemilihan paket, dialog privasi, dan reduced-motion pada registrasi.
+- transaksi POS owner: penjualan tunai, idempotensi `clientRequestId`, stok kurang, void, dan isolasi data antar-bisnis;
+- akses kasir: redirect ke POS, transaksi tunai, blokir menu owner/admin, dan penolakan void;
+- pembayaran owner: membuat pesanan transfer bank, upload bukti, dan penyimpanan data pengirim;
+- pembayaran Platform Admin lokal/CI: approve, reject dengan catatan, tandai dicairkan, audit log, serta penolakan anonymous/user biasa.
 
 Untuk smoke test deployment read-only:
 

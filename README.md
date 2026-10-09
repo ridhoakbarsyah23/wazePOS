@@ -482,7 +482,7 @@ npm run test:e2e    # Playwright: smoke test desktop dan mobile
 npm run security:dependencies # Blok advisori high/critical dependency runtime
 ```
 
-Test unit/integration dikelompokkan mengikuti domain di `__tests__/<domain>/` (admin, auth, billing, dashboard, marketing, operations, pos, dll). Smoke test browser berada di `e2e/` dan secara default menjalankan build production lokal di Chromium desktop serta mobile. Gunakan `PLAYWRIGHT_BASE_URL=https://domain.example` untuk memeriksa deployment tanpa menyalakan server lokal. Jalankan seluruh perintah di atas sebelum membuat pull request.
+Test unit/integration dikelompokkan mengikuti domain di `__tests__/<domain>/` (admin, auth, billing, dashboard, marketing, operations, pos, dll). Smoke test browser berada di `e2e/` dan secara default menjalankan build production lokal di Chromium desktop serta mobile. Suite lokal/CI menyertakan alur seeded untuk POS owner/kasir, checkout transfer owner, upload bukti pembayaran, dan verifikasi pembayaran Platform Admin; saat `PLAYWRIGHT_BASE_URL=https://domain.example` dipakai untuk deployment, skenario mutasi data tersebut dilewati dan hanya smoke test read-only yang berjalan. Jalankan seluruh perintah di atas sebelum membuat pull request.
 
 Checklist UAT, bukti aktivasi production, dan kriteria go/no-go tersedia di [`docs/production-readiness.md`](docs/production-readiness.md).
 
