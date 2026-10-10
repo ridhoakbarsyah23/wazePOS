@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,27 @@ function formatDateTime(value: Date | string | null) {
 
 export function PlatformAdminPaymentDisburseButton({ payment }: { payment: PlatformAdminPaymentItem }) {
   const router = useRouter();
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const referenceRef = useRef<HTMLInputElement | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    window.setTimeout(() => {
+      referenceRef.current?.focus();
+    }, 0);
+
+    return () => {
+      restoreFocusRef.current?.focus();
+      restoreFocusRef.current = null;
+    };
+  }, [open]);
 
   if (payment.status !== "paid") return null;
 
@@ -43,12 +59,46 @@ export function PlatformAdminPaymentDisburseButton({ payment }: { payment: Platf
     );
   }
 
+  function openDialog() {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setOpen(true);
+  }
+
   function closeDialog() {
     if (pending) return;
     setOpen(false);
     setReference("");
     setNote("");
     setMessage(null);
+  }
+
+  function keepFocusInDialog(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeDialog();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    );
+    if (!focusable.length) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   async function submit() {
@@ -82,13 +132,13 @@ export function PlatformAdminPaymentDisburseButton({ payment }: { payment: Platf
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs" onClick={() => setOpen(true)}>
+      <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs" onClick={openDialog}>
         Tandai dicairkan
       </Button>
 
       {open && (
-        <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Tandai pencairan ${payment.providerOrderId}`}>
-          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
+        <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Tandai pencairan ${payment.providerOrderId}`} onKeyDown={keepFocusInDialog}>
+          <div ref={dialogRef} className="w-full max-w-md overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
             <div className="border-b border-[#e8efeb] p-4 dark:border-[#303030] sm:p-5">
               <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078] dark:text-[#a3a3a3]">Pencairan ke rekening pribadi</p>
               <h2 className="m-0 mt-1 text-base font-black text-[#15211d] dark:text-white">{payment.businessName}</h2>
@@ -109,6 +159,7 @@ export function PlatformAdminPaymentDisburseButton({ payment }: { payment: Platf
                 Referensi pencairan (opsional)
               </label>
               <input
+                ref={referenceRef}
                 id={`disburse-ref-${payment.id}`}
                 value={reference}
                 maxLength={120}

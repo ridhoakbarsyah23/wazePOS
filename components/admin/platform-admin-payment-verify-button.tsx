@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Eye, LoaderCircle, ShieldCheck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,9 @@ function formatRupiah(value: number) {
 
 export function PlatformAdminPaymentVerifyButton({ payment }: { payment: PlatformAdminPaymentItem }) {
   const router = useRouter();
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const noteRef = useRef<HTMLTextAreaElement | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [proof, setProof] = useState<ProofDetail | null>(null);
   const [loadingProof, setLoadingProof] = useState(false);
@@ -35,7 +38,21 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
 
   const canVerify = payment.status === "pending";
 
+  useEffect(() => {
+    if (!open) return;
+
+    window.setTimeout(() => {
+      noteRef.current?.focus();
+    }, 0);
+
+    return () => {
+      restoreFocusRef.current?.focus();
+      restoreFocusRef.current = null;
+    };
+  }, [open]);
+
   async function openDialog() {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setOpen(true);
     setMessage(null);
     if (!payment.proofUploaded) {
@@ -67,6 +84,35 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
     setProof(null);
     setNote("");
     setMessage(null);
+  }
+
+  function keepFocusInDialog(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeDialog();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    );
+    if (!focusable.length) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   async function verify(decision: "approve" | "reject") {
@@ -119,8 +165,8 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
       </Button>
 
       {open && (
-        <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Verifikasi pembayaran ${payment.providerOrderId}`}>
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
+        <div data-admin-portal className="fixed inset-0 z-[300] flex items-center justify-center bg-[#09271d]/60 p-4 backdrop-blur-[3px]" role="alertdialog" aria-modal="true" aria-label={`Verifikasi pembayaran ${payment.providerOrderId}`} onKeyDown={keepFocusInDialog}>
+          <div ref={dialogRef} className="w-full max-w-lg overflow-hidden rounded-3xl border border-[#dfe8e3] bg-white shadow-[0_30px_90px_rgba(4,42,29,.32)] dark:border-[#303030] dark:bg-[#0d0d0d] dark:text-white">
             <div className="border-b border-[#e8efeb] p-4 dark:border-[#303030] sm:p-5">
               <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718078] dark:text-[#a3a3a3]">Verifikasi transfer bank</p>
               <h2 className="m-0 mt-1 text-base font-black text-[#15211d] dark:text-white">{payment.businessName}</h2>
@@ -152,6 +198,7 @@ export function PlatformAdminPaymentVerifyButton({ payment }: { payment: Platfor
                 Catatan verifikasi (wajib bila menolak)
               </label>
               <textarea
+                ref={noteRef}
                 id={`verify-note-${payment.id}`}
                 value={note}
                 maxLength={500}
