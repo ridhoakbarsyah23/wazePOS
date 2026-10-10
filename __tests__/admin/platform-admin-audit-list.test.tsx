@@ -28,6 +28,24 @@ const logs = [
     createdAt: new Date("2026-09-24T10:00:00.000Z"),
     metadata: null,
   },
+  {
+    id: "audit-2",
+    action: "payment_verified",
+    entityType: "payment",
+    entityId: "pay-1",
+    businessId: "biz-1",
+    businessName: "Nest Coffee",
+    actorName: "Admin",
+    actorEmail: "admin@wazepos.com",
+    createdAt: new Date("2026-09-24T10:05:00.000Z"),
+    metadata: {
+      decision: "approve",
+      plan: "bisnis",
+      amount: 199000,
+      orderId: "WAZE-2026-0001",
+      note: "Bukti sesuai mutasi",
+    },
+  },
 ];
 
 describe("PlatformAdminAuditList", () => {
@@ -59,5 +77,23 @@ describe("PlatformAdminAuditList", () => {
     );
 
     expect(screen.getByText(/Tabel audit belum tersedia/)).toBeDefined();
+  });
+
+  it("menampilkan detail metadata pembayaran dan siap dark mode", () => {
+    render(
+      <PlatformAdminAuditList
+        logs={logs}
+        filters={{ query: "", action: "all" }}
+        pagination={{ total: 2, page: 1, pageSize: 15, totalPages: 1, from: 1, to: 2 }}
+        auditAvailable
+      />,
+    );
+
+    expect(screen.getAllByText("Keputusan").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Disetujui").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("wazePOS Bisnis").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("WAZE-2026-0001").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("region", { name: "Tabel jejak audit" }).closest("section")?.className).toContain("dark:bg-[#0d0d0d]");
+    expect(screen.getByLabelText("Cari admin, usaha, atau entity").className).toContain("dark:bg-[#101010]");
   });
 });
