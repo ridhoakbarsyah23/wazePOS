@@ -66,6 +66,7 @@ export async function markPaymentDisbursed(
       amount: payment.amount,
       reference: input.reference ?? null,
       orderId: payment.providerOrderId,
+      note: input.note ?? null,
     },
   });
 

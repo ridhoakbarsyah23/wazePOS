@@ -110,7 +110,13 @@ export async function verifyBankTransferPayment(
       businessId: payment.businessId,
       entityType: "payment",
       entityId: payment.id,
-      metadata: { decision: "reject", plan: payment.plan, amount: payment.amount },
+      metadata: {
+        decision: "reject",
+        plan: payment.plan,
+        amount: payment.amount,
+        orderId: payment.providerOrderId,
+        note: input.note ?? null,
+      },
     });
 
     const email = await notifyOwnerOfVerification(payment, "reject", input.note);
@@ -169,7 +175,13 @@ export async function verifyBankTransferPayment(
     businessId: payment.businessId,
     entityType: "payment",
     entityId: payment.id,
-    metadata: { decision: "approve", plan: payment.plan, amount: payment.amount },
+    metadata: {
+      decision: "approve",
+      plan: payment.plan,
+      amount: payment.amount,
+      orderId: payment.providerOrderId,
+      note: input.note ?? null,
+    },
   });
 
   const email = await notifyOwnerOfVerification(payment, "approve", input.note);

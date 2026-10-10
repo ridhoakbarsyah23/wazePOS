@@ -121,6 +121,9 @@ export function PlatformAdminPaymentList({
             <span aria-live="polite" className="rounded-full bg-[#eef6f2] px-2.5 py-1 text-[11px] font-extrabold text-[#527066] dark:bg-[#1a1a1a] dark:text-[#a3a3a3]">
               {pagination.total} data
             </span>
+            <span className="rounded-full border border-[#dfe8e3] bg-white px-2.5 py-1 text-[11px] font-extrabold text-[#527066] dark:border-[#303030] dark:bg-[#111111] dark:text-[#d4d4d4]">
+              {hasFilters ? "Hasil filter" : "Semua pembayaran"}
+            </span>
           </div>
           <p className="mt-1 text-xs leading-5 text-[#627069] dark:text-[#a3a3a3]">
             Menampilkan {pagination.from}–{pagination.to} dari {pagination.total} pembayaran, maksimal {pagination.pageSize} per halaman.
@@ -323,6 +326,12 @@ export function PlatformAdminPaymentList({
         </nav>
       )}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#e8efeb] px-4 py-3 text-xs text-[#627069] dark:border-[#303030] dark:text-[#a3a3a3] sm:px-5">
+        <span className="font-extrabold text-[#34443d] dark:text-white">Ringkasan keseluruhan</span>
+        {hasFilters ? (
+          <span className="rounded-full bg-[#fff8ef] px-2.5 py-1 font-bold text-[#8c5b24] dark:bg-amber-400/10 dark:text-amber-200">
+            Daftar sedang difilter
+          </span>
+        ) : null}
         <span>Pending: <strong>{summary.pendingPayments}</strong></span>
         <span>Berhasil: <strong>{summary.paidPayments}</strong></span>
         <span>Pendapatan: <strong>{formatRupiah(summary.paidRevenue)}</strong></span>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PlatformAdminPaymentList } from "@/components/admin/platform-admin-payment-list";
 
@@ -67,6 +67,8 @@ describe("PlatformAdminPaymentList", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Daftar pembayaran" })).toBeDefined();
+    expect(screen.getByText("Hasil filter")).toBeDefined();
+    expect(screen.getByText("Daftar sedang difilter")).toBeDefined();
     expect(screen.getAllByText("Nest Coffee").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("link", { name: "2" }).getAttribute("href")).toBe(
       "/admin/payments?q=Nest&status=paid&plan=tumbuh&page=2",
@@ -98,11 +100,12 @@ describe("PlatformAdminPaymentList", () => {
 
     expect(screen.getByText(/Siap dicairkan:/)).toBeDefined();
     expect(screen.getByText(/Sudah dicairkan:/)).toBeDefined();
+    expect(screen.getByText("Ringkasan keseluruhan")).toBeDefined();
     // Tombol dirender di tabel desktop dan kartu mobile sekaligus di jsdom.
     expect(screen.getAllByRole("button", { name: "Tandai dicairkan" }).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("menjaga modal pencairan tetap terbaca di dark mode", () => {
+  it("menjaga modal pencairan tetap terbaca di dark mode", async () => {
     render(
       <PlatformAdminPaymentList
         payments={payments}
@@ -115,10 +118,12 @@ describe("PlatformAdminPaymentList", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Tandai dicairkan" })[0]);
 
     expect(screen.getByRole("alertdialog", { name: /Tandai pencairan/ }).firstElementChild?.className).toContain("dark:bg-[#0d0d0d]");
-    expect(screen.getByLabelText("Referensi pencairan (opsional)").className).toContain("dark:bg-[#101010]");
+    const referenceInput = screen.getByLabelText("Referensi pencairan (opsional)");
+    expect(referenceInput.className).toContain("dark:bg-[#101010]");
+    await waitFor(() => expect(document.activeElement).toBe(referenceInput));
   });
 
-  it("menjaga modal verifikasi tetap terbaca di dark mode", () => {
+  it("menjaga modal verifikasi tetap terbaca di dark mode", async () => {
     render(
       <PlatformAdminPaymentList
         payments={[{ ...payments[0], id: "pay-2", status: "pending", proofUploaded: false, verifiedBy: null, verifiedAt: null }]}
@@ -131,6 +136,29 @@ describe("PlatformAdminPaymentList", () => {
     fireEvent.click(screen.getAllByRole("button", { name: /Verifikasi/ })[0]);
 
     expect(screen.getByRole("alertdialog", { name: /Verifikasi pembayaran/ }).firstElementChild?.className).toContain("dark:bg-[#0d0d0d]");
-    expect(screen.getByLabelText("Catatan verifikasi (wajib bila menolak)").className).toContain("dark:bg-[#101010]");
+    const noteInput = screen.getByLabelText("Catatan verifikasi (wajib bila menolak)");
+    expect(noteInput.className).toContain("dark:bg-[#101010]");
+    await waitFor(() => expect(document.activeElement).toBe(noteInput));
+  });
+
+  it("menutup modal verifikasi dengan Escape dan mengembalikan fokus ke tombol pemicu", async () => {
+    render(
+      <PlatformAdminPaymentList
+        payments={[{ ...payments[0], id: "pay-3", status: "pending", proofUploaded: false, verifiedBy: null, verifiedAt: null }]}
+        filters={{ query: "", status: "pending", plan: "all" }}
+        summary={summary}
+        pagination={{ total: 1, page: 1, pageSize: 10, totalPages: 1, from: 1, to: 1 }}
+      />,
+    );
+
+    const trigger = screen.getAllByRole("button", { name: /Verifikasi/ })[0];
+    trigger.focus();
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole("alertdialog", { name: /Verifikasi pembayaran/ });
+
+    fireEvent.keyDown(dialog, { key: "Escape" });
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog", { name: /Verifikasi pembayaran/ })).toBeNull());
+    expect(document.activeElement).toBe(trigger);
   });
 });
